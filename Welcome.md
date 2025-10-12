@@ -25,7 +25,7 @@ Obsidian is a powerful knowledge base that works on top of a local folder of pla
 - `Ctrl/Cmd + F`: Search in current note
 
 ## Next Steps
-1. Create your first note in the [[Notes]] folder
+1. Create your first note in the `Notes/` folder
 2. Explore the different panes and features
 3. Customize your vault settings in Settings → Appearance/Editor
 4. Check out the graph view to see connections between your notes
