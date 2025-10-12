@@ -1,0 +1,12 @@
+{
+  "livePreview": true,
+  "showFrontmatter": true,
+  "showLineNumber": false,
+  "readableLineLength": true,
+  "strictLineBreaks": false,
+  "showInlineTitle": true,
+  "spellcheck": true,
+  "spellcheckLanguages": [
+    "en-US"
+  ]
+}
