@@ -11,10 +11,14 @@
             "id": "77974d99e02a83a8",
             "type": "leaf",
             "state": {
-              "type": "empty",
-              "state": {},
+              "type": "markdown",
+              "state": {
+                "file": "Home Improvement/Crawl Space/Initial Price List.md",
+                "mode": "source",
+                "source": false
+              },
               "icon": "lucide-file",
-              "title": "New tab"
+              "title": "Initial Price List"
             }
           }
         ]
@@ -163,5 +167,14 @@
     }
   },
   "active": "77974d99e02a83a8",
-  "lastOpenFiles": []
+  "lastOpenFiles": [
+    "Following_Christ/Serving God Above All Authorities.md",
+    "Home Improvement/Crawl Space/Initial Price List.md",
+    "Home Improvement/Crawl Space",
+    "Home Improvement",
+    "Health",
+    "Cheat Sheets",
+    "Following_Christ/Untitled.md",
+    "Following_Christ/Christ Misrepresented.md"
+  ]
 }
