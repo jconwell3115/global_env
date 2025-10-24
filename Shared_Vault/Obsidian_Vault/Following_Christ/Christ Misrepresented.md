@@ -1,6 +1,3 @@
-This is good, but add in how MAGA leaders claiming christ misrepresent Him with their actions
-
-Here is the expanded devotional, incorporating how MAGA leaders who claim to follow Christ can misrepresent Him through their actions, in light of *Philippians 1:15–17* and *2 Peter 2:1–3.*
 
 ***
 
@@ -8,13 +5,13 @@ Here is the expanded devotional, incorporating how MAGA leaders who claim to fol
 
 **Scripture Reading:** *Philippians 1:15–17; 2 Peter 2:1–3*
 
-In Paul’s day, some preached Christ from envy and strife—not out of genuine love, but for personal gain. Yet even then, Paul rejoiced that the name of Christ was proclaimed, trusting that God could use even impure motives for His purposes [9][10]. Peter, however, issued a grave warning: false teachers would arise within the church, exploiting faith for power and wealth, leading many astray with fabricated words and greedy intentions [11].
+Today there are many who claim the name of Christ not out of genuine love, but for personal gain. Paul speaks about this and even rejoiced that the name of Christ was proclaimed, trusting that God could use even impure motives for His purposes [9][10]. Peter, however, issued a grave warning: false teachers would arise within the church, exploiting faith for power and wealth, leading many astray with fabricated words and greedy intentions [11].
 
 Today, this warning echoes in the modern American church—particularly among political leaders in the MAGA movement who invoke Jesus’s name yet display behaviors starkly opposed to His teachings. Many of these leaders exalt dominance over humility, retaliation over forgiveness, and nationalism over compassion. They claim to represent Christ but distort His image for political gain, wielding faith not as a call to repentance but as a tool of influence and control [1][3][5][8].
 
 When political figures celebrate violence, demean the poor, or stoke hatred toward immigrants—all while calling themselves Christians—they mirror the hypocrisy Peter condemned. The Jesus of Scripture—the one who blessed peacemakers, ate with outcasts, and told His followers to love their enemies—would not cheer vengeance or division from a pulpit or rally stage [4][5]. Every time His name is used to excuse cruelty, it is not the gospel being preached, but a counterfeit.
 
-Paul saw that even flawed preaching could still magnify Christ if His message remained intact. But when the message itself becomes corrupted—when Christ’s humility is replaced by pride, and His mercy by scorn—the result is no longer Christianity; it is idolatry draped in Christian symbols.  
+Paul saw that even flawed preaching could still magnify Christ if His message remained intact. But when the message itself becomes corrupted—when Christ’s humility is replaced by pride, and His mercy by scorn—the result is no longer Christianity; it is idolatry draped in Christian symbols.  Paul called for people who preached this this kind of corrupted gospel to be accursed. (Galations 1:8)
 
 Let every believer remember: Jesus does not need defending through rage or power. He is most clearly seen in love, truth, and sacrifice. To follow Him is not to conquer others, but to carry the cross before them.
 

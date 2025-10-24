@@ -13,12 +13,12 @@
             "state": {
               "type": "markdown",
               "state": {
-                "file": "Following_Christ/Christ Misrepresented.md",
+                "file": "Self Hosting/Self-Hosting with Docker & Docker Compose Best Practices.md",
                 "mode": "source",
                 "source": false
               },
               "icon": "lucide-file",
-              "title": "Christ Misrepresented"
+              "title": "Self-Hosting with Docker & Docker Compose Best Practices"
             }
           },
           {
@@ -112,7 +112,7 @@
         "state": {
           "type": "backlink",
           "state": {
-            "file": "Docker Cheatsheet.md",
+            "file": "Home Improvement/Crawl Space/Initial Price List.md",
             "collapseAll": false,
             "extraContext": false,
             "sortOrder": "alphabetical",
@@ -170,18 +170,21 @@
   },
   "active": "3e49f3a82de81bb2",
   "lastOpenFiles": [
-    "Clippings/Copilot ask, edit, and agent modes What they do and when to use them 1.md",
+    "Self Hosting/Open VPN.md",
+    "Self Hosting/Self Hosting.md",
     "Following_Christ/Christ Misrepresented.md",
+    "Following_Christ/The Kingdom Beyond Borders.md",
+    "Following_Christ/Serving God Above All Authorities.md",
+    "Following_Christ/Christ or Barrabas.md",
+    "Home Improvement/Crawl Space/Initial Price List.md",
+    "Clippings/Copilot ask, edit, and agent modes What they do and when to use them 1.md",
     "Self Hosting/🏠 Self-Hosting with Docker & Docker Compose Best Practices.md",
     "Self Hosting/Self Hosting.md.2025-10-12_06.52.44.foldersync.old",
     "Self Hosting/Cloudflare Setup.md",
     "Self Hosting.md.2025-10-12_06.52.30.foldersync.old",
     "Following_Christ/Welcoming the Stranger.md",
     "Following_Christ/Untitled.md",
-    "Following_Christ/The Kingdom Beyond Borders.md",
-    "Following_Christ/Serving God Above All Authorities.md",
     "Following_Christ/MAGA VS Christianity.md",
-    "Following_Christ/Christ or Barrabas.md",
     "Following_Christ",
     "Fasting Plan.md",
     "Clippings/Ultimate Home Lab Backup Strategy (2025 Edition).md",
@@ -196,9 +199,6 @@
     "Clippings/7 Python Libraries Every Analytics Engineer Should Know.md",
     "Clippings/7 AI Tools to Build a Profitable One-Person Business That Runs While You Sleep.md",
     "Clippings/5 systemd tweaks that really boost my boot time.md",
-    "Clippings/12 Python libraries that you should learn for a job in banking and finance.md",
-    "Clippings/10 Useful Python One-Liners for Data Engineering.md",
-    "Clippings/10 Books That Will Teach the Middle Class More Than Any Financial Advisor.md",
     "Self Hosting/Untitled",
     "Self Hosting",
     "_utilities",
