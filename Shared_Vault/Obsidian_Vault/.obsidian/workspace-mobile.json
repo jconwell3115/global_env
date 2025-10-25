@@ -13,12 +13,12 @@
             "state": {
               "type": "markdown",
               "state": {
-                "file": "Self Hosting/Self-Hosting with Docker & Docker Compose Best Practices.md",
+                "file": "Following_Christ/The Kingdom Beyond Borders.md",
                 "mode": "source",
                 "source": false
               },
               "icon": "lucide-file",
-              "title": "Self-Hosting with Docker & Docker Compose Best Practices"
+              "title": "The Kingdom Beyond Borders"
             }
           },
           {
@@ -170,6 +170,7 @@
   },
   "active": "3e49f3a82de81bb2",
   "lastOpenFiles": [
+    "Self Hosting/Self-Hosting with Docker & Docker Compose Best Practices.md",
     "Self Hosting/Open VPN.md",
     "Self Hosting/Self Hosting.md",
     "Following_Christ/Christ Misrepresented.md",
@@ -198,7 +199,6 @@
     "Clippings/Building Machine Learning Application with Django.md",
     "Clippings/7 Python Libraries Every Analytics Engineer Should Know.md",
     "Clippings/7 AI Tools to Build a Profitable One-Person Business That Runs While You Sleep.md",
-    "Clippings/5 systemd tweaks that really boost my boot time.md",
     "Self Hosting/Untitled",
     "Self Hosting",
     "_utilities",
