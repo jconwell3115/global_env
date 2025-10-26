@@ -13,12 +13,12 @@
             "state": {
               "type": "markdown",
               "state": {
-                "file": "Self Hosting/Open VPN.md",
+                "file": "Following_Christ/Reverence, Not Ritual - Honoring Christ in Witness.md",
                 "mode": "source",
                 "source": false
               },
               "icon": "lucide-file",
-              "title": "Open VPN"
+              "title": "Reverence, Not Ritual - Honoring Christ in Witness"
             }
           }
         ]
@@ -78,8 +78,7 @@
       }
     ],
     "direction": "horizontal",
-    "width": 300,
-    "collapsed": true
+    "width": 300
   },
   "right": {
     "id": "7eb2226cf99d6b17",
@@ -169,6 +168,7 @@
   },
   "active": "77974d99e02a83a8",
   "lastOpenFiles": [
+    "Self Hosting/Open VPN.md",
     "Home Improvement/Crawl Space/Initial Price List.md",
     "Following_Christ/Serving God Above All Authorities.md",
     "Home Improvement/Crawl Space",

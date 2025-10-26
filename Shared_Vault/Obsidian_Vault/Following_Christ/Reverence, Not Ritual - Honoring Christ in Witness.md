@@ -1,6 +1,5 @@
 
 ***
-
 ### Reverence, Not Ritual: Honoring Christ in Witness
 
 The third commandment calls God’s people to treat His name—and all that He reveals about Himself—with deep reverence and respect: “You shall not take the name of the Lord your God in vain” (Exodus 20:7)[1][2][6]. God’s name is not merely a word but a representation of His character, truth, and presence. To misuse or cheapen His name, even by well-meaning actions, invites us to reflect on whether our witness is sincere or merely symbolic[1][3][4].
