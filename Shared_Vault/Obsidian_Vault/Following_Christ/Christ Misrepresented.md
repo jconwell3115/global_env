@@ -7,13 +7,13 @@
 
 Today there are many who claim the name of Christ not out of genuine love, but for personal gain. Paul speaks about this and even rejoiced that the name of Christ was proclaimed, trusting that God could use even impure motives for His purposes [9][10]. Peter, however, issued a grave warning: false teachers would arise within the church, exploiting faith for power and wealth, leading many astray with fabricated words and greedy intentions [11].
 
-Today, this warning echoes in the modern American church—particularly among political leaders in the MAGA movement who invoke Jesus’s name yet display behaviors starkly opposed to His teachings. Many of these leaders exalt dominance over humility, retaliation over forgiveness, and nationalism over compassion. They claim to represent Christ but distort His image for political gain, wielding faith not as a call to repentance but as a tool of influence and control [1][3][5][8].
+Today, this warning echoes in the modern American church—particularly among political leaders in the Pseudo-Christian MAGA movement who invoke Jesus’s name yet display behaviors starkly opposed to His teachings. Many of these leaders exalt dominance over humility, retaliation over forgiveness, and nationalism over compassion. They claim to represent Christ but distort His image for political gain, wielding faith not as a call to repentance but as a tool of influence and control [1][3][5][8].
 
 When political figures celebrate violence, demean the poor, or stoke hatred toward immigrants—all while calling themselves Christians—they mirror the hypocrisy Peter condemned. The Jesus of Scripture—the one who blessed peacemakers, ate with outcasts, and told His followers to love their enemies—would not cheer vengeance or division from a pulpit or rally stage [4][5]. Every time His name is used to excuse cruelty, it is not the gospel being preached, but a counterfeit.
 
 Paul saw that even flawed preaching could still magnify Christ if His message remained intact. But when the message itself becomes corrupted—when Christ’s humility is replaced by pride, and His mercy by scorn—the result is no longer Christianity; it is idolatry draped in Christian symbols.  Paul called for people who preached this this kind of corrupted gospel to be accursed. (Galations 1:8)
 
-Let every believer remember: Jesus does not need defending through rage or power. He is most clearly seen in love, truth, and sacrifice. To follow Him is not to conquer others, but to carry the cross before them.
+Let every believer remember: Jesus does not need defending through rage or power. He is most clearly seen in love, truth, and sacrifice. To follow Him is not to conquer others, but to embody His love and truth in how we walk each day.
 
 **Prayer:**  
 Lord Jesus, expose the hypocrisy hidden behind holy words. Protect your truth from those who would use it for gain or glory. Teach your people to speak and live the gospel in humility, holiness, and compassion—so that Your name, not our agendas, is lifted high. Amen.
