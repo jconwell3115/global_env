@@ -25,19 +25,21 @@
 	- 2nd PC 
 11. [ ] Homarr - Dashboard
 	- main PC 
-12. [ ] Actual - budget
+12. [ ] Obsidian container 
+13. [ ] Actual - budget
 	- 2 vCore
 	- 4 GB of RAM
 	- 2nd PC 
-13. [ ] Home Assistant - smart home
+14. [ ] Home Assistant - smart home
 	- 4 GB of RAM
 	- Main PC 
-14. [ ] Paperless ngx - document saver
+15. [ ] Paperless ngx - document saver
 	- 4 GB of RAM 
 	- 2nd PC
-15. [ ] Habitica - habit and improvement tracker
+16. [ ] Habitica - habit and improvement tracker
 	- 4 GB of RAM
-16. [ ] Meetily for Ai note transcription 
-17. [ ] n8n for automation
-	- 4 GB of RAM 
+17. [ ] Meetily for Ai note transcription 
+18. [ ] n8n for automation
+	- 4 GB of RAM
+19. [ ] Network map
 

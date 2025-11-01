@@ -2,42 +2,33 @@
 2. [ ] Cloud flare domain name
 3. [ ] Cloudflare tunnel - main Linux host 
 4. [ ] Docker mgmt -portainer/dockge
-	- 1 GB of RAM
-	- main PC
+	a. 1 GB of RAM 
 5. [ ] Ngnix proxy manager
-	- 1 Core
-	- 1 GB of RAM 
-	- main PC
+	a. 1 Core
+	b. 1 GB of RAM 
 6. [ ] Monitoring - beszel/uptime kuma
-	- 2 vCore
-	- 2 GB of RAM 
-	- main PC
+	a. 2 vCore
+	b. 2 GB of RAM 
 7. [ ] Dozzle - logs/alerts
-	- main PC
 8. [ ] Cloud flare ddns container
-	- main PC
 9. [ ] Open VPN - kyle/manna
-	- 1 GB of RAM
-	- main PC
+	a. 1 GB of RAM
 10. [ ] Nextcloud AIO - Replace O365
-	- 2 Core
-	- 6 GB of RAM 
-	- 2nd PC 
+	a. 2 Core
+	b. 6 GB of RAM 
 11. [ ] Homarr - Dashboard
-	- main PC 
-12. [ ] Actual - budget
-	- 2 vCore
-	- 4 GB of RAM
-	- 2nd PC 
+12. [ ] Actual or firefly III - budget
+	a. 2 vCore
+	b. 4 GB of RAM 
 13. [ ] Home Assistant - smart home
-	- 4 GB of RAM
-	- Main PC 
+	a. 4 GB of RAM
 14. [ ] Paperless ngx - document saver
-	- 4 GB of RAM 
-	- 2nd PC
+	a. 4 GB of RAM 
 15. [ ] Habitica - habit and improvement tracker
-	- 4 GB of RAM
-16. [ ] Meetily for Ai note transcription 
-17. [ ] n8n for automation
-	- 4 GB of RAM 
+	a. 4 GB of RAM 
+16. [ ] Wallabag - read later app
+	a. 1 GB of RAM 
+17. [ ] Meetily for Ai note transcription 
+18. [ ] n8n for automation
+	a. 4 GB of RAM 
 
