@@ -13,12 +13,12 @@
             "state": {
               "type": "markdown",
               "state": {
-                "file": "Following_Christ/Reverence, Not Ritual - Honoring Christ in Witness.md",
+                "file": "Following_Christ/Christ or Barrabas.md",
                 "mode": "source",
                 "source": false
               },
               "icon": "lucide-file",
-              "title": "Reverence, Not Ritual - Honoring Christ in Witness"
+              "title": "Christ or Barrabas"
             }
           }
         ]
@@ -78,7 +78,7 @@
       }
     ],
     "direction": "horizontal",
-    "width": 300
+    "width": 798.5
   },
   "right": {
     "id": "7eb2226cf99d6b17",
@@ -168,14 +168,35 @@
   },
   "active": "77974d99e02a83a8",
   "lastOpenFiles": [
-    "Self Hosting/Open VPN.md",
-    "Home Improvement/Crawl Space/Initial Price List.md",
-    "Following_Christ/Serving God Above All Authorities.md",
+    "Self Hosting(1).md",
+    "Following_Christ/Christ or Barrabas.md",
+    "Self Hosting/Self Hosting(1).md",
+    "Self Hosting/Self Hosting Copy(1).md",
+    "Self Hosting/Portainer Install with Docker Compose(1).md",
+    "Self Hosting/Ngnix Proxy Manager(1).md",
+    "Self Hosting/Nextcloud AIO Setup with Portainer on Fedora(1).md",
+    "Self Hosting/Next Cloud Information(1).md",
+    "Self Hosting/Interactions(1).md",
+    "Clippings/Shortcuts for the Long Run Automated Workflows for Aspiring Data Engineers(1).md",
+    "Clippings/Prompt Engineering Cheat Sheet for GPT-5 Learn These Patterns for Solid Code Generation(1).md",
+    "Clippings/Obsidian Beginner's Guide 2025  Organize Your Mind Like a Pro(1).md",
+    "Clippings/My essential and useful Obsidian plugins - Share & showcase(1).md",
+    "Clippings/Must have plugins(1).md",
+    "Clippings/IBM Free Data Science Online Course 2025 Learn Data Science From Experts(1).md",
+    "Clippings/I automated my life with n8n, and this open-source Zapier alternative is scarily powerful(1).md",
+    "Clippings/GitHub for Beginners How to get LLMs to do what you want(1).md",
+    "Clippings/GitHub Copilot Chat Cookbook(1).md",
+    "Clippings/Debugging Python in Docker A Tutorial for Beginners(1).md",
+    "Clippings/Dataview in Obsidian A Beginner's Guide(1).md",
+    "Clippings/Copilot ask, edit, and agent modes What they do and when to use them(1).md",
+    "Clippings/Copilot ask, edit, and agent modes What they do and when to use them 1(1).md",
+    "Clippings/Copilot ask, edit, and agent modes What they do and when to use them 1.md",
+    "Clippings/Beginner tutorial for Obsidian Dataview(1).md",
+    "Clippings/A guide to deciding what AI model to use in GitHub Copilot(1).md",
+    "Clippings/A Gentle Introduction to Docker for Python Developers(1).md",
     "Home Improvement/Crawl Space",
     "Home Improvement",
     "Health",
-    "Cheat Sheets",
-    "Following_Christ/Untitled.md",
-    "Following_Christ/Christ Misrepresented.md"
+    "Cheat Sheets"
   ]
 }
