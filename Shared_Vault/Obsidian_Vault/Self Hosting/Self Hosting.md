@@ -25,7 +25,7 @@
 	- 2nd PC 
 11. [ ] Homarr - Dashboard
 	- main PC 
-12. [ ] Actual - budget
+12. [ ] Actual or budgetboard - budget
 	- 2 vCore
 	- 4 GB of RAM
 	- 2nd PC 
