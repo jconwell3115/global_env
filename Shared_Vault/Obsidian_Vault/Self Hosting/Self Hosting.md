@@ -1,3 +1,8 @@
+---
+tags:
+  - Self-Hosting
+---
+
 1. [ ] Install Fedora Budgie on main computer
 2. [ ] Cloud flare domain name
 3. [ ] Cloudflare tunnel - main Linux host 

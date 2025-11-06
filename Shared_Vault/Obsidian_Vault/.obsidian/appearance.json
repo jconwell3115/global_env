@@ -1,3 +1,5 @@
 {
-  "accentColor": "#115917"
+  "accentColor": "#115917",
+  "cssTheme": "GitHub Theme",
+  "showViewHeader": true
 }

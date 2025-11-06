@@ -1,6 +1,3 @@
-Absolutely! Here's a complete set of **Obsidian templates** with **YAML metadata** and **tags** for various use cases: daily notes, meetings, books, Zettelkasten, projects, and research/study.
-
----
 
 ## 📝 **Daily Note Template**
 

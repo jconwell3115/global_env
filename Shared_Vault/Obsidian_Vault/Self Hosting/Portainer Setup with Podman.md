@@ -1,3 +1,9 @@
+---
+tags:
+  - Self-Hosting
+  - Podman
+---
+
 ### **Summary: Portainer Setup with Podman on Fedora Atomic**
 
 1. **Install Podman (if not already installed)**

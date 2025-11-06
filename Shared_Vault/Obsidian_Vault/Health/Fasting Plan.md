@@ -1,3 +1,8 @@
+---
+tags:
+  - Health
+---
+
 Here is a structured fasting program that combines regular intermittent 16:8 fasting with a monthly 3-day water fast followed by a 2-day gradual refeeding plan:
 
 ***
@@ -22,8 +27,9 @@ Here is a structured fasting program that combines regular intermittent 16:8 fas
 - Monitor for any adverse symptoms; discontinue if unwell and seek advice.
 
 #### Day 4-5: Refeeding Phase
-- **Day 4:** Break fast gently with small portions of broth, diluted vegetable juices, and light cooked vegetables like zucchini or spinach.
-- **Day 5:** Slowly add soft foods such as steamed vegetables, eggs, avocado, and lean protein like chicken or fish.
+- **Day 4:** Break fast gently with small portions
+	- bone broth, fermented foods, broccoli sprouts & greens
+- **Day 5:** Slowly add soft foods such as steamed vegetables, eggs, avocado, and lean protein like salmon.
 - Avoid heavy carbs, processed foods, and sugars.
 - Continue small, spaced meals and hydrate well.
 - Gradually return to your 16:8 routine following completion of Day 5.

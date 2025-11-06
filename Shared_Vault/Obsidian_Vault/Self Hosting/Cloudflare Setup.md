@@ -1,3 +1,9 @@
+---
+tags:
+  - Self-Hosting
+  - Cloudflare
+---
+
 GitHub Copilot Chat Assistant.
 
 Below is a concise, Fedora-specific, step‑by‑step guide to:
