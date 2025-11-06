@@ -13,12 +13,12 @@
             "state": {
               "type": "markdown",
               "state": {
-                "file": "Cheat Sheets/Portainer Cheat Sheet.md",
+                "file": "Following_Christ/Love That Leaves the Ledger Blank.md",
                 "mode": "source",
                 "source": false
               },
               "icon": "lucide-file",
-              "title": "Portainer Cheat Sheet"
+              "title": "Love That Leaves the Ledger Blank"
             }
           }
         ]
@@ -169,8 +169,8 @@
   },
   "active": "4384002ed6a9132f",
   "lastOpenFiles": [
-    "Prompt Driven Development.md",
     "Cheat Sheets/Portainer Cheat Sheet.md",
+    "Prompt Driven Development.md",
     "Portainer Cheat Sheet.md",
     "Cheat Sheets/Data Analysis Cheat Sheet.md",
     "Cheat Sheets/Obsidian Cheat Sheet.md",
