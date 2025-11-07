@@ -1,3 +1,9 @@
+---
+tags:
+  - Devotional
+published:
+created:
+---
 
 ***
 ### Reverence, Not Ritual: Honoring Christ in Witness

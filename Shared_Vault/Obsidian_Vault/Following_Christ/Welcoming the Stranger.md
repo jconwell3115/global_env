@@ -1,3 +1,10 @@
+---
+tags:
+  - Devotional
+published:
+created:
+---
+
 Welcoming the Stranger—A Call to Christlike Compassion
 
 Scripture Reading: Matthew 25:31–46

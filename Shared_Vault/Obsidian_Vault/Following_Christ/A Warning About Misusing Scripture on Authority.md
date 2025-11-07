@@ -1,3 +1,10 @@
+---
+tags:
+  - Devotional
+published: 2025-10-31
+created:
+---
+
 Devotional: A Warning About Misusing Scripture on Authority
 
 Scripture Reading: 

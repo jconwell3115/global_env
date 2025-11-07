@@ -4,21 +4,17 @@
     "type": "split",
     "children": [
       {
-        "id": "cc8f86a21e413a6d",
+        "id": "791aec00c84f6ca8",
         "type": "tabs",
         "children": [
           {
-            "id": "4384002ed6a9132f",
+            "id": "9751da583d636bfd",
             "type": "leaf",
             "state": {
-              "type": "markdown",
-              "state": {
-                "file": "Following_Christ/Love That Leaves the Ledger Blank.md",
-                "mode": "source",
-                "source": false
-              },
+              "type": "empty",
+              "state": {},
               "icon": "lucide-file",
-              "title": "Love That Leaves the Ledger Blank"
+              "title": "New tab"
             }
           }
         ]
@@ -53,7 +49,7 @@
             "state": {
               "type": "search",
               "state": {
-                "query": "",
+                "query": "tag:#Title",
                 "matchingCase": false,
                 "explainSearch": false,
                 "collapseAll": false,
@@ -78,7 +74,7 @@
       }
     ],
     "direction": "horizontal",
-    "width": 798.5
+    "width": 355.5
   },
   "right": {
     "id": "7eb2226cf99d6b17",
@@ -167,8 +163,25 @@
       "bases:Create new base": false
     }
   },
-  "active": "4384002ed6a9132f",
+  "active": "23a1721c08eb4337",
   "lastOpenFiles": [
+    "Following_Christ/Title.md",
+    "Following_Christ/test.md",
+    "_templates/Devotional Template.md",
+    "Following_Christ/A Warning About Misusing Scripture on Authority.md",
+    "_templates/test_template.md",
+    "Following_Christ/Untitled 4.md",
+    "Following_Christ/Untitled 3.md",
+    "Following_Christ/Untitled 2.md",
+    "Following_Christ/Untitled 1.md",
+    "Following_Christ/Welcoming the Stranger.md",
+    "Following_Christ/The Kingdom Beyond Borders.md",
+    "Following_Christ/Serving God Above All Authorities.md",
+    "Following_Christ/Reverence, Not Ritual - Honoring Christ in Witness.md",
+    "Following_Christ/MAGA VS Christianity.md",
+    "Following_Christ/Love That Leaves the Ledger Blank.md",
+    "Following_Christ/Christ or Barrabas.md",
+    "Following_Christ/Christ Misrepresented.md",
     "Cheat Sheets/Portainer Cheat Sheet.md",
     "Prompt Driven Development.md",
     "Portainer Cheat Sheet.md",
@@ -177,24 +190,6 @@
     "Data Analysis Cheat Sheet.md",
     "Cheat Sheets/Harness CI CD.md",
     "Harness CI CD.md",
-    "Cheat Sheets/Docker Cheat Sheet.md",
-    "Docker Cheat Sheet.md",
-    "Cheat Sheets/Draw.io Cheat Sheet.md",
-    "Cheat Sheets/Ansible Cheat Sheet.md",
-    "Cheat Sheets/Ansible Cheat Sheet 1.md",
-    "_templates/Template Ideas.md",
-    "Template Ideas.md",
-    "_templates/Coding Template(1).md",
-    "Self Hosting.md",
-    "Cheat Sheets/Obsidian Cheat Sheet.md",
-    "Cheat Sheets/Draw.io Cheat Sheet.md",
-    "Self Hosting/🏠 Self-Hosting with Docker & Docker Compose Best Practices.md",
-    "Self Hosting/Self-Hosting with Docker & Docker Compose Best Practices.md",
-    "Self Hosting/Self Hosting.md",
-    "Self Hosting/Portainer Setup with Podman.md",
-    "Self Hosting/Nextcloud AIO Setup with Portainer on Fedora.md",
-    "Self Hosting/Next Cloud Information.md",
-    "Self Hosting/Interactions.md",
     "Home Improvement/Crawl Space",
     "Home Improvement",
     "Health",

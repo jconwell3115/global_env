@@ -1,3 +1,10 @@
+---
+tags:
+  - Devotional
+published:
+created:
+---
+
 **Devotional: Love That Leaves the Ledger Blank**
 
 **Scripture Reading:**  
