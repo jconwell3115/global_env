@@ -1,5 +1,5 @@
 ---
-title: 5 tips for writing better custom instructions for Copilot
+title: 5 tips for writing betterr custom instructions for Copilot
 source: https://github.blog/ai-and-ml/github-copilot/5-tips-for-writing-better-custom-instructions-for-copilot/
 author:
   - "[[Christopher Harrison]]"
