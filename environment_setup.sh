@@ -106,7 +106,7 @@ generate_uv_diagnostics
 # ------------- Setup SSH -------------
 section "Setting up SSH keys..."
 if ask_renew_ssh; then
-  ssh-keygen -t $KEY_TYPE -b $KEY_SIZE -N "" -f "$KEY_PATH" -C "$EMAIL"
+  ssh-keygen -t "$KEY_TYPE" -b "$KEY_SIZE" -N "" -f "$KEY_PATH" -C "$EMAIL"
 
   # Set permissions for the private key
   chmod 600 "$KEY_PATH"
