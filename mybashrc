@@ -27,7 +27,7 @@ export UV_CHANNEL="https://astral.sh/uv/install.sh"
 
 
 # Source shared shell functions
-source "$HOME/my_work_tools/global_env/shell_functions.sh"
+[ -f "$HOME/my_work_tools/global_env/shell_functions.sh" ] && source "$HOME/my_work_tools/global_env/shell_functions.sh"
 
 echo ""
 echo "*** Read ~/.bashrc ***"
@@ -60,8 +60,6 @@ alias l='ls -CF'  # List with indicators
 
 # Python shortcuts
 alias py='python3'
-alias pip='python3 -m pip'
-alias venv='python3 -m venv'
 alias uvdo='source .venv/bin/activate'  # For local virtual envs
 alias envsetup='~/my_work_tools/global_env/environment_setup.sh'  # Setup environment
 alias uvsetup='~/my_work_tools/global_env/new_uv_setup.sh'  # Migrate to UV
