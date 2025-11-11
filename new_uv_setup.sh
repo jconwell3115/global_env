@@ -27,6 +27,10 @@ source "$SCRIPT_DIR/shell_functions.sh"
 : "${UV_GLOBAL_TOOLS:=black ruff mypy bandit pydocstyle ansible-lint yamllint djlint pre-commit}"     # space-separated list
 : "${UV_CHANNEL:=https://astral.sh/uv/install.sh}"  # install script URL
 
+# Note: --no-build-isolation is used throughout to avoid build issues with packages
+# that don't properly declare their build dependencies. This allows the build to
+# access packages already installed in the environment.
+
 # ------------- Preflight -------------
 info "Starting migration to UV in: $(pwd)"
 

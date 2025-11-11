@@ -60,7 +60,7 @@ repos:
 #       - id: yamllint
 #         name: Yamllint
 #         entry: yamllint
-#         args: [-c=/home/jconw483/my_work_tools/global_env/.yamllint]
+#         args: [-c=.yamllint]
 #         description: Lint YAML files for best practices
 #         stages: [manual, pre-commit]
 #         log_file: logs/yamllint.log

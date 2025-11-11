@@ -84,15 +84,19 @@ setup_uv_if_needed() {
 }
 
 customize_pyproject_toml() {
-  if [[ "$(basename "$(pwd)")" != "global_env" && -n "${PROJECT_NAME:-}" && -n "${PROJECT_VERSION:-}" && -n "${PROJECT_DESCRIPTION:-}" ]]; then
+  local pyproject_file="$1"
+  local project_name="$2"
+  local project_version="$3"
+  local project_description="$4"
+  if [[ "$(basename "$(pwd)")" != "global_env" && -n "${project_name:-}" && -n "${project_version:-}" && -n "${project_description:-}" ]]; then
     info "Customizing pyproject.toml for project..."
-    sed -i "s/name = \"my-project\"/name = \"$PROJECT_NAME\"/" pyproject.toml
-    sed -i "s/version = \"0.1.0\"/version = \"$PROJECT_VERSION\"/" pyproject.toml
-    sed -i "s/description = \"Example project using UV and pre-commit\"/description = \"$PROJECT_DESCRIPTION\"/" pyproject.toml
+    sed -i "s/name = \"my-project\"/name = \"$project_name\"/" "$pyproject_file"
+    sed -i "s/version = \"0.1.0\"/version = \"$project_version\"/" "$pyproject_file"
+    sed -i "s/description = \"Example project using UV and pre-commit\"/description = \"$project_description\"/" "$pyproject_file"
 
     # Add UV sources configuration if not already present
-    if ! grep -q "\[tool.uv\]" pyproject.toml; then
-      cat >> pyproject.toml << 'EOF'
+    if ! grep -q "\[tool.uv\]" "$pyproject_file"; then
+      cat >> "$pyproject_file" << 'EOF'
 
 [tool.uv]
 # Primary index
@@ -262,7 +266,7 @@ generate_uv_diagnostics() {
     if [[ -f pyproject.toml ]]; then
       echo "pyproject.toml: Present"
       echo "Project Name: $(grep -E '^name\s*=' pyproject.toml | head -1 | sed 's/.*= *//' | tr -d '"')"
-      echo "Python Version Required: $(grep -E '^python\s*=' pyproject.toml | head -1 | sed 's/.*= *//' | tr -d '"')"
+      echo "Python Version Required: $(grep -E '^requires-python\s*=' pyproject.toml | head -1 | sed 's/.*= *//' | tr -d '"')"
     else
       echo "pyproject.toml: Not found"
     fi
@@ -388,7 +392,13 @@ findreplace() {
     echo "Usage: findreplace <find> <replace> <file_pattern>"
     return 1
   fi
-  find . -type f -name "$3" -exec sed -i "s/$1/$2/g" {} +
+  # Escape delimiter and special regex chars in find string
+  local find_escaped
+  find_escaped=$(printf '%s' "$1" | sed 's/[.[\*^$\/|]/\\&/g')
+  # Escape & and \ in replacement string
+  local replace_escaped
+  replace_escaped=$(printf '%s' "$2" | sed 's/[&\\/]/\\&/g')
+  find . -type f -name "$3" -exec sed -i "s|$find_escaped|$replace_escaped|g" {} +
 }
 
 is_git_repo() {

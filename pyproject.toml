@@ -65,7 +65,7 @@ verbosity = 1                           # 0 = quiet, 1 = normal, 2 = verbose
 [tool.yamllint]
 # YAML linting configuration
 # You can reference a config file or inline rules
-config_file = ".yamllint.yml"           # External config file
+# config_file = ".yamllint.yml"           # External config file
 # OR inline rules:
 rules = {line-length = { max = 120 }, indentation = { spaces = 2 }}
 
