@@ -1,17 +1,23 @@
 #!/bin/bash
 
-# Get project name
-read -rp "Enter the project name: " PROJECT_NAME
-read -rp "Enter the full repo ssh info: " REPO
-read -rp "Enter the repo name: " REPO_NAME
+# Environment Setup Script
+# This script sets up a complete development environment including:
+# - Work tools directories and repositories
+# - SSH keys and GitHub access
+# - UV package manager and Python environments
+# - Pre-commit hooks and linting tools
+# Usage:
+#   ./environment_setup.sh
+# Function calls are made to shared utilities defined in shell_functions.sh
 
-# Variable Configuration
-WORK_ENV_DIR="$HOME/Work_Environments/"
+# ------------- Config -------------
+WORK_ENV_DIR="$HOME/Work_Environments"
 WORK_TOOLS_DIR="$HOME/my_work_tools"
 BIN_DIR=$WORK_TOOLS_DIR/bin/
-GLOBAL_PIPENV_DIR="$WORK_TOOLS_DIR/environment_setup"
-PROJECT_DIR="$WORK_ENV_DIR/$PROJECT_NAME"
+GLOBAL_ENV_DIR="$WORK_TOOLS_DIR/global_env"
 CONDA_DIR="/home/jconw483/miniconda3/"
+PIPCONF_DIR="$HOME/.config/pip"
+SSH_DIR="$HOME/.ssh"
 USERNAME="Jonathan Conwell"
 
 # Set variables for key generation
@@ -19,277 +25,258 @@ KEY_NAME="id_ed25519"
 KEY_PATH="$HOME/.ssh/$KEY_NAME"
 KEY_TYPE="ed25519"
 KEY_SIZE="2048"
-EMAIL="jconwell3115@gmail.com"
+EMAIL="jonathan.conwell@marriott-sp.com"
 
-# Define a function to handle errors
-handle_error() {
-  echo ""
-  echo "*******************************************************************************"
-  echo "Error: Command failed with exit code $?"
-  echo "*******************************************************************************"
-  echo ""
-}
+set -euo pipefail
 
-# Set the trap to call handle_error on ERR signal
-trap handle_error ERR
+# Source shared utilities
+SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+source "$SCRIPT_DIR/shell_functions.sh"
 
-# Commented out for now
-#echo ""
-#echo "*******************************************************************************"
-##echo "Removing old virtualenvs if they exist"
-#echo "*******************************************************************************"
-#echo ""
-#rm -rf /home/jconw483/.local/share/virtualenvs/
-
-#Get and Install Miniconda3-latest-Linux-x86_64
-if [ ! -d "$CONDA_DIR" ]; then
-  echo ""
-  echo "*******************************************************************************"
-  echo "Installing Miniconda3 to handle python versions ..."
-  echo "*******************************************************************************"
-  echo ""
-  wget https://repo.anaconda.com/miniconda/Miniconda3-latest-Linux-x86_64.sh
-  echo ""
-  bash ~/Miniconda3-latest-Linux-x86_64.sh
-  echo ""
-
-  #Set conda init
-  source /home/jconw483/.bashrc
-  # Just in case conda doesn't initialize
-  conda activate
-
-  #Set python 3.12 as default
-  conda install python=3.12
-
-  # Install Pipenv
-  echo ""
-  echo "*******************************************************************************"
-  echo "Installing pipenv to setup virtual environments and handle Python packages ..."
-  echo "*******************************************************************************"
-  echo ""
-  pip3 install --user pipenv
-
-
-  #Turn off auto activate base
-  conda config --set auto_activate_base false
-  source /home/jconw483/.bashrc
-else
-  echo ""
-  echo "*******************************************************************************"
-  echo "Microconda3 already installed, nothing to do!"
-  echo "*******************************************************************************"
-  echo ""
+# Only set trap if script is run directly (not sourced)
+if [[ "${BASH_SOURCE[0]}" == "${0}" ]]; then
+  # Set script name for cleanup function
+  export SCRIPT_NAME="environment_setup.sh"
+  # Set up cleanup trap
+  trap cleanup EXIT
 fi
 
-# Create the ~/my_work_tools/ directory
-if [ ! -d "$WORK_TOOLS_DIR" ]; then
-  echo ""
-  echo "*******************************************************************************"
-  echo "Creating work directory at $WORK_TOOLS_DIR ..."
-  echo "*******************************************************************************"
-  echo ""
-	mkdir "$WORK_TOOLS_DIR"
-else
-  echo ""
-  echo "*******************************************************************************"
-	echo "Work directory already exists at $WORK_TOOLS_DIR ..."
-  echo "*******************************************************************************"
-  echo ""
+# ---- Project-specific configurations ----
+read -rp "Enter the project name: " PROJECT_NAME
+read -rp "Enter the repo name: (Leave blank if just setting up the project directory) " REPO_NAME
+read -rp "Enter the repo owner: (Just press enter for Network-DevOps) " REPO_OWNER
+
+# Validate inputs
+if [[ -z "$PROJECT_NAME" ]]; then
+  err "Project name is required"
+  exit 1
 fi
-# Generate the SSH keypair, overwriting if it exists
-ssh-keygen -t $KEY_TYPE -b $KEY_SIZE -N "" -f "$KEY_PATH" -C "$EMAIL"
 
-# Set permissions for the private key
-chmod 600 "$KEY_PATH"
+# Warn if no repo name provided
+if [[ -z "$REPO_NAME" ]]; then
+  warn "No repo name provided - setting up project directory only (no repository will be cloned)"
+fi
 
-# Display success message and key locations
-echo ""
-echo "*******************************************************************************"
-echo "SSH keypair generated successfully!"
-echo "*******************************************************************************"
-echo ""
-cat "$KEY_PATH.pub"
-echo ""
-echo "*******************************************************************************"
-echo ""
+# Validate system requirements
+validate_requirements
 
-# Add key to GH
-read -rp "Press Enter to continue after uploading the key to GitHub ..."
+# Define project directory
+PROJECT_DIR="$WORK_ENV_DIR/$PROJECT_NAME"
 
+# Update pyproject.toml template
+read -rp "Enter the project version (default 0.1.0): " PROJECT_VERSION
+PROJECT_VERSION=${PROJECT_VERSION:-0.1.0}
+
+# Set default description based on whether repo name is provided
+if [[ -n "$REPO_NAME" ]]; then
+  default_desc="Project for $REPO_NAME"
+else
+  default_desc="Project $PROJECT_NAME"
+fi
+
+read -rp "Enter the project description (default '$default_desc'): " PROJECT_DESCRIPTION
+PROJECT_DESCRIPTION=${PROJECT_DESCRIPTION:-"$default_desc"}
+PYPROJECT_FILE="$GLOBAL_ENV_DIR/pyproject.toml"
+
+# ------------- Preflight -------------
+
+cleanup_old_virtualenvs "$PROJECT_NAME"
+
+cd ~/ || exit
+
+# ------------- Setup Work Tools -------------
+create_dir_if_not_exists "$WORK_TOOLS_DIR" "work directory"
+
+# Setup UV for my_work_tools (shared environment)
 cd "$WORK_TOOLS_DIR" || exit
-echo ""
-echo "*******************************************************************************"
-echo "Changed to the $(pwd) directory ..."
-echo "*******************************************************************************"
-echo ""
 
-# Clone my_work_tools repo
-echo ""
-echo "*******************************************************************************"
-echo "Cloning $WORK_TOOLS_DIR repos ..."
-echo "*******************************************************************************"
-echo ""
-git clone git@github.com:jconwell3115/environment_setup.git
+info "Changed to work tools directory: $(pwd)"
+
+info "Copying configuration files to my_work_tools..."
+copy_config_files "$WORK_TOOLS_DIR"
+
+info "Updating pyproject.toml for project..."
+customize_pyproject_toml "$PYPROJECT_FILE" "$PROJECT_NAME" "$PROJECT_VERSION" "$PROJECT_DESCRIPTION"
+
+info "Setting up shared UV environment in my_work_tools..."
+setup_uv_if_needed "my_work_tools"
+generate_uv_diagnostics
+
+
+# ------------- Setup SSH -------------
+section "Setting up SSH keys..."
+if ask_renew_ssh; then
+  ssh-keygen -t $KEY_TYPE -b $KEY_SIZE -N "" -f "$KEY_PATH" -C "$EMAIL"
+
+  # Set permissions for the private key
+  chmod 600 "$KEY_PATH"
+
+  # Display success message and key locations
+  info "SSH keypair generated successfully!"
+  cat "$KEY_PATH.pub"
+
+  # Add key to GH
+  read -rp "Press Enter to continue after uploading the key to GitHub ..."
+fi
+
+# ------------- Clone Work Tools Repos -------------
+section "Cloning work tools repositories..."
+
+clone_or_pull "git@git.marriott.com:jconw483/global_env.git"
+
+# Setup global_env directory with pre-commit
+cd "$GLOBAL_ENV_DIR" || exit
+if is_git_repo; then
+  info "Installing pre-commit for global_env directory..."
+  pre-commit install
+else
+  warn "global_env directory is not a git repository, skipping pre-commit install"
+fi
+create_log_files
+cd "$WORK_TOOLS_DIR" || exit
 
 # Wait for 30 seconds
-echo ""
-echo "*******************************************************************************"
-read -t 30 -rp "Pausing for 30 seconds or until you press enter ..."
-echo "*******************************************************************************"
-echo ""
+info "Pausing for 30 seconds or until you press enter ..."
+read -t 30 -rp "" || true
 
-# This will be created later, it contains useful scripts for the development environment
-#git clone git@github.com:jconwell3115/bin.git
+clone_or_pull "git@git.marriott.com:jconw483/bin.git"
 
-# Setup Pipenv for my_work_tools
-/home/jconw483/my_work_tools/environment_setup/manage_pipenv.sh "$WORK_TOOLS_DIR"
-
-echo ""
-echo "*******************************************************************************"
-echo "Setting up pre-commit in $(pwd)"
-echo "*******************************************************************************"
-echo ""
-cd /home/jconw483/my_work_tools/environment_setup/ || exit
-pipenv run pre-commit install
-
-echo ""
-echo "*********************************************"
-echo "Creating logs directory and base log files"
-echo "*********************************************"
-echo ""
-mkdir logs
-touch logs/ansible-lint.log
-touch logs/yamllint.log
-touch logs/ruff.log
-touch logs/trufflehog.log
-touch logs/djlint.log
-
-# cd /home/jconw483/my_work_tools/bin/ || exit
-# echo ""
-#echo "*******************************************************************************"
-#echo "Setting up pre-commit in $(pwd)"
-#echo "*******************************************************************************"
-#echo ""
-#scp -p "$environment_setup_DIR/.pre-commit-config.yaml" "$BIN_DIR"
-#pipenv run pre-commit install
-
-#echo ""
-#echo "*********************************************"
-#echo "Creating logs directory and base log files"
-#echo "*********************************************"
-#echo ""
-#mkdir logs
-#touch logs/ansible-lint.log
-#touch logs/yamllint.log
-#touch logs/ruff.log
-#touch logs/trufflehog.log
-#touch logs/djlint.log
-
-# Set .bashrc parameters
-echo ""
-echo "*******************************************************************************"
-echo "Setting .bashrc parameters ..."
-echo "*******************************************************************************"
-echo ""
-cat  "$GLOBAL_PIPENV_DIR/mybashrc" > ~/.bashrc
-source /home/jconw483/.bashrc
-
-# Create the ~/Work_Environments/ directory
-if [ ! -d "$WORK_ENV_DIR" ]; then
-  echo ""
-  echo "*******************************************************************************"
-  echo "Creating work directory at $WORK_ENV_DIR ..."
-  echo "*******************************************************************************"
-  echo ""
-	mkdir "$WORK_ENV_DIR"
+# Setup bin directory with config files and pre-commit
+cd "$BIN_DIR" || exit
+info "Setting up bin directory with configuration files..."
+copy_config_files "$BIN_DIR"
+if is_git_repo; then
+  # Ensure .gitignore exists
+  if [[ ! -f .gitignore ]]; then
+    cp "$GLOBAL_ENV_DIR/.gitignore" ./
+    info "Copied .gitignore to bin directory"
+  fi
+  info "Installing pre-commit for bin directory..."
+  pre-commit install
 else
-  echo ""
-  echo "*******************************************************************************"
-	echo "Work directory already exists at $WORK_ENV_DIR ..."
-  echo "*******************************************************************************"
-  echo ""
+  warn "bin directory is not a git repository, skipping pre-commit install"
+fi
+create_log_files
+cd "$WORK_TOOLS_DIR" || exit
+
+# ------------- Configure Environment -------------
+section "Configuring work tools environment..."
+
+info "Setting .bashrc parameters..."
+cat "$GLOBAL_ENV_DIR/mybashrc" > "$HOME/.bashrc"
+source "$HOME/.bashrc"
+
+info "Copying the .pem for AAP CLI..."
+create_dir_if_not_exists "$SSH_DIR" "SSH directory"
+cp -pr "$GLOBAL_ENV_DIR/ansible-prod-user.pem" "$SSH_DIR"
+ls -al "$SSH_DIR"
+sleep 5
+
+# ------------- Setup Project Environment -------------
+section "Setting up project environment..."
+
+# Skip project setup if this is the my_work_tools directory itself
+if [[ "$PROJECT_NAME" == "my_work_tools" ]]; then
+  info "Skipping project setup for my_work_tools (already configured above)"
+else
+  # Create the Work_Environments directory
+  create_dir_if_not_exists "$WORK_ENV_DIR" "work environments directory"
+
+  # Move to Work_Environments directory
+  cd "$WORK_ENV_DIR" || exit
+  info "Changed to work environments directory: $(pwd)"
+
+  # Create the Project directory
+  create_dir_if_not_exists "$PROJECT_DIR" "project directory"
+
+  cd "$PROJECT_DIR" || exit
+  info "Changed to project directory: $(pwd)"
+
+  # Clone project repo (only if REPO_NAME is provided)
+  if [[ -n "$REPO_NAME" ]]; then
+    info "Cloning project repository..."
+    clone_or_pull "git@git.marriott.com:${REPO_OWNER:-Network-DevOps}/$REPO_NAME.git"
+
+    cd "$PROJECT_DIR/$REPO_NAME" || exit
+    info "Changed to repository directory: $(pwd)"
+    
+    if is_git_repo; then
+      # Ensure .gitignore exists
+      if [[ ! -f .gitignore ]]; then
+        cp "$GLOBAL_ENV_DIR/.gitignore" ./
+        info "Copied .gitignore to project repository"
+      fi
+      info "Installing pre-commit and creating log files in project"
+      pre-commit install
+    else
+      warn "Project repository is not a git repository, skipping pre-commit install"
+    fi
+    create_log_files
+  else
+    warn "No repo name provided, skipping repository clone, pre-commit install, and log file creation"
+  fi
+
+  cd "$PROJECT_DIR" || exit
+  info "Changed to project directory: $(pwd)"
+
+  info "Copying configuration files to project..."
+  copy_config_files "$PROJECT_DIR"
+
+  info "Updating pyproject.toml for project..."
+  customize_pyproject_toml "$PYPROJECT_FILE" "$PROJECT_NAME" "$PROJECT_VERSION" "$PROJECT_DESCRIPTION"
+
+  # Setup UV for the project
+  info "Setting up UV for the project..."
+  setup_uv_if_needed "$PROJECT_NAME"
+  generate_uv_diagnostics
 fi
 
-# Move to Work_Environments directory
-cd "$WORK_ENV_DIR" || exit
-echo ""
-echo "*******************************************************************************"
-echo "Changed to the $(pwd) directory ..."
-echo "*******************************************************************************"
-echo ""
 
-# Create the Project directory
-if [ ! -d "$PROJECT_DIR" ]; then
-  echo ""
-  echo "*******************************************************************************"
-  echo "Creating project directory at $PROJECT_DIR ..."
-  echo "*******************************************************************************"
-  echo ""
-	mkdir "$PROJECT_DIR"
+# ------------- Configure Git -------------
+section "Setting Global Git Parameters"
+# Only set git config if not already configured
+if ! git config --global --get user.name >/dev/null 2>&1; then
+  git config --global user.name "$USERNAME"
+  info "Set global git user.name to $USERNAME"
 else
-  echo ""
-  echo "*******************************************************************************"
-	echo "Project directory already exists at $PROJECT_DIR ..."
-  echo "*******************************************************************************"
-  echo ""
+  info "Global git user.name already set, skipping..."
 fi
 
-cd "$PROJECT_DIR" || exit
-echo ""
-echo "*******************************************************************************"
-echo "Changed to the $(pwd) directory ..."
-echo "*******************************************************************************"
-echo ""
+if ! git config --global --get user.email >/dev/null 2>&1; then
+  git config --global user.email "$EMAIL"
+  info "Set global git user.email to $EMAIL"
+else
+  info "Global git user.email already set, skipping..."
+fi
 
-# Clone my_work_tools repo
-echo ""
-echo "*******************************************************************************"
-echo "Attempting to Clone $REPO_NAME repos"
-echo "*******************************************************************************"
-echo ""
-git clone "$REPO"
+if ! git config --global --get credential.helper >/dev/null 2>&1; then
+  git config --global credential.helper "cache --timeout=86400"
+  info "Set global git credential helper"
+else
+  info "Global git credential helper already set, skipping..."
+fi
 
-/home/jconw483/my_work_tools/environment_setup/manage_pipenv.sh "$PROJECT_DIR"
+if ! git config --global --get pull.rebase >/dev/null 2>&1; then
+  git config --global pull.rebase false
+  info "Set global git pull.rebase to false"
+else
+  info "Global git pull.rebase already set, skipping..."
+fi
 
+if ! git config --global --get alias.bc >/dev/null 2>&1; then
+  git config --global alias.bc "branch --show-current"
+  info "Set global git alias 'bc'"
+else
+  info "Global git alias 'bc' already set, skipping..."
+fi
 
-cd "$PROJECT_DIR/$REPO_NAME" || exit
-echo ""
-echo "*******************************************************************************"
-echo "Setting up pre-commit in $(pwd)"
-echo "*******************************************************************************"
-echo ""
-# Remove and existing .pre-commit-config.yml file
-rm -f .pre-commit-config.yaml
-rm -f .pre-commit-config.yml
-scp -p "$GLOBAL_PIPENV_DIR/.pre-commit-config.yaml" "$PROJECT_DIR/$REPO_NAME"
-pipenv run pre-commit install
+# Validate that setup was successful
+validate_setup
 
-echo ""
-echo "*******************************************************************************"
-echo "Creating logs directory and base log files"
-echo "*******************************************************************************"
-echo ""
-mkdir logs
-touch logs/ansible-lint.log
-touch logs/yamllint.log
-touch logs/ruff.log
-touch logs/trufflehog.log
-touch logs/djlint.log
+section "Environment setup complete please check for errors"
 
-
-echo ""
-echo "*******************************************************************************"
-echo "Setting Global Git Parameters"
-echo "*******************************************************************************"
-echo ""
-git config --global credential.helper "cache --timeout=86400" --replace-all
-git config --global pull.rebase false --replace-all
-git config --global user.name "$USERNAME" --replace-all
-git config --global user.email "$EMAIL" --replace-all
-git config --global alias.bc "branch --show-current" --replace-all
-
-echo ""
-echo "*********************************************"
-echo "Environment setup complete please check for errors"
-echo "*********************************************"
-echo ""
+# Unset the trap if it was set (only when run directly)
+if [[ "${BASH_SOURCE[0]}" == "${0}" ]]; then
+  trap - EXIT
+  unset SCRIPT_NAME
+fi
