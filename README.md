@@ -49,6 +49,24 @@ The top of `environment_setup.sh` contains defaults that you can change before r
 
 If you prefer not to edit the script, run it interactively and provide values at the prompts.
 
+### mybashrc
+- Location: The script copies the `mybashrc` file from the repo (expected at `$GLOBAL_ENV_DIR/mybashrc`) to your home as `~/.bashrc`.
+- Behavior: `environment_setup.sh` performs `cat "$GLOBAL_ENV_DIR/mybashrc" > "$HOME/.bashrc"` and then `source "$HOME/.bashrc"`, so the profile is overwritten and immediately applied for the running shell session.
+- Contents: `mybashrc` is intended to provide PATH updates, environment variables, and helper aliases/functions used by these setup scripts and the UV workflow. Review the file to ensure there are no conflicts with your existing shell customizations.
+- Recommendations:
+  - Back up your existing bash profile before running the script:
+    ```bash
+    cp -p ~/.bashrc ~/.bashrc.pre_global_env_bak.$(date +%Y%m%d_%H%M%S)
+    ```
+  - Inspect and edit `mybashrc` in this repo to add or remove environment tweaks before running `environment_setup.sh`.
+  - If you want the changes to apply only to future sessions, avoid sourcing the file immediately and instead open a new shell after the copy, or manually merge entries.
+- Reverting: Restore your previous profile with:
+  ```bash
+  mv ~/.bashrc.pre_global_env_bak.<TIMESTAMP> ~/.bashrc
+  source ~/.bashrc
+  ```
+  or edit ~/.bashrc to remove or adjust the lines you don't want.
+
 ### Using the scripts
 
 #### 1) Full interactive setup
