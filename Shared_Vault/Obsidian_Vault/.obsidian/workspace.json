@@ -11,10 +11,14 @@
             "id": "9751da583d636bfd",
             "type": "leaf",
             "state": {
-              "type": "empty",
-              "state": {},
+              "type": "markdown",
+              "state": {
+                "file": "Self Hosting/Next Cloud Information.md",
+                "mode": "source",
+                "source": false
+              },
               "icon": "lucide-file",
-              "title": "New tab"
+              "title": "Next Cloud Information"
             }
           }
         ]
@@ -163,8 +167,11 @@
       "bases:Create new base": false
     }
   },
-  "active": "23a1721c08eb4337",
+  "active": "9751da583d636bfd",
   "lastOpenFiles": [
+    "Following_Christ/Living as One Who Follows Christ.md",
+    "Clippings/From Dataset to DataFrame to Deployed Your First Project with Pandas & Scikit-learn.md",
+    "Self Hosting/Nextcloud AIO Podman Compose Setup Guide.md",
     "Following_Christ/Title.md",
     "Following_Christ/test.md",
     "_templates/Devotional Template.md",
@@ -188,8 +195,6 @@
     "Cheat Sheets/Data Analysis Cheat Sheet.md",
     "Cheat Sheets/Obsidian Cheat Sheet.md",
     "Data Analysis Cheat Sheet.md",
-    "Cheat Sheets/Harness CI CD.md",
-    "Harness CI CD.md",
     "Home Improvement/Crawl Space",
     "Home Improvement",
     "Health",
