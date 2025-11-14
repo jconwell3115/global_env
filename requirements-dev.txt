@@ -1,6 +1,7 @@
 # Python & General
 pytest>=8.0.0
 pytest-cov>=5.0.0
+types-requests>=2.28.0
 
 # Ansible-Specific
 ansible-lint>=25.1.0
