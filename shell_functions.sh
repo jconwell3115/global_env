@@ -88,7 +88,7 @@ customize_pyproject_toml() {
   local project_name="$2"
   local project_version="$3"
   local project_description="$4"
-  if [[ "$(basename "$(pwd)")" != "global_env" && -n "${project_name:-}" && -n "${project_version:-}" && -n "${project_description:-}" ]]; then
+  if [[ -f "$pyproject_file" && -n "${project_name:-}" && -n "${project_version:-}" && -n "${project_description:-}" ]]; then
     info "Customizing pyproject.toml for project..."
     sed -i "s/name = \"my-project\"/name = \"$project_name\"/" "$pyproject_file"
     sed -i "s/version = \"0.1.0\"/version = \"$project_version\"/" "$pyproject_file"
@@ -394,7 +394,7 @@ findreplace() {
   fi
   # Escape delimiter and special regex chars in find string
   local find_escaped
-  find_escaped=$(printf '%s' "$1" | sed 's/[.[\*^$\/|]/\\&/g')
+  find_escaped=$(printf '%s' "$1" | sed 's/[.[\]*^$\/|]/\\&/g')
   # Escape & and \ in replacement string
   local replace_escaped
   replace_escaped=$(printf '%s' "$2" | sed 's/[&\\/]/\\&/g')
@@ -435,3 +435,137 @@ cleanup_old_virtualenvs() {
     info "No existing virtualenvs found for project '$project_name'"
   fi
 }
+
+update_project_pyproject_tools() {
+  local project_path="$1"
+  local global_pyproject="$GLOBAL_ENV_DIR/pyproject.toml"
+  local project_pyproject="$project_path/pyproject.toml"
+
+  if [[ -z "$project_path" ]]; then
+    err "Usage: update_project_pyproject_tools <project_directory>"
+    return 1
+  fi
+
+  if [[ ! -f "$global_pyproject" ]]; then
+    err "Global pyproject.toml not found at $global_pyproject"
+    return 1
+  fi
+
+  if [[ ! -f "$project_pyproject" ]]; then
+    err "Project pyproject.toml not found at $project_pyproject"
+    return 1
+  fi
+
+  info "Updating pyproject.toml tool configurations for project: $project_path"
+  python "$BIN_DIR/update_pyproject_tools.py" "$global_pyproject" "$project_pyproject"
+}
+
+copy_precommit_config() {
+  local project_path="$1"
+  local global_precommit="$GLOBAL_ENV_DIR/.pre-commit-config.yaml"
+  local project_precommit="$project_path/.pre-commit-config.yaml"
+
+  if [[ -z "$project_path" ]]; then
+    err "Usage: copy_precommit_config <project_directory>"
+    return 1
+  fi
+
+  if [[ ! -f "$global_precommit" ]]; then
+    err "Global .pre-commit-config.yaml not found at $global_precommit"
+    return 1
+  fi
+
+  info "Copying .pre-commit-config.yaml to project: $project_path"
+  cp -pr "$global_precommit" "$project_path"
+  info "Copied .pre-commit-config.yaml to $project_path"
+}
+
+copy_global_requirements() {
+  local project_path="$1"
+
+  if [[ -z "$project_path" ]]; then
+    err "Usage: copy_global_requirements <project_directory>"
+    return 1
+  fi
+
+  if [[ ! -d "$project_path" ]]; then
+    err "Project directory does not exist: $project_path"
+    return 1
+  fi
+
+  info "Copying global requirements files to project: $project_path"
+
+  # Copy requirements files if they exist
+  local req_files=("requirements.txt" "requirements-dev.txt" "requirements.yml")
+  for req_file in "${req_files[@]}"; do
+    local global_file="$GLOBAL_ENV_DIR/$req_file"
+    if [[ -f "$global_file" ]]; then
+      cp -pr "$global_file" "$project_path"
+      info "Copied $req_file to $project_path"
+    else
+      warn "Global $req_file not found, skipping"
+    fi
+  done
+
+  # Change to project directory and update UV dependencies
+  cd "$project_path" || return 1
+
+  if [[ -f "requirements.txt" ]]; then
+    info "Adding requirements.txt to UV project..."
+    uv add -r requirements.txt --no-build-isolation || warn "Failed to add requirements.txt"
+  fi
+
+  if [[ -f "requirements-dev.txt" ]]; then
+    info "Adding requirements-dev.txt as dev dependencies..."
+    uv add --dev -r requirements-dev.txt --no-build-isolation || warn "Failed to add requirements-dev.txt"
+  fi
+
+  if [[ -f "requirements.yml" ]]; then
+    info "Installing Ansible requirements..."
+    if command -v ansible-galaxy >/dev/null 2>&1; then
+      ansible-galaxy install -r requirements.yml || warn "Failed to install Ansible requirements"
+    else
+      warn "ansible-galaxy not found, skipping requirements.yml"
+    fi
+  fi
+
+  # Sync UV
+  if [[ -f "pyproject.toml" ]]; then
+    info "Syncing UV dependencies..."
+    uv sync --no-build-isolation || warn "UV sync failed"
+  fi
+
+  cd - >/dev/null  # Return to previous directory
+}
+
+renew_project() {
+  local project_path="$1"
+
+  if [[ -z "$project_path" ]]; then
+    err "Usage: renew_project <project_directory>"
+    return 1
+  fi
+
+  info "Starting renew for project: $project_path"
+
+  # Update pyproject tool configuration
+  update_project_pyproject_tools "$project_path" || {
+    err "update_project_pyproject_tools failed for $project_path"
+    return 1
+  }
+
+  # Copy pre-commit config
+  copy_precommit_config "$project_path" || {
+    err "copy_precommit_config failed for $project_path"
+    return 1
+  }
+
+  # Copy global requirements and sync uv/deps
+  copy_global_requirements "$project_path" || {
+    err "copy_global_requirements failed for $project_path"
+    return 1
+  }
+
+  info "Renew completed for project: $project_path"
+}
+# ------------- End of shell_functions.sh -------------
