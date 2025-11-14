@@ -1,8 +1,8 @@
 ansible-builder
 ansible-core<2.18
 ansible-generator
-ansible-vault
 ansible-pylibssh
+ansible-vault
 awxkit
 benchexec
 bs4
@@ -34,7 +34,10 @@ pynautobot
 pysnmp
 simplejson
 tabulate
+tomli_w
+tomlkit
 tqdm
 treelib
 xlrd
+xlsxwriter
 yq
