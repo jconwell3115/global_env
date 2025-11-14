@@ -77,3 +77,7 @@ alias cgf='copy_global_files'
 alias doit='pipenv shell'
 alias findpip="python3 -m pip config debug"
 alias findtodo="grep -r --exclude-dir={.collections,avd,arista} --include='*.py' -nE 'TODO|FIXME' ."
+alias upp='update_project_pyproject_tools'
+alias cpc='copy_precommit_config'
+alias cgr='copy_global_requirements'
+alias rp='renew_project'
