@@ -33,6 +33,29 @@ Shared configuration files and shell functions for consistent project setup and 
 - **Ansible**: Install collections/roles from `requirements.yml`
 - **Pip**: Fallback management with `pip.conf` for Artifactory access
 
+## Configurable Parameters
+Environment variables and script parameters commonly used in setup workflows:
+
+- **GLOBAL_ENV_DIR**: Path to this directory (e.g., `/home/user/my_work_tools/global_env`)
+- **BIN_DIR**: Path to bin/ directory for utility scripts
+- **PROJECT_DIR**: Target directory for new projects
+- **REPO_NAME**: Name of repository being cloned/setup
+- **PYTHON_VERSION**: Python version for UV/virtualenv (default: `3.12`)
+- **UV_CACHE_DIR**: UV cache location (optional, for custom cache paths)
+- **UV_CHANNEL**: UV release channel (e.g., `stable`, `preview`)
+- **UV_GLOBAL_TOOLS**: Space-separated list of global tools to install via UV
+- **KEY_PATH**: SSH key path for git operations (e.g., `~/.ssh/id_ed25519`)
+- **SCRIPT_NAME**: Name of the calling script (for cleanup/error messages)
+
+Typical usage in setup scripts:
+```bash
+export GLOBAL_ENV_DIR="/home/user/my_work_tools/global_env"
+export BIN_DIR="/home/user/my_work_tools/bin"
+export PROJECT_DIR="$HOME/projects"
+export PYTHON_VERSION="3.12"
+source "$GLOBAL_ENV_DIR/shell_functions.sh"
+```
+
 ## Examples
 - Setup logging: `info "Starting setup"; warn "Potential issue"; err "Failed"; die "Critical error"`
 - Backup and modify: `backup_file config.yml; sed -i 's/old/new/' config.yml`
