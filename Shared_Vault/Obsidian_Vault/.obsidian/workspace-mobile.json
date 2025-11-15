@@ -13,12 +13,12 @@
             "state": {
               "type": "markdown",
               "state": {
-                "file": "Following_Christ/Living as One Who Follows Christ.md",
+                "file": "Self Hosting/Nextcloud AIO + Cloudflared with SKIP_DOMAIN_VALIDATION.md",
                 "mode": "source",
                 "source": false
               },
               "icon": "lucide-file",
-              "title": "Living as One Who Follows Christ"
+              "title": "Nextcloud AIO + Cloudflared with SKIP_DOMAIN_VALIDATION"
             }
           },
           {
@@ -171,8 +171,10 @@
   },
   "active": "3e49f3a82de81bb2",
   "lastOpenFiles": [
-    "Clippings/From Dataset to DataFrame to Deployed Your First Project with Pandas & Scikit-learn.md",
+    "Following_Christ/Truth, Mercy, and Honoring God.md",
     "Following_Christ/Living as One Who Follows Christ.md",
+    "Clippings/This data removal service helped me regain control of my personal data.md",
+    "Clippings/From Dataset to DataFrame to Deployed Your First Project with Pandas & Scikit-learn.md",
     "Following_Christ/A Warning About Misusing Scripture on Authority.md",
     "Following_Christ/Christ or Barrabas.md",
     "Following_Christ/Tesy.md",
@@ -195,10 +197,8 @@
     "Self Hosting/Open VPN.md",
     "Home Improvement/Crawl Space/Initial Price List.md",
     "Clippings/Copilot ask, edit, and agent modes What they do and when to use them 1.md",
-    "Self Hosting/🏠 Self-Hosting with Docker & Docker Compose Best Practices.md",
     "Self Hosting/Self Hosting.md.2025-10-12_06.52.44.foldersync.old",
     "Self Hosting.md.2025-10-12_06.52.30.foldersync.old",
-    "Following_Christ/Welcoming the Stranger.md",
     "Following_Christ",
     "Self Hosting/Untitled",
     "Self Hosting",
