@@ -20,8 +20,21 @@
               "icon": "lucide-file",
               "title": "Nextcloud AIO + Cloudflared with SKIP_DOMAIN_VALIDATION"
             }
+          },
+          {
+            "id": "c6685168d9991453",
+            "type": "leaf",
+            "state": {
+              "type": "release-notes",
+              "state": {
+                "currentVersion": "1.10.3"
+              },
+              "icon": "lucide-book-up",
+              "title": "Release Notes 1.10.3"
+            }
           }
-        ]
+        ],
+        "currentTab": 1
       }
     ],
     "direction": "vertical"
@@ -168,7 +181,7 @@
       "bases:Create new base": false
     }
   },
-  "active": "9751da583d636bfd",
+  "active": "c6685168d9991453",
   "lastOpenFiles": [
     "Self Hosting/Next Cloud Information.md",
     "Following_Christ/Living as One Who Follows Christ.md",
