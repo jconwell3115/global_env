@@ -25,12 +25,14 @@
             "id": "c6685168d9991453",
             "type": "leaf",
             "state": {
-              "type": "release-notes",
+              "type": "markdown",
               "state": {
-                "currentVersion": "1.10.3"
+                "file": "Following_Christ/Faith Without Favoritism.md",
+                "mode": "source",
+                "source": false
               },
-              "icon": "lucide-book-up",
-              "title": "Release Notes 1.10.3"
+              "icon": "lucide-file",
+              "title": "Faith Without Favoritism"
             }
           }
         ],
@@ -91,8 +93,7 @@
       }
     ],
     "direction": "horizontal",
-    "width": 355.5,
-    "collapsed": true
+    "width": 355.5
   },
   "right": {
     "id": "7eb2226cf99d6b17",
@@ -183,8 +184,10 @@
   },
   "active": "c6685168d9991453",
   "lastOpenFiles": [
-    "Self Hosting/OpenVPN-as Quadlet.md",
+    "_templates/Devotional Template.md",
+    "Following_Christ/Faith Without Favoritism.md",
     "Following_Christ/Truth, Mercy, and Honoring God.md",
+    "Self Hosting/OpenVPN-as Quadlet.md",
     "Clippings/This data removal service helped me regain control of my personal data.md",
     "Cheat Sheets/copilot-instruction-ideas.md",
     "Self Hosting/Next Cloud Information.md",
@@ -193,7 +196,6 @@
     "Self Hosting/Nextcloud AIO Podman Compose Setup Guide.md",
     "Following_Christ/Title.md",
     "Following_Christ/test.md",
-    "_templates/Devotional Template.md",
     "Following_Christ/A Warning About Misusing Scripture on Authority.md",
     "_templates/test_template.md",
     "Following_Christ/Untitled 4.md",
@@ -208,7 +210,6 @@
     "Following_Christ/Love That Leaves the Ledger Blank.md",
     "Following_Christ/Christ or Barrabas.md",
     "Following_Christ/Christ Misrepresented.md",
-    "Cheat Sheets/Portainer Cheat Sheet.md",
     "Home Improvement/Crawl Space",
     "Home Improvement",
     "Health",
