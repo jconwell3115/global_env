@@ -6,17 +6,81 @@ requires-python = ">=3.12"
 
 [tool.ruff]
 line-length = 90
+target-version = "py312"
 exclude = ['cases_update']
-lint.extend-select = ['Q', 'RUF100', 'C90', 'UP', 'I']
-lint.mccabe = { max-complexity = 10 }
-lint.isort = { known-first-party = ['pytest_examples'] }
-target-version = 'py312'
+
+[tool.ruff.lint]
+select = [
+    "E",   # pycodestyle errors
+    "W",   # pycodestyle warnings
+    "F",   # pyflakes
+    "I",   # isort
+    "N",   # pep8-naming
+    "UP",  # pyupgrade
+    "B",   # flake8-bugbear
+    "A",   # flake8-builtins
+    "C",   # mccabe complexity
+    "C4",  # flake8-comprehensions
+    "T10", # flake8-debugger
+    "DJ",  # flake8-django
+    "D",   # flake8-docstrings
+    "EM",  # flake8-errmsg
+    "EXE", # flake8-executable
+    "FA",  # flake8-future-annotations
+    "ISC", # flake8-implicit-str-concat
+    "ICN", # flake8-import-conventions
+    "G",   # flake8-logging-format
+    "INP", # flake8-no-pep420
+    "PIE", # flake8-pie
+    "T20", # flake8-print
+    "PYI", # flake8-pyi
+    "Q",   # flake8-quotes
+    "RET", # flake8-return
+    "SLF", # flake8-self
+    "SLOT",# flake8-slots
+    "SIM", # flake8-simplify
+    "TID", # flake8-tidy-imports
+    "TCH", # flake8-type-checking
+    "INT", # flake8-gettext
+    "ARG", # flake8-unused-arguments
+    "PTH", # flake8-use-pathlib
+    "ERA", # eradicate
+    "PD",  # pandas-vet
+    "PGH", # pygrep-hooks
+    "PL",  # pylint
+    "TRY", # tryceratops
+    "AIR", # airflow
+    "PERF",# perflint
+    "FURB",# refurb
+    "LOG", # flake8-logging
+    "RUF", # ruff
+    "S",   # flake8-bandit
+]
+ignore = [
+    "E501", # line too long, handled by formatter
+    "B008", # do not perform function calls in argument defaults
+    "C901", # too complex
+]
+
+[tool.ruff.lint.mccabe]
+max-complexity = 10
+
+[tool.ruff.lint.isort]
+known-first-party = ['pytest_examples']
+# Additional robust options:
+force-sort-within-sections = true          # Alphabetical within sections
+force-single-line = true           # Force all imports to be on separate lines
+lines-after-imports = 2                    # Number of blank lines after imports
+order-by-type = true                       # Order imports by type (standard, third-party, first-party, local)
+case-sensitive = true                      # Case-sensitive sorting
+split-on-trailing-comma = true             # Split imports on trailing comma for multi-line
+lines-between-types = 1                    # Lines between different import types
+known-third-party = []                     # Add common third-party packages if needed (e.g., ['requests', 'django'])
 
 [tool.ruff.format]
 quote-style = "double"          # Use double quotes for strings
 indent-style = "space"          # Spaces for indentation
 line-ending = "auto"            # Auto-detect line endings
-
 [tool.mypy]
 # Static type checking for Python
 python_version = "3.12"
@@ -25,6 +89,8 @@ ignore_missing_imports = true
 warn_unused_ignores = true
 warn_return_any = true
 disallow_untyped_defs = true
+disallow_any_generics = true
+disallow_untyped_calls = true
 plugins = []
 
 [tool.bandit]
