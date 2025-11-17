@@ -1,0 +1,133 @@
+[user]
+    name = Your Full Name
+    email = your.email@example.com
+    signingkey =
+    # Uncomment and set if you sign your commits, e.g. GPG/SSH key.
+
+[core]
+    editor = vim
+    pager = less -FRX
+    excludesfile = ~/.gitignore_global
+    autocrlf = input
+    whitespace = fix,-indent-with-non-tab,trailing-space,cr-at-eol
+
+[color]
+    ui = auto
+    diff = auto
+    status = auto
+    branch = auto
+    interactive = auto
+
+[push]
+    default = simple
+
+[pull]
+    rebase = false
+
+[merge]
+    tool = vimdiff
+    conflictstyle = diff3
+
+[diff]
+    tool = vimdiff
+
+[log]
+    date = iso
+
+[credential]
+    helper = cache
+    # Use 'store' or a platform-specific helper if you prefer
+
+[init]
+    defaultBranch = development
+
+[alias]
+    # Common Commands
+    st = status
+    s = status -s
+    co = checkout
+    ci = commit
+    br = branch
+    sw = switch
+    lg = log --oneline --graph --decorate
+    lga = log --oneline --graph --decorate --all
+    aa = add --all
+    ap = add -p
+    ca = commit --amend
+    cm = commit -m
+    cl = clone
+    d = diff
+    ds = diff --staged
+    dc = diff --cached
+    last = log -1 HEAD
+    unstage = reset HEAD --
+    res = restore
+    resf = restore --staged
+    amend = commit --amend --no-edit
+    rmf = rm -rf
+
+    # Log / History
+    hist = log --pretty=format:'%C(yellow)%h%Cred%d%Creset %s%Cblue [%cn]' --decorate
+    lol = log --oneline --decorate --graph --all
+    l = log --oneline --decorate --all --graph
+    short = log --pretty=format:'%h %ad | %s%d [%an]' --graph --date=short
+
+    # Grep / Search
+    find = "!f() { git log --all --grep=\"$1\"; }; f"
+    grep = grep --break --heading --line-number
+
+    # Stash
+    sl = stash list
+    sa = stash apply
+    ss = stash save
+    sp = stash pop
+    sd = stash drop
+    scl = stash clear
+
+    # Submodules
+    subu = submodule update --init --recursive
+    suba = submodule add
+
+    # Remote and Sync
+    pl = pull
+    plr = pull --rebase
+    ps = push
+    psa = push --all
+    pf = push --force-with-lease
+    pfo = push --force
+
+    # Setups & Cleanup & Rebase
+    rh = reset --hard
+    rs = reset --soft
+    cleanall = "!git reset --hard && git clean -dfx"
+    ctag = checkout tags/
+    tagd = tag -d
+    tags = tag -l
+    recent = for-each-ref --count=10 --sort=-committerdate --format='%(refname:short) %(committerdate:relative)' refs/heads/
+
+    # Branch & Merge
+    bclean = "!git branch --merged | grep -v '\\*' | xargs -n 1 git branch -d"
+    mf = merge --ff-only
+    m = merge --no-ff
+    abort = merge --abort
+
+    # Cherry-pick and Fixup
+    cp = cherry-pick
+    fixup = "!f() { git commit --fixup=$1; }; f"
+    squash = "!git reset --soft HEAD~1 && git commit --amend"
+
+    # Show/Describe
+    showstat = show --stat
+    sshow = show --summary
+    desc = describe --tags
+    blame = blame -w
+
+    # Misc Useful
+    uncommit = reset --soft HEAD^
+    who = shortlog -sne
+    count = rev-list --all --count
+    root = rev-parse --show-toplevel
+    lgfiles = log --follow -p --
+
+    # Ignore helper
+    ignore = "!gi() { echo $1 >> .gitignore; }; gi"
