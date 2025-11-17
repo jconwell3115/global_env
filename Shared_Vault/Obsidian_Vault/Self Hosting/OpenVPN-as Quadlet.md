@@ -6,29 +6,31 @@
 #### Path: /etc/containers/systemd/openvpnas.container
 > Rootful systemd (system scope) + host networking + NET_ADMIN + TUN device + persistence
 ```bash
-cat << 'EOF' | sudo tee /etc/containers/systemd/openvpnas.container
-# /etc/containers/systemd/openvpnas.container
+cat << 'EOF' | sudo tee /etc/containers/systemd/openvpn-as.container
+# /etc/containers/systemd/openvpn-as.container
 [Unit]
 Description=OpenVPN Access Server (Podman Quadlet)
 Wants=network-online.target
 After=network-online.target
 
 [Container]
+ContainerName=openvpn-as
 # Choose your image. linuxserver/openvpn-as is popular and maintained.
-Image=lscr.io/linuxserver/openvpn-as:latest
+# Image=lscr.io/linuxserver/openvpn-as:latest# If you prefer the official OpenVPN Inc. image instead, use:
+Image=openvpn/openvpn-as:latest
 
 # Rootful + host net to avoid slirp quirks and preserve routing semantics.
 Network=host
 
 # Required for VPN routing + iptables operations inside the container
-CapAdd=NET_ADMIN
-CapAdd=NET_RAW
+AddCapability=NET_ADMIN
+AddCapability=NET_RAW
 
 # Ensure the TUN device is available in the container
-Device=/dev/net/tun
+AddDevice=/dev/net/tun
 
 # Persist the AS configuration and PKI
-Volume=/srv/openvpnas/config:/config:z
+Volume=/home/rhlabs/podman/volumes/openvpn-config:/openvpn:z
 
 # (Optional) auto-update at reboot if you want
 # AutoUpdate=registry
@@ -43,10 +45,11 @@ Environment=TZ=America/New_York
 # Environment=INTERACTIVE=false
 # Environment=EULA=accept
 
-# If you prefer the official OpenVPN Inc. image instead, use:
-# Image=openvpn/openvpn-as:latest
-# And change the persisted path to /openvpn (official image):
-# Volume=/srv/openvpnas/data:/openvpn:z
+
+# Open Ports
+PublishPort=943:943
+PublishPort=9443:9443
+PublishPort=1194:1194/udp
 
 # (Optional) if your host uses nftables backbone, you can allow legacy iptables in the container:
 # Environment=OVPN_AS_USE_LEGACY_IPTABLES=1
@@ -77,18 +80,18 @@ OpenVPN-AS manipulates routing/iptables and expects to bind its ports directly (
 ## 2) Prepare host directories & enable the unit
 
 ```bash
-sudo mkdir -p /srv/openvpnas/config
-sudo chown -R root:root /srv/openvpnas
+sudo mkdir -p /home/rhlabs/podman/volumes/openvpn-config
+sudo chown -R root:root /home/rhlabs/podman/volumes/openvpn-config
 
 # Reload Quadlets -> systemd units
 sudo systemctl daemon-reload
 
 # Enable at boot and start now
-sudo systemctl enable openvpnas.service
-sudo systemctl start openvpnas.service
+sudo systemctl enable openvpn-as.service
+sudo systemctl start openvpn-as.service
 
 # Check status/logs
-systemctl status openvpnas.service
+systemctl status openvpn-as.service
 journalctl -u openvpnas.service -f
 ```
 
@@ -114,10 +117,10 @@ sudo sysctl --system
 ## 4) Ports & access
 
 > With Network=host, ports are bound directly on the host:
-> - Admin UI: https://<host>:943/admin
-> - Client UI: https://<host>:943/
-> - Web services: :9443/tcp
-> - OpenVPN data channel (default): :1194/udp
+> Admin UI: https://host:943/admin
+> Client UI: https://host:943/
+> Web services: :9443/tcp
+> OpenVPN data channel (default): :1194/udp
 
 **If your host firewall is active, allow those ports:**
 
