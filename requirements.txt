@@ -20,7 +20,6 @@ jmespath
 jupyter
 markdown
 md_toc
-mind_libs
 molecule
 ncclient
 netaddr
