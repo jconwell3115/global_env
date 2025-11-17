@@ -19,10 +19,10 @@ export KEY_NAME="id_ed25519"
 export KEY_PATH="$HOME/.ssh/$KEY_NAME"
 export KEY_TYPE="ed25519"
 export KEY_SIZE="2048"
-export EMAIL="jonathan.conwell@marriott-sp.com"
+export EMAIL="jconwell3115@gmail.com"
 export PYTHON_VERSION="3.12"
 export UV_CACHE_DIR="$HOME/.uv-cache"
-export UV_GLOBAL_TOOLS="black ruff mypy bandit pydocstyle ansible-lint yamllint djlint pre-commit"
+export UV_GLOBAL_TOOLS="ruff mypy bandit pydocstyle ansible-lint yamllint djlint pre-commit"
 export UV_CHANNEL="https://astral.sh/uv/install.sh"
 
 
@@ -51,7 +51,6 @@ alias ...='cd ../..'
 alias ....='cd ../../..'
 alias ~='cd ~'
 alias W='cd ~/Work_Environments'
-alias aaphubssh="ssh -i ~/.ssh/ansible-prod-user.pem ansible-prod-user@10.212.244.147"
 alias T="cd ~/my_work_tools"
 
 # Enhanced listing
