@@ -27,6 +27,20 @@ repos:
         files: \.py$
         log_file: logs/mypy.log
 
+      - id: pylint
+        name: Pylint
+        entry: pylint
+        language: system
+        files: \.py$
+        log_file: logs/pylint.log
+
+      - id: markdownlint
+        name: Markdownlint
+        entry: pymarkdown scan
+        language: system
+        types: [markdown]
+        log_file: logs/markdownlint.log
+
 #       - id: bandit
 #         name: Bandit
 #         entry: bandit
