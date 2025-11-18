@@ -24,7 +24,7 @@ source "$SCRIPT_DIR/shell_functions.sh"
 # ------------- Config (override with env vars) -------------
 : "${PYTHON_VERSION:=3.12}"
 : "${UV_CACHE_DIR:=$HOME/.uv-cache}"
-: "${UV_GLOBAL_TOOLS:=ruff pylint mypy bandit pydocstyle ansible-lint yamllint djlint pre-commit setuptools}"     # space-separated list
+: "${UV_GLOBAL_TOOLS:=ruff pylint mypy bandit pydocstyle ansible-lint yamllint djlint pymarkdownlnt pre-commit}"     # space-separated list
 : "${UV_CHANNEL:=https://astral.sh/uv/install.sh}"  # install script URL
 
 # Note: --no-build-isolation is used throughout to avoid build issues with packages
