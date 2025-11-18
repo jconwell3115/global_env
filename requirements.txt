@@ -1,3 +1,4 @@
+setuptools
 ansible-builder
 ansible-core<2.18
 ansible-generator

@@ -159,7 +159,7 @@ fi
 # ------------- Clone Work Tools Repos -------------
 section "Cloning work tools repositories..."
 
-clone_or_pull "git@git.marriott.com:jconw356/global_env.git"
+clone_or_pull "git@github.com:jconwell3115/global_env.git"
 
 # Setup global_env directory with pre-commit
 cd "$GLOBAL_ENV_DIR" || exit
@@ -176,7 +176,7 @@ cd "$WORK_TOOLS_DIR" || exit
 info "Pausing for 30 seconds or until you press enter ..."
 read -t 30 -rp "" || true
 
-clone_or_pull "git@git.marriott.com:jconw356/bin.git"
+clone_or_pull "git@github.com:jconwell3115/bin.git"
 
 # Setup bin directory with config files and pre-commit
 cd "$BIN_DIR" || exit
@@ -236,12 +236,6 @@ else
 fi
 # Source ~/.bashrc if present
 [ -f "$HOME/.bashrc" ] && source "$HOME/.bashrc"
-
-info "Copying the .pem for AAP CLI..."
-create_dir_if_not_exists "$SSH_DIR" "SSH directory"
-cp -pr "$GLOBAL_ENV_DIR/ansible-prod-user.pem" "$SSH_DIR"
-ls -al "$SSH_DIR"
-sleep 5
 
 # ------------- Setup Project Environment -------------
 section "Setting up project environment..."

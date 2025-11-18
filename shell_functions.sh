@@ -100,6 +100,9 @@ customize_pyproject_toml() {
 [tool.uv]
 # Primary index
 index-url = "https://pypi.org/simple"
+
+[tool.uv.extra-build-dependencies]
+ipaddr = ["setuptools"]
 EOF
       info "Added UV configuration to pyproject.toml"
     fi

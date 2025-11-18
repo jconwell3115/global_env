@@ -24,7 +24,7 @@ source "$SCRIPT_DIR/shell_functions.sh"
 # ------------- Config (override with env vars) -------------
 : "${PYTHON_VERSION:=3.12}"
 : "${UV_CACHE_DIR:=$HOME/.uv-cache}"
-: "${UV_GLOBAL_TOOLS:=ruff mypy bandit pydocstyle ansible-lint yamllint djlint pre-commit}"     # space-separated list
+: "${UV_GLOBAL_TOOLS:=ruff pylint mypy bandit pydocstyle ansible-lint yamllint djlint pre-commit setuptools}"     # space-separated list
 : "${UV_CHANNEL:=https://astral.sh/uv/install.sh}"  # install script URL
 
 # Note: --no-build-isolation is used throughout to avoid build issues with packages
@@ -59,6 +59,19 @@ if [[ -n "$PYTHON_VERSION" ]]; then
   fi
 fi
 
+# ------------- Global tools -------------
+if [[ -n "$UV_GLOBAL_TOOLS" ]]; then
+  info "Installing global tools: $UV_GLOBAL_TOOLS"
+  # shellcheck disable=SC2086
+  for tool in $UV_GLOBAL_TOOLS; do
+    uv tool install "$tool" || warn "Failed to install tool: $tool"
+  done
+fi
+
+# ------------ Install Setuptools -----------
+
+
+
 # Check if already migrated
 if [[ -f uv.lock ]]; then
   info "uv.lock already exists, assuming already migrated. Running sync..."
@@ -92,6 +105,7 @@ if $HAS_PIPFILE; then
     uv init .
   fi
   uv venv
+  uv add setuptools
 
   # Import requirements if they exist
   if $HAS_REQS; then
@@ -125,6 +139,7 @@ elif $HAS_REQS; then
     uv venv  # Ensure venv exists
   fi
 
+  uv add setuptools
   backup_file requirements.txt
   uv add -r requirements.txt --no-build-isolation
 
@@ -166,15 +181,6 @@ if $HAS_ANSIBLE_REQS; then
   else
     warn "Ansible not installed in UV environment. Install Ansible first (e.g., uv add ansible-core) and re-run to install requirements.yml."
   fi
-fi
-
-# ------------- Global tools -------------
-if [[ -n "$UV_GLOBAL_TOOLS" ]]; then
-  info "Installing global tools: $UV_GLOBAL_TOOLS"
-  # shellcheck disable=SC2086
-  for tool in $UV_GLOBAL_TOOLS; do
-    uv tool install "$tool" || warn "Failed to install tool: $tool"
-  done
 fi
 
 # ------------- Summary -------------
