@@ -137,3 +137,36 @@ preserve_blank_lines=true
 profile="jinja"
 use_gitignore=true
 include="J004,J018,T001,T002,T003,T027,T028,T032,T034"
+
+[tool.pylint.main]
+ignore = ["venv", ".venv"]
+jobs = 1
+init-hook = "import sys; sys.path.append('.')"
+
+[tool.pylint.messages_control]
+# Disable some docstring checks (we use pydocstyle separately) and other noisy checks
+disable = [
+    "C0114",  # missing-module-docstring
+    "C0115",  # missing-class-docstring
+    "C0116",  # missing-function-docstring
+    "R0903",  # too-few-public-methods
+    "R0201",  # no-self-use
+]
+
+[tool.pylint.format]
+max-line-length = 90
+indent-string = "    "
+
+[tool.pylint.reports]
+output-format = "colorized"
+score = false
+
+[tool.pylint.typecheck]
+# Allow dynamic members commonly used in network SDKs
+generated-members = ["requests.*", "netmiko.*", "pynautobot.*"]
+
+[tool.pylint.basic]
+good-names = ["i", "j", "k", "ex", "Run", "_", "pk", "id"]
+
+[tool.pylint.similarities]
+min-similarity-lines = 4
