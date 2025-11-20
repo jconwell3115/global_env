@@ -15,8 +15,6 @@ WORK_ENV_DIR="$HOME/Work_Environments"
 WORK_TOOLS_DIR="$HOME/my_work_tools"
 BIN_DIR=$WORK_TOOLS_DIR/bin/
 GLOBAL_ENV_DIR="$WORK_TOOLS_DIR/global_env"
-CONDA_DIR="/home/jconw483/miniconda3/"
-PIPCONF_DIR="$HOME/.config/pip"
 SSH_DIR="$HOME/.ssh"
 USERNAME="Jonathan Conwell"
 
@@ -31,6 +29,7 @@ set -euo pipefail
 
 # Source shared utilities
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+# shellcheck source=/home/jconw483/my_work_tools/global_env/shell_functions.sh
 source "$SCRIPT_DIR/shell_functions.sh"
 
 # Only set trap if script is run directly (not sourced)
@@ -57,16 +56,16 @@ fi
 if [[ -z "$REPO_NAME" ]]; then
   warn "No repo name provided - setting up project directory only (no repository will be cloned)"
 else
-  read -rp "Enter the repo owner: (Leave blank for Network-DevOps) " REPO_OWNER
+  read -rp "Enter the repo owner: (Leave blank for jconwell3115) " REPO_OWNER
 fi
 
 # Validate system requirements
 validate_requirements
+# Ensure shell lint tool is available (shellcheck)
+ensure_shell_tools_installed
 
 # Define project directory
 PROJECT_DIR="$WORK_ENV_DIR/$PROJECT_NAME"
-
-PYPROJECT_FILE="$GLOBAL_ENV_DIR/pyproject.toml"
 
 # If a project name was provided, collect project-specific metadata
 if [[ "${SKIP_PROJECT_SETUP:-false}" != true ]]; then
@@ -181,8 +180,9 @@ clone_or_pull "git@github.com:jconwell3115/bin.git"
 # Setup bin directory with config files and pre-commit
 cd "$BIN_DIR" || exit
 info "Setting up bin directory with configuration files..."
-cp -pr "$GLOBAL_ENV_DIR/.pre-commit-config.yaml" "$BIN_DIR"
 if is_git_repo; then
+  # ensure the most recent pre-config is copied
+  copy_precommit_config "$BIN_DIR"
   # Ensure .gitignore exists
   if [[ ! -f .gitignore ]]; then
     cp "$GLOBAL_ENV_DIR/.gitignore" ./
@@ -235,7 +235,14 @@ else
   info "Installed template ~/.bashrc"
 fi
 # Source ~/.bashrc if present
+# shellcheck disable=SC1090
 [ -f "$HOME/.bashrc" ] && source "$HOME/.bashrc"
+
+info "Copying the .pem for AAP CLI..."
+create_dir_if_not_exists "$SSH_DIR" "SSH directory"
+cp -pr "$GLOBAL_ENV_DIR/ansible-prod-user.pem" "$SSH_DIR"
+ls -al "$SSH_DIR"
+sleep 5
 
 # ------------- Setup Project Environment -------------
 section "Setting up project environment..."
@@ -262,7 +269,7 @@ else
   # Clone project repo (only if REPO_NAME is provided)
   if [[ -n "$REPO_NAME" ]]; then
     info "Cloning project repository..."
-    clone_or_pull "git@git.marriott.com:${REPO_OWNER:-Network-DevOps}/$REPO_NAME.git"
+    clone_or_pull "git@github.com:${REPO_OWNER:-jconwell3115}/$REPO_NAME.git"
 
     cd "$PROJECT_DIR/$REPO_NAME" || exit
     info "Changed to repository directory: $(pwd)"
@@ -274,8 +281,8 @@ else
         info "Copied .gitignore to project repository"
       fi
       # Copy pre-commit config
-      cp -pr "$GLOBAL_ENV_DIR/.pre-commit-config.yaml" ./
-      info "Installing pre-commit and creating log files in project"
+      copy_precommit_config .
+  info "Installing pre-commit for $REPO_NAME directory..."
       pre-commit install
     else
       warn "Project repository is not a git repository, skipping pre-commit install"
@@ -308,41 +315,17 @@ fi
 
 
 # ------------- Configure Git -------------
-section "Setting Global Git Parameters"
-# Only set git config if not already configured
-if ! git config --global --get user.name >/dev/null 2>&1; then
-  git config --global user.name "$USERNAME"
-  info "Set global git user.name to $USERNAME"
+section "Installing global Git config"
+# Simplified behavior: copy a prepared global git config into ~/.gitconfig
+GLOBAL_GIT_CONFIG="$GLOBAL_ENV_DIR/global_git_config"
+if [[ -f "$GLOBAL_GIT_CONFIG" ]]; then
+  if [[ -f "$HOME/.gitconfig" ]]; then
+    backup_file "$HOME/.gitconfig"
+  fi
+  cp -pr "$GLOBAL_GIT_CONFIG" "$HOME/.gitconfig"
+  info "Installed global git config from $GLOBAL_GIT_CONFIG -> ~/.gitconfig"
 else
-  info "Global git user.name already set, skipping..."
-fi
-
-if ! git config --global --get user.email >/dev/null 2>&1; then
-  git config --global user.email "$EMAIL"
-  info "Set global git user.email to $EMAIL"
-else
-  info "Global git user.email already set, skipping..."
-fi
-
-if ! git config --global --get credential.helper >/dev/null 2>&1; then
-  git config --global credential.helper "cache --timeout=86400"
-  info "Set global git credential helper"
-else
-  info "Global git credential helper already set, skipping..."
-fi
-
-if ! git config --global --get pull.rebase >/dev/null 2>&1; then
-  git config --global pull.rebase false
-  info "Set global git pull.rebase to false"
-else
-  info "Global git pull.rebase already set, skipping..."
-fi
-
-if ! git config --global --get alias.bc >/dev/null 2>&1; then
-  git config --global alias.bc "branch --show-current"
-  info "Set global git alias 'bc'"
-else
-  info "Global git alias 'bc' already set, skipping..."
+  warn "Global git config not found at $GLOBAL_GIT_CONFIG; skipping git configuration"
 fi
 
 # Validate that setup was successful

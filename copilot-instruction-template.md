@@ -11,12 +11,48 @@
 #### Python
 
 - **Version**: [Specify minimum Python version, e.g., Python 3.12+]
-- **Type Hints**: All functions, methods, and classes must include complete type hints using `typing` module (Dict, List, Optional, Union, Any)
+- **Type Hints**: All functions, methods, and classes must include complete type
+    hints using the `typing` module (Dict, List, Optional, Union, Any)
 - **Formatting**: Follow PEP 8 with line length of [88/100/120] characters
-- **Linting**: Code must pass `mypy --ignore-missing-imports`, `pylint`, `ruff` [specify tools and any ignore flags]
-- **Imports**: Group imports as: stdlib, third-party, [framework modules if applicable], local modules (use `isort` for sorting)
+- **Linting**: Code must pass `mypy --ignore-missing-imports`, `pylint`, and `ruff`.
+    Specify any per-tool ignore flags where applicable.
+- **Imports**: Group imports in this order: stdlib, third-party, framework modules
+    (when applicable), then local modules. Use `isort` to enforce ordering.
 
 #### [Other Languages - JavaScript/TypeScript/Go/etc.]
+
+[#### Shell / Bash
+
+- **Shell**: Use `bash` for scripts that require Bash features and POSIX
+    sh when portability is required. Specify version if you depend on
+    Bash-specific features (e.g., Bash 4.4+).
+- **Shebang**: Start executable scripts with `#!/usr/bin/env bash`.
+- **Strict mode**: Use `set -euo pipefail` and `IFS=$'\n\t'` at the top
+    of scripts unless a clear reason to opt-out is documented.
+- **Quoting**: Always quote expansions unless intentionally splitting
+    fields. Prefer `"$var"` over unquoted `$var`.
+- **Functions**: Prefer named functions over inline blocks. Use the
+    `function_name() { ... }` style and explicitly `return` status codes.
+- **Argument parsing**: Use `getopts` for short options and document
+    supported flags. Validate inputs and provide helpful usage text.
+- **No `eval`**: Avoid `eval` and other constructs that execute arbitrary
+    input. Sanitize inputs when interacting with external content.
+- **Logging & errors**: Write clear messages to stderr for errors and
+    use consistent log helpers. Use `exit` codes for failure states and
+    avoid `echo` for error output (use `>&2`).
+- **Debugging**: Use `set -x` only for troubleshooting. Do not leave it
+    enabled in committed scripts.
+- **Style tools**: Run `shellcheck` to catch common issues. Add relevant
+    checks to `pre-commit`.
+- **Dependency isolation**: Do not assume a specific environment; check
+    for required commands and fail fast with helpful messages.
+- **Security**: Avoid storing secrets in scripts. Use environment
+    variables securely and mark sensitive CLI options with `no_log`
+    equivalents where applicable.
+- **Testing**: Add small unit-like tests where practical (e.g., via
+    Bats) and include examples in README or script `--help` output.
+- **Reference**: Link to `global_env/shell_functions.sh` for commonly used
+    helpers and logging conventions used across the project.
 
 [Add language-specific style guidelines as needed]
 
@@ -35,11 +71,13 @@ Example for Ansible:
 
 ### Python Docstrings
 
-All Python modules, classes, methods, and functions must use reStructuredText (reST) format with the following enhanced structure:
+All Python modules, classes, methods, and functions must use reStructuredText (reST)
+format with the following enhanced structure:
 
 #### Module Docstrings
 
-Module docstrings should be comprehensive and serve as the primary reference documentation.
+Module docstrings should be comprehensive and serve as the primary reference
+documentation for the module.
 
 **Required sections:**
 
@@ -488,7 +526,8 @@ Before finalizing docstrings, verify:
 
 [Define project-specific naming patterns]
 
-- **Module names**: [pattern, e.g., lowercase_with_underscores, or prefix_name for custom modules]
+- **Module names**: [pattern, e.g., lowercase_with_underscores, or
+    prefix_name for custom modules]
 - **Class names**: [pattern, e.g., PascalCase, or PrefixClassName for project classes]
 - **Function names**: [pattern, e.g., lowercase_with_underscores]
 - **Constants**: [pattern, e.g., UPPER_CASE_WITH_UNDERSCORES]
@@ -497,9 +536,12 @@ Before finalizing docstrings, verify:
 
 Example project-specific patterns:
 
-- Use `[prefix]_` for all custom modules in `library/` (e.g., MiND Pulse uses `mp_` for `mp_process_compliance.py`)
-- Use `[ProjectName]` prefix for Python classes (e.g., MiND Pulse uses `MiNDPulseProcessCompliance`)
-- File names follow pattern: `[prefix]_<action>_<object>.[ext]` (e.g., MiND Pulse uses `mp_compliance_report.yml`)
+- Use `[prefix]_` for all custom modules in `library/`. For example, MiND Pulse uses
+    `mp_` as the prefix (e.g., `mp_process_compliance.py`).
+- Use a `[ProjectName]` prefix for Python classes when appropriate. For example,
+    MiND Pulse uses `MiNDPulseProcessCompliance` as a class name.
+- File names should follow the pattern: `[prefix]_<action>_<object>.[ext]`.
+    Example: `mp_compliance_report.yml` for MiND Pulse reports.
 
 ### Domain-Specific Patterns
 
@@ -523,7 +565,8 @@ Example:
 Example for framework-specific error handling:
 
 - Ansible modules should use `module.fail_json()` for errors, not `sys.exit()`
-- Custom modules should restore default signal handlers: `signal.signal(signal.SIGINT, signal.SIG_DFL)`
+-- Custom modules should restore default signal handlers using:
+    `signal.signal(signal.SIGINT, signal.SIG_DFL)`
 - Always provide meaningful error messages with context (object name, identifier, etc.)
 - Log debug information to help troubleshoot issues in production
 
@@ -537,7 +580,8 @@ Example for framework-specific error handling:
 - **Test edge cases**: None, empty, single item, many items
 - **Verify type hints**: Run `mypy --ignore-missing-imports` (or stricter)
 - **Test input variations**: Test with various input shapes/envelopes
-- **Test normalization**: Test edge cases (whitespace, case differences, special characters)
+- **Test normalization**: Test edge cases such as leading/trailing whitespace,
+  case differences, and special characters.
 
 ## File Organization
 
@@ -813,16 +857,26 @@ if __name__ == "__main__":
 
 ## Best Practices
 
-1. **Always use type hints** - Every function/method parameter and return value must be typed for better IDE support and error detection
-2. **Document side effects** - Clearly document any mutations, I/O, or state changes in docstrings with **bold** emphasis
-3. **Handle multiple input shapes** - Data can come in various envelopes/formats; normalize early in the pipeline
-4. **Normalize before matching** - Always normalize identifiers (strip, lowercase) before comparison or lookup operations
-5. **Deep copy when merging** - Prevent unintended mutations with `copy.deepcopy()` when merging data structures
-6. **Provide realistic examples** - Include runnable code examples in module/class docstrings showing actual usage
-7. **Test with type checkers** - Ensure type hints are correct and complete by running mypy or similar tools
-8. **Use conservative defaults** - Prefer safe operations that preserve data rather than destructive operations
-9. **Log comprehensively** - Use appropriate log levels and include context (identifiers, operation, values)
-10. **Follow the principle of least surprise** - Design APIs and behaviors that match user expectations
+1. **Always use type hints** - Every function/method parameter and return value must be
+    typed for better IDE support and for earlier error detection by type checkers.
+2. **Document side effects** - Clearly document any mutations, I/O, or state changes
+    in docstrings using **bold** emphasis so callers understand side effects.
+3. **Handle multiple input shapes** - Data may arrive in different envelopes or formats;
+    normalize input early in the pipeline to simplify downstream processing.
+4. **Normalize before matching** - Always normalize identifiers (strip, lowercase)
+    before comparison or lookup to avoid subtle mismatches.
+5. **Deep copy when merging** - Prevent unintended mutations with
+    `copy.deepcopy()` when merging complex data structures.
+6. **Provide realistic examples** - Include runnable code examples in module/class
+    docstrings that show typical usage and edge cases.
+7. **Test with type checkers** - Verify type hints are correct and complete by
+    running `mypy` (or a similar tool) as part of CI.
+8. **Use conservative defaults** - Prefer safe operations that preserve data rather
+    than destructive defaults.
+9. **Log comprehensively** - Use appropriate log levels and include contextual
+    information (identifiers, operation, values) to aid debugging.
+10. **Follow the principle of least surprise** - Design APIs and behaviors that
+     match user expectations and avoid surprising side effects.
 
 ## Dependencies and Integration
 

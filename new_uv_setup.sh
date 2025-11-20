@@ -68,10 +68,6 @@ if [[ -n "$UV_GLOBAL_TOOLS" ]]; then
   done
 fi
 
-# ------------ Install Setuptools -----------
-
-
-
 # Check if already migrated
 if [[ -f uv.lock ]]; then
   info "uv.lock already exists, assuming already migrated. Running sync..."
@@ -105,7 +101,7 @@ if $HAS_PIPFILE; then
     uv init .
   fi
   uv venv
-  uv add setuptools
+  uv add setuptools --no-build-isolation  # Ensure setuptools is present for builds
 
   # Import requirements if they exist
   if $HAS_REQS; then
@@ -139,7 +135,8 @@ elif $HAS_REQS; then
     uv venv  # Ensure venv exists
   fi
 
-  uv add setuptools
+  uv add setuptools --no-build-isolation  # Ensure setuptools is present for builds
+
   backup_file requirements.txt
   uv add -r requirements.txt --no-build-isolation
 
@@ -158,6 +155,7 @@ elif $HAS_REQS; then
 elif $HAS_PYPROJECT; then
   info "pyproject.toml detected (no Pipfile/requirements.txt). Locking & syncing with UV..."
   uv venv  # Ensure venv exists
+  uv add setuptools --no-build-isolation  # Ensure setuptools is present for builds
 
   # Import dev requirements if present
   if $HAS_DEV_REQS; then
