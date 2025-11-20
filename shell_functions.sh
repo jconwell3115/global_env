@@ -32,7 +32,8 @@ ask_renew_ssh() {
 
 clone_or_pull() {
   local repo_url="$1"
-  local dir_name=$(basename "$repo_url" .git)
+  local dir_name
+  dir_name=$(basename "$repo_url" .git)
   if [ -d "$dir_name" ]; then
     if [ -d "$dir_name/.git" ]; then
       info "Directory $dir_name exists and is a git repo, pulling latest"
@@ -51,14 +52,17 @@ clone_or_pull() {
 create_log_files() {
   mkdir -p logs
   touch logs/ansible-lint.log
-  touch logs/yamllint.log
-  touch logs/ruff.log
-  touch logs/ruff-format.log
-  touch logs/djlint.log
-  touch logs/mypy.log
   touch logs/bandit.log
-  touch logs/pydocstyle.log
   touch logs/djlint-reformat.log
+  touch logs/djlint.log
+  touch logs/markdownlint.log
+  touch logs/mypy.log
+  touch logs/pydocstyle.log
+  touch logs/pylint.log
+  touch logs/ruff-format.log
+  touch logs/ruff.log
+  touch logs/shellcheck.log
+  touch logs/yamllint.log
 }
 
 create_dir_if_not_exists() {
@@ -100,9 +104,11 @@ customize_pyproject_toml() {
 [tool.uv]
 # Primary index
 index-url = "https://pypi.org/simple"
+# Extra indexes to check for packages not found in primary
+extra-index-url = ["https://artifactory.marriott.com/artifactory/api/pypi/network-devops-pypi-local/simple/"]
+# Extra build dependencies for packages that don't declare them properly
+extra-build-dependencies = { "mind-libs" = ["setuptools"] }
 
-[tool.uv.extra-build-dependencies]
-ipaddr = ["setuptools"]
 EOF
       info "Added UV configuration to pyproject.toml"
     fi
@@ -113,7 +119,8 @@ backup_file() {
   local f="$1"
   if [[ -f "$f" && "$f" != *".bak"* ]]; then
     # Check if this is a requirements file that matches the global template
-    local template_file="$GLOBAL_ENV_DIR/$(basename "$f")"
+    local template_file
+    template_file="$GLOBAL_ENV_DIR/$(basename "$f")"
     if [[ -f "$template_file" ]] && diff -q "$f" "$template_file" >/dev/null 2>&1; then
       info "Skipped backup of $f (identical to template)"
       return 0
@@ -129,7 +136,7 @@ copy_config_files() {
 
   # Get list of config files to potentially copy
   local config_files=()
-  for pattern in "requirements*" "pyproject.toml" ".ansible-lint" ".pre-commit-config.yaml" ".gitignore"; do
+  for pattern in "requirements*" "pyproject.toml" ".ansible-lint" ".pre-commit-config.yaml" ".gitignore" ".pymarkdown"; do
     for file in "$GLOBAL_ENV_DIR"/$pattern; do
       if [[ -f "$file" ]]; then
         config_files+=("$file")
@@ -139,7 +146,8 @@ copy_config_files() {
 
   # Process each config file
   for source_file in "${config_files[@]}"; do
-    local filename=$(basename "$source_file")
+    local filename
+    filename=$(basename "$source_file")
     local target_file="$target_dir/$filename"
 
     # Only process if file doesn't exist or is different
@@ -175,6 +183,72 @@ validate_requirements() {
   fi
 
   info "All required tools are available"
+}
+
+# Ensure shell tooling (shellcheck) is available; try to install when missing
+ensure_shell_tools_installed() {
+  local missing=()
+  local tools=("shellcheck")
+  for tool in "${tools[@]}"; do
+    if ! command -v "$tool" >/dev/null 2>&1; then
+      missing+=("$tool")
+    fi
+  done
+
+  if [[ ${#missing[@]} -eq 0 ]]; then
+    info "Shell tools present: ShellCheck"
+    return 0
+  fi
+
+  info "Missing shell tools: ${missing[*]}. Attempting automated install..."
+
+  # Prefer rpm-ostree when present (Fedora Silverblue / CoreOS style hosts).
+  if command -v rpm-ostree >/dev/null 2>&1; then
+    warn "Using rpm-ostree to install: ${missing[*]}"
+    # rpm-ostree is used on immutable systems. Installation creates a new
+    # deployment and may require a reboot to activate. Attempt the install
+    # and inform the user about next steps.
+    if ! sudo rpm-ostree install "${missing[@]}"; then
+      warn "rpm-ostree install failed for: ${missing[*]}. You may need to use toolbox, overlays, or install manually"
+    else
+      info "rpm-ostree install attempted; a reboot or rebase may be required to complete. Run 'sudo systemctl reboot' to apply changes."
+    fi
+  elif command -v apt-get >/dev/null 2>&1; then
+    warn "Using apt-get to install: ${missing[*]} (may prompt for sudo)"
+    sudo apt-get update || warn "apt-get update failed"
+    sudo apt-get install -y "${missing[@]}" || warn "apt-get install failed"
+  elif command -v dnf >/dev/null 2>&1; then
+    warn "Using dnf to install: ${missing[*]}"
+    sudo dnf install -y "${missing[@]}" || warn "dnf install failed"
+  elif command -v yum >/dev/null 2>&1; then
+    warn "Using yum to install: ${missing[*]}"
+    sudo yum install -y epel-release || true
+    sudo yum install -y "${missing[@]}" || warn "yum install failed"
+  elif command -v apk >/dev/null 2>&1; then
+    warn "Using apk to install: ${missing[*]}"
+    sudo apk add "${missing[@]}" || warn "apk add failed"
+  elif command -v brew >/dev/null 2>&1; then
+    warn "Using brew to install: ${missing[*]}"
+    brew install "${missing[@]}" || warn "brew install failed"
+  else
+    warn "No supported package manager found to install: ${missing[*]}"
+    warn "Please install them manually. See https://www.shellcheck.net"
+  fi
+
+  # Re-check and report
+  local still_missing=()
+  for tool in "${missing[@]}"; do
+    if ! command -v "$tool" >/dev/null 2>&1; then
+      still_missing+=("$tool")
+    fi
+  done
+
+  if [[ ${#still_missing[@]} -gt 0 ]]; then
+    warn "The following shell tools are still missing: ${still_missing[*]}"
+    warn "Install them manually or add them to your PATH before re-running this script"
+  else
+    info "Shell tools installed: ${missing[*]}"
+  fi
 }
 
 validate_setup() {
@@ -220,7 +294,8 @@ remove_file() {
 }
 
 generate_uv_diagnostics() {
-  local diag_file="uv-setup-diagnostics-$(date +%Y%m%d_%H%M%S).txt"
+  local diag_file
+  diag_file="uv-setup-diagnostics-$(date +%Y%m%d_%H%M%S).txt"
 
   info "Generating comprehensive diagnostics file: $diag_file"
 
@@ -250,11 +325,11 @@ generate_uv_diagnostics() {
 
     echo "=== PYTHON INFORMATION ==="
     if command -v python3 >/dev/null 2>&1; then
-      echo "Python3 Path: $(which python3)"
+      echo "Python3 Path: $(command -v python3)"
       echo "Python3 Version: $(python3 --version 2>&1)"
     fi
     if command -v python >/dev/null 2>&1; then
-      echo "Python Path: $(which python)"
+      echo "Python Path: $(command -v python)"
       echo "Python Version: $(python --version 2>&1)"
     fi
     echo ""
@@ -372,7 +447,12 @@ extract() {
 }
 
 mkcd() {
-  mkdir -p "$1" && cd "$1"
+  if [ -z "${1:-}" ]; then
+    err "mkcd requires a directory argument"
+    return 1
+  fi
+  mkdir -p "$1" || { err "Failed to create directory $1"; return 1; }
+  cd "$1" || { err "Failed to change directory to $1"; return 1; }
 }
 
 backup() {
@@ -460,7 +540,6 @@ update_project_pyproject_tools() {
 copy_precommit_config() {
   local project_path="$1"
   local global_precommit="$GLOBAL_ENV_DIR/.pre-commit-config.yaml"
-  local project_precommit="$project_path/.pre-commit-config.yaml"
 
   if [[ -z "$project_path" ]]; then
     err "Usage: copy_precommit_config <project_directory>"
@@ -532,7 +611,7 @@ copy_global_requirements() {
     uv sync --no-build-isolation || warn "UV sync failed"
   fi
 
-  cd - >/dev/null  # Return to previous directory
+  cd - >/dev/null || { err "Failed to return to previous directory"; return 1; }
 }
 
 renew_project() {
