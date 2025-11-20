@@ -15,8 +15,6 @@ WORK_ENV_DIR="$HOME/Work_Environments"
 WORK_TOOLS_DIR="$HOME/my_work_tools"
 BIN_DIR=$WORK_TOOLS_DIR/bin/
 GLOBAL_ENV_DIR="$WORK_TOOLS_DIR/global_env"
-CONDA_DIR="/home/jconw483/miniconda3/"
-PIPCONF_DIR="$HOME/.config/pip"
 SSH_DIR="$HOME/.ssh"
 USERNAME="Jonathan Conwell"
 
@@ -31,6 +29,7 @@ set -euo pipefail
 
 # Source shared utilities
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+# shellcheck source=/home/jconw483/my_work_tools/global_env/shell_functions.sh
 source "$SCRIPT_DIR/shell_functions.sh"
 
 # Only set trap if script is run directly (not sourced)
@@ -62,11 +61,11 @@ fi
 
 # Validate system requirements
 validate_requirements
+# Ensure shell lint tool is available (shellcheck)
+ensure_shell_tools_installed
 
 # Define project directory
 PROJECT_DIR="$WORK_ENV_DIR/$PROJECT_NAME"
-
-PYPROJECT_FILE="$GLOBAL_ENV_DIR/pyproject.toml"
 
 # If a project name was provided, collect project-specific metadata
 if [[ "${SKIP_PROJECT_SETUP:-false}" != true ]]; then
@@ -159,7 +158,7 @@ fi
 # ------------- Clone Work Tools Repos -------------
 section "Cloning work tools repositories..."
 
-clone_or_pull "git@github.com:jconwell3115/global_env.git"
+clone_or_pull "git@git.marriott.com:jconw356/global_env.git"
 
 # Setup global_env directory with pre-commit
 cd "$GLOBAL_ENV_DIR" || exit
@@ -176,13 +175,14 @@ cd "$WORK_TOOLS_DIR" || exit
 info "Pausing for 30 seconds or until you press enter ..."
 read -t 30 -rp "" || true
 
-clone_or_pull "git@github.com:jconwell3115/bin.git"
+clone_or_pull "git@git.marriott.com:jconw356/bin.git"
 
 # Setup bin directory with config files and pre-commit
 cd "$BIN_DIR" || exit
 info "Setting up bin directory with configuration files..."
-cp -pr "$GLOBAL_ENV_DIR/.pre-commit-config.yaml" "$BIN_DIR"
 if is_git_repo; then
+  # ensure the most recent pre-config is copied
+  copy_precommit_config "$BIN_DIR"
   # Ensure .gitignore exists
   if [[ ! -f .gitignore ]]; then
     cp "$GLOBAL_ENV_DIR/.gitignore" ./
@@ -235,7 +235,14 @@ else
   info "Installed template ~/.bashrc"
 fi
 # Source ~/.bashrc if present
+# shellcheck disable=SC1090
 [ -f "$HOME/.bashrc" ] && source "$HOME/.bashrc"
+
+info "Copying the .pem for AAP CLI..."
+create_dir_if_not_exists "$SSH_DIR" "SSH directory"
+cp -pr "$GLOBAL_ENV_DIR/ansible-prod-user.pem" "$SSH_DIR"
+ls -al "$SSH_DIR"
+sleep 5
 
 # ------------- Setup Project Environment -------------
 section "Setting up project environment..."
@@ -274,8 +281,8 @@ else
         info "Copied .gitignore to project repository"
       fi
       # Copy pre-commit config
-      cp -pr "$GLOBAL_ENV_DIR/.pre-commit-config.yaml" ./
-      info "Installing pre-commit and creating log files in project"
+      copy_precommit_config .
+  info "Installing pre-commit for $REPO_NAME directory..."
       pre-commit install
     else
       warn "Project repository is not a git repository, skipping pre-commit install"
