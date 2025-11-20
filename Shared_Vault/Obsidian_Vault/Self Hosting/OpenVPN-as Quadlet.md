@@ -16,7 +16,8 @@ After=network-online.target
 [Container]
 ContainerName=openvpn-as
 # Choose your image. linuxserver/openvpn-as is popular and maintained.
-# Image=lscr.io/linuxserver/openvpn-as:latest# If you prefer the official OpenVPN Inc. image instead, use:
+# Image=lscr.io/linuxserver/openvpn-as:latest
+# If you prefer the official OpenVPN Inc. image instead, use:
 Image=openvpn/openvpn-as:latest
 
 # Rootful + host net to avoid slirp quirks and preserve routing semantics.
