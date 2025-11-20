@@ -315,41 +315,17 @@ fi
 
 
 # ------------- Configure Git -------------
-section "Setting Global Git Parameters"
-# Only set git config if not already configured
-if ! git config --global --get user.name >/dev/null 2>&1; then
-  git config --global user.name "$USERNAME"
-  info "Set global git user.name to $USERNAME"
+section "Installing global Git config"
+# Simplified behavior: copy a prepared global git config into ~/.gitconfig
+GLOBAL_GIT_CONFIG="$GLOBAL_ENV_DIR/global_git_config"
+if [[ -f "$GLOBAL_GIT_CONFIG" ]]; then
+  if [[ -f "$HOME/.gitconfig" ]]; then
+    backup_file "$HOME/.gitconfig"
+  fi
+  cp -pr "$GLOBAL_GIT_CONFIG" "$HOME/.gitconfig"
+  info "Installed global git config from $GLOBAL_GIT_CONFIG -> ~/.gitconfig"
 else
-  info "Global git user.name already set, skipping..."
-fi
-
-if ! git config --global --get user.email >/dev/null 2>&1; then
-  git config --global user.email "$EMAIL"
-  info "Set global git user.email to $EMAIL"
-else
-  info "Global git user.email already set, skipping..."
-fi
-
-if ! git config --global --get credential.helper >/dev/null 2>&1; then
-  git config --global credential.helper "cache --timeout=86400"
-  info "Set global git credential helper"
-else
-  info "Global git credential helper already set, skipping..."
-fi
-
-if ! git config --global --get pull.rebase >/dev/null 2>&1; then
-  git config --global pull.rebase false
-  info "Set global git pull.rebase to false"
-else
-  info "Global git pull.rebase already set, skipping..."
-fi
-
-if ! git config --global --get alias.bc >/dev/null 2>&1; then
-  git config --global alias.bc "branch --show-current"
-  info "Set global git alias 'bc'"
-else
-  info "Global git alias 'bc' already set, skipping..."
+  warn "Global git config not found at $GLOBAL_GIT_CONFIG; skipping git configuration"
 fi
 
 # Validate that setup was successful
