@@ -11,18 +11,31 @@
 #### Python
 
 - **Version**: [Specify minimum Python version, e.g., Python 3.12+]
-- **Type Hints**: All functions, methods, and classes must include complete type
-  hints using `typing` module (Dict, List, Optional, Union, Any)
+- **Type Hints**: All functions, methods, and classes must include complete type hints using `typing` module (Dict, List, Optional, Union, Any)
 - **Formatting**: Follow PEP 8 with line length of [88/100/120] characters
-- **Linting**: Code must pass `mypy`, `pylint`, `ruff` [specify tools and any ignore flags]
-- **Imports**: Group imports as: stdlib, third-party, local modules (use `isort` for sorting)
+- **Linting**: Code must pass `mypy --ignore-missing-imports`, `pylint`, `ruff` [specify tools and any ignore flags]
+- **Imports**: Group imports as: stdlib, third-party, [framework modules if applicable], local modules (use `isort` for sorting)
+
+#### [Other Languages - JavaScript/TypeScript/Go/etc.]
+
+[Add language-specific style guidelines as needed]
+
+### [Framework-Specific Guidelines - e.g., Ansible, Django, FastAPI]
+
+[If your project uses a specific framework, add guidelines here]
+
+Example for Ansible:
+
+- **Playbooks**: Use YAML with 2-space indentation
+- **Variable naming**: Use snake_case with descriptive prefixes (e.g., `project_` prefix)
+- **Tags**: Always include tags for tasks to enable selective execution
+- **Error handling**: Use `failed_when`, `changed_when`, and `ignore_errors` appropriately
 
 ## Documentation Style Guide
 
 ### Python Docstrings
 
-All Python modules, classes, methods, and functions must use reStructuredText
-(reST) format with the following enhanced structure:
+All Python modules, classes, methods, and functions must use reStructuredText (reST) format with the following enhanced structure:
 
 #### Module Docstrings
 
@@ -475,11 +488,18 @@ Before finalizing docstrings, verify:
 
 [Define project-specific naming patterns]
 
-- Module names: [pattern, e.g., lowercase_with_underscores]
-- Class names: [pattern, e.g., PascalCase with prefix]
-- Function names: [pattern, e.g., lowercase_with_underscores]
-- Constants: [pattern, e.g., UPPER_CASE_WITH_UNDERSCORES]
-- Private members: [pattern, e.g., _leading_underscore]
+- **Module names**: [pattern, e.g., lowercase_with_underscores, or prefix_name for custom modules]
+- **Class names**: [pattern, e.g., PascalCase, or PrefixClassName for project classes]
+- **Function names**: [pattern, e.g., lowercase_with_underscores]
+- **Constants**: [pattern, e.g., UPPER_CASE_WITH_UNDERSCORES]
+- **Private members**: [pattern, e.g., _leading_underscore]
+- **File names**: [pattern, e.g., prefix_action_object.ext]
+
+Example project-specific patterns:
+
+- Use `[prefix]_` for all custom modules in `library/` (e.g., MiND Pulse uses `mp_` for `mp_process_compliance.py`)
+- Use `[ProjectName]` prefix for Python classes (e.g., MiND Pulse uses `MiNDPulseProcessCompliance`)
+- File names follow pattern: `[prefix]_<action>_<object>.[ext]` (e.g., MiND Pulse uses `mp_compliance_report.yml`)
 
 ### Domain-Specific Patterns
 
@@ -500,55 +520,309 @@ Example:
 - Log errors at appropriate levels (debug, info, warning, error)
 - Document all exceptions in docstring `Raises` section
 
+Example for framework-specific error handling:
+
+- Ansible modules should use `module.fail_json()` for errors, not `sys.exit()`
+- Custom modules should restore default signal handlers: `signal.signal(signal.SIGINT, signal.SIG_DFL)`
+- Always provide meaningful error messages with context (object name, identifier, etc.)
+- Log debug information to help troubleshoot issues in production
+
 ### Testing
 
 [Define testing requirements and patterns]
 
-- Minimum test coverage: [percentage]%
-- Test framework: [pytest, unittest, etc.]
-- Mock external dependencies
-- Test edge cases: None, empty, single item, many items
-- Verify type hints with mypy
+- **Minimum test coverage**: [percentage]%
+- **Test framework**: [pytest, unittest, etc.]
+- **Mock external dependencies**: Use [unittest.mock, pytest-mock, etc.]
+- **Test edge cases**: None, empty, single item, many items
+- **Verify type hints**: Run `mypy --ignore-missing-imports` (or stricter)
+- **Test input variations**: Test with various input shapes/envelopes
+- **Test normalization**: Test edge cases (whitespace, case differences, special characters)
 
 ## File Organization
 
 [Describe the project's directory structure]
 
+Example for Python projects:
+
 ```shell
 project-root/
 ├── src/                 # Source code
+│   └── package_name/    # Main package
 ├── tests/               # Test files
 ├── docs/                # Documentation
-├── scripts/             # Utility scripts
+├── bin/                 # Utility scripts
 ├── requirements.txt     # Dependencies
+├── pyproject.toml       # Project configuration
 └── README.md           # Project overview
+```
+
+Example for Ansible projects (like MiND Pulse orchestration):
+
+```shell
+project-root/
+├── library/             # Custom Ansible modules
+├── group_vars/          # Group variables
+├── host_vars/           # Host variables (if needed)
+├── roles/               # Ansible roles (if used)
+├── logs/                # Execution logs (gitignored)
+├── output/              # Output files (gitignored)
+├── requirements.txt     # Python dependencies
+├── requirements.yml     # Ansible Galaxy dependencies
+├── ansible.cfg          # Ansible configuration
+└── *.yml               # Playbooks
 ```
 
 ## Common Patterns
 
-### [Pattern Name 1]
+### [Pattern Name 1 - e.g., Conservative Merge Pattern]
 
 [Describe a common pattern used in the codebase with example]
 
+Example - Conservative Merge Pattern:
+
+When merging data structures:
+
+1. Deep copy values to avoid shared references
+2. Extend lists rather than replacing them
+3. Merge dicts recursively
+4. Preserve existing data when possible
+
 ```python
-# Example code showing the pattern
+import copy
+
+def merge_data(existing: dict, new_data: dict) -> dict:
+    """Merge new_data into existing using conservative semantics."""
+    for key, value in new_data.items():
+        if isinstance(value, list) and isinstance(existing.get(key), list):
+            existing[key].extend(copy.deepcopy(value))
+        elif isinstance(value, dict) and isinstance(existing.get(key), dict):
+            merge_data(existing[key], value)
+        else:
+            existing[key] = copy.deepcopy(value)
+    return existing
 ```
 
-### [Pattern Name 2]
+### [Pattern Name 2 - e.g., Module/Class Structure]
 
-[Describe another common pattern]
+[Describe structural patterns used in the codebase]
+
+Example - Standard Module Structure (MiND Pulse pattern):
+
+All business logic is encapsulated in classes. The `main()` function only handles:
+
+- Signal handler restoration
+- Argument/module initialization
+- Class instantiation
+- Delegating to the class's `run_module()` or `sub_main()` method
+
+Helper methods are private (prefixed with `_`).
 
 ```python
-# Example code
+"""module_name
+==============
+
+Module description here.
+"""
+
+from typing import Any, Dict, List, Optional
+import signal
+import sys
+
+try:
+    from external_module import ExternalClass
+except ImportError as e:
+    print(f"Error importing required modules: {e}")
+    sys.exit(1)
+
+
+class MyProcessor:
+    """Process and handle business logic.
+    
+    Parameters
+    ----------
+    result : dict
+        Mutable result dict for returning data to caller.
+    config : dict
+        Configuration parameters.
+    
+    Attributes
+    ----------
+    result : dict
+        Reference to mutable result mapping.
+    config : dict
+        Configuration settings.
+    """
+    
+    def __init__(self, result: Dict[str, Any], config: Dict[str, Any]) -> None:
+        self.result = result
+        self.config = config
+    
+    def _helper_method(self, data: Any) -> Any:
+        """Private helper method for internal processing."""
+        # Helper logic here
+        pass
+    
+    def run_module(self) -> None:
+        """Execute the main processing pipeline.
+        
+        This is the primary entry point called from main().
+        Orchestrates all processing steps and updates self.result.
+        
+        :returns: None (updates self.result in-place)
+        :rtype: None
+        """
+        # Main business logic here
+        self._helper_method(self.config)
+        self.result["status"] = "success"
+
+
+def main() -> None:
+    """Module entry point.
+    
+    Handles only:
+    - Signal handler restoration
+    - CLI argument parsing or module initialization
+    - Class instantiation
+    - Delegation to run_module()
+    """
+    # Restore default signal handler for SIGINT (Ctrl-C)
+    signal.signal(signal.SIGINT, signal.SIG_DFL)
+    
+    # Initialize arguments/config
+    config = {"param1": "value1"}
+    result = {"status": "unknown"}
+    
+    try:
+        # Instantiate and delegate to class
+        processor = MyProcessor(result, config)
+        processor.run_module()
+    except Exception as e:
+        print(f"Error: {e}")
+        sys.exit(1)
+
+
+if __name__ == "__main__":
+    main()
+```
+
+Example - Ansible Module Structure (MiND Pulse pattern):
+
+```python
+"""ansible_module_name
+======================
+
+Ansible module description here.
+"""
+
+from typing import Any, Dict, Optional
+import signal
+import sys
+
+try:
+    from ansible.module_utils.basic import AnsibleModule  # type: ignore
+except ImportError as e:
+    print(f"Error importing Ansible modules: {e}")
+    sys.exit(1)
+
+
+class MyModuleProcessor:
+    """Process module logic for Ansible.
+    
+    Parameters
+    ----------
+    result : dict
+        Mutable result dict returned via module.exit_json().
+    module : AnsibleModule
+        The AnsibleModule instance providing params and exit methods.
+    """
+    
+    def __init__(self, result: Dict[str, Any], module: AnsibleModule) -> None:
+        self.result = result
+        self.module = module
+        self.param1: str = module.params["param1"]
+        self.param2: Optional[str] = module.params.get("param2")
+    
+    def _validate_input(self) -> None:
+        """Private helper to validate module parameters."""
+        if not self.param1:
+            raise ValueError("param1 cannot be empty")
+    
+    def _process_data(self) -> Dict[str, Any]:
+        """Private helper for core data processing."""
+        # Processing logic
+        return {"processed": True}
+    
+    def run_module(self) -> None:
+        """Execute the module processing pipeline.
+        
+        This method orchestrates all processing steps, updates self.result,
+        and calls module.exit_json() to return control to Ansible.
+        
+        :returns: None (exits via module.exit_json())
+        :rtype: None
+        """
+        self._validate_input()
+        processed = self._process_data()
+        
+        self.result["changed"] = True
+        self.result["data"] = processed
+        self.module.exit_json(**self.result)
+
+
+def main() -> None:
+    """Ansible module entry point.
+    
+    Handles only:
+    - Signal handler restoration
+    - Module argument specification
+    - AnsibleModule instantiation
+    - Class instantiation and delegation to run_module()
+    """
+    # Restore default signal handler for SIGINT (Ctrl-C)
+    signal.signal(signal.SIGINT, signal.SIG_DFL)
+    
+    module_args = dict(
+        param1=dict(type="str", required=True),
+        param2=dict(type="str", required=False, default=None),
+    )
+    
+    result = dict(changed=False, data={})
+    module: Optional[AnsibleModule] = None
+    
+    try:
+        module = AnsibleModule(
+            argument_spec=module_args,
+            supports_check_mode=False
+        )
+        
+        processor = MyModuleProcessor(result, module)
+        processor.run_module()  # Exits via module.exit_json()
+        
+    except Exception as e:
+        if module is not None:
+            module.fail_json(msg=f"Error: {e}", **result)
+        else:
+            print(f"Error: {e}", file=sys.stderr)
+            sys.exit(1)
+
+
+if __name__ == "__main__":
+    main()
 ```
 
 ## Best Practices
 
-1. **Practice 1** - Description of best practice and why it matters
-2. **Practice 2** - Another important practice with rationale
-3. **Practice 3** - Additional guidance for code quality
-4. **Practice 4** - Performance or security considerations
-5. **Practice 5** - Maintainability and readability guidelines
+1. **Always use type hints** - Every function/method parameter and return value must be typed for better IDE support and error detection
+2. **Document side effects** - Clearly document any mutations, I/O, or state changes in docstrings with **bold** emphasis
+3. **Handle multiple input shapes** - Data can come in various envelopes/formats; normalize early in the pipeline
+4. **Normalize before matching** - Always normalize identifiers (strip, lowercase) before comparison or lookup operations
+5. **Deep copy when merging** - Prevent unintended mutations with `copy.deepcopy()` when merging data structures
+6. **Provide realistic examples** - Include runnable code examples in module/class docstrings showing actual usage
+7. **Test with type checkers** - Ensure type hints are correct and complete by running mypy or similar tools
+8. **Use conservative defaults** - Prefer safe operations that preserve data rather than destructive operations
+9. **Log comprehensively** - Use appropriate log levels and include context (identifiers, operation, values)
+10. **Follow the principle of least surprise** - Design APIs and behaviors that match user expectations
 
 ## Dependencies and Integration
 
