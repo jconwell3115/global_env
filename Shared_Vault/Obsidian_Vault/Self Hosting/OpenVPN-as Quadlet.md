@@ -3,7 +3,7 @@
 ------------------------------------------------------------
 ## 1) Create the Quadlet file
 
-#### Path: /etc/containers/systemd/openvpnas.container
+#### Path: /etc/containers/systemd/openvpn-as.container
 > Rootful systemd (system scope) + host networking + NET_ADMIN + TUN device + persistence
 ```bash
 cat << 'EOF' | sudo tee /etc/containers/systemd/openvpn-as.container
@@ -65,7 +65,7 @@ RestartSec=5s
 TimeoutStartSec=0
 
 # If your host needs IP forwarding at container start, you can uncomment:
-# ExecStartPre=/usr/bin/sysctl -w net.ipv4.ip_forward=1
+ExecStartPre=/usr/bin/sysctl -w net.ipv4.ip_forward=1
 # ExecStartPre=/usr/bin/sysctl -w net.ipv6.conf.all.forwarding=1
 
 [Install]

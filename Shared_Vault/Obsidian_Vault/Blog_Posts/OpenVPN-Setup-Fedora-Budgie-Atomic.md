@@ -45,40 +45,58 @@ After=network-online.target
 
 [Container]
 ContainerName=openvpn-as
-# Using the official OpenVPN Access Server image
+# Choose your image. linuxserver/openvpn-as is popular and maintained.
+# Image=lscr.io/linuxserver/openvpn-as:latest
+# If you prefer the official OpenVPN Inc. image instead, use:
 Image=openvpn/openvpn-as:latest
 
-# Rootful + host networking for VPN routing
+# Rootful + host net to avoid slirp quirks and preserve routing semantics.
 Network=host
 
-# Required capabilities for VPN operations
+# Required for VPN routing + iptables operations inside the container
 AddCapability=NET_ADMIN
 AddCapability=NET_RAW
 
-# Ensure TUN device is available
+# Ensure the TUN device is available in the container
 AddDevice=/dev/net/tun
 
-# Persist configuration and PKI data
+# Persist the AS configuration and PKI
 Volume=/home/rhlabs/podman/volumes/openvpn-config:/openvpn:z
 
-# Environment variables
+# (Optional) auto-update at reboot if you want
+# AutoUpdate=registry
+
+# Environment (adjust PUID/PGID/UMASK as you like; leave root if you want fully rootful)
+# If you prefer running as root inside the container, omit PUID/PGID
 Environment=PUID=0
 Environment=PGID=0
 Environment=TZ=America/New_York
 
-# Published ports
+# If you need to accept EULA non-interactively with the linuxserver image:
+# Environment=INTERACTIVE=false
+# Environment=EULA=accept
+
+
+# Open Ports
 PublishPort=943:943
 PublishPort=9443:9443
 PublishPort=1194:1194/udp
 
+# (Optional) if your host uses nftables backbone, you can allow legacy iptables in the container:
+# Environment=OVPN_AS_USE_LEGACY_IPTABLES=1
+
 [Service]
-# Load TUN kernel module before starting
+# Ensure the tun module exists before the container starts
 ExecStartPre=/usr/sbin/modprobe tun
 
-# Service resilience
+# Make it resilient
 Restart=always
 RestartSec=5s
 TimeoutStartSec=0
+
+# If your host needs IP forwarding at container start, you can uncomment:
+ExecStartPre=/usr/bin/sysctl -w net.ipv4.ip_forward=1
+# ExecStartPre=/usr/bin/sysctl -w net.ipv6.conf.all.forwarding=1
 
 [Install]
 WantedBy=multi-user.target
@@ -152,9 +170,9 @@ After the service starts successfully:
 3. **Default credentials**: 
    - Username: `openvpn`
    - Password: Check the container logs for the auto-generated password:
-     ```bash
-     journalctl -u openvpn-as.service | grep -i password
-     ```
+```bash
+journalctl -u openvpn-as.service | grep -i password
+```
 
 4. **Complete the initial setup wizard** in the web interface
 
