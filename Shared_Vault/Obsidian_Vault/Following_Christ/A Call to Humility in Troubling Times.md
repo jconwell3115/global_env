@@ -10,14 +10,6 @@ status: draft
 
 # A Call to Humility in Troubling Times
 
-Let's give the devotional a title
-
-Here is the final devotional with a title added, keeping all previous content intact and the simplified notes section with a title:
-
-***
-
-### A Call to Humility in Troubling Times
-
 #### **Scripture Reading:**
 - [2 Timothy 3:1-2 ESV](https://www.blueletterbible.org/esv/2ti/3/1-2/)
 - [Proverbs 16:18 ESV](https://www.blueletterbible.org/esv/pro/16/18/)

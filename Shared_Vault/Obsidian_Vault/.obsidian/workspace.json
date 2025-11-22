@@ -27,12 +27,12 @@
             "state": {
               "type": "markdown",
               "state": {
-                "file": "Self Hosting/OpenVPN-as Quadlet.md",
+                "file": "Following_Christ/A Call to Humility in Troubling Times.md",
                 "mode": "source",
                 "source": false
               },
               "icon": "lucide-file",
-              "title": "OpenVPN-as Quadlet"
+              "title": "A Call to Humility in Troubling Times"
             }
           }
         ],
@@ -93,8 +93,7 @@
       }
     ],
     "direction": "horizontal",
-    "width": 355.5,
-    "collapsed": true
+    "width": 355.5
   },
   "right": {
     "id": "7eb2226cf99d6b17",
@@ -185,11 +184,11 @@
   },
   "active": "c6685168d9991453",
   "lastOpenFiles": [
+    "Self Hosting/OpenVPN-as Quadlet.md",
     "Cheat Sheets/copilot-instruction-ideas.md",
     "Following_Christ/Faith Without Favoritism.md",
     "_templates/Devotional Template.md",
     "Following_Christ/Truth, Mercy, and Honoring God.md",
-    "Self Hosting/OpenVPN-as Quadlet.md",
     "Clippings/This data removal service helped me regain control of my personal data.md",
     "Self Hosting/Next Cloud Information.md",
     "Following_Christ/Living as One Who Follows Christ.md",
