@@ -117,11 +117,12 @@ EOF
 ### Step 2: Prepare the Host System
 
 Create the necessary directories and enable IP forwarding:
+> Change the directory structure to match yours
 
 ```bash
 # Create persistent storage directory
-sudo mkdir -p /home/rhlabs/podman/volumes/openvpn-config
-sudo chown -R root:root /home/rhlabs/podman/volumes/openvpn-config
+sudo mkdir -p /home/{username}/podman/volumes/openvpn-config
+sudo chown -R root:root /home/{username}/podman/volumes/openvpn-config
 
 # Enable IP forwarding (required for VPN routing)
 echo "net.ipv4.ip_forward=1" | sudo tee /etc/sysctl.d/99-openvpn.conf
@@ -171,7 +172,7 @@ After the service starts successfully:
    - Username: `openvpn`
    - Password: Check the container logs for the auto-generated password:
 ```bash
-journalctl -u openvpn-as.service | grep -i password
+journalctl -u openvpn-as.service | grep -i "Auto-generated pass ="
 ```
 
 4. **Complete the initial setup wizard** in the web interface
@@ -192,26 +193,26 @@ Once your server is running, you have two main interfaces:
 #### 1. Change the Admin Password
 
 From the Admin UI:
-1. Navigate to **User Management > User Permissions**
+1. Navigate to **Users** in the left menu
 2. Select the `openvpn` user
 3. Click **Change Password**
 4. Set a strong, unique password
 
 #### 2. Configure Network Settings
 
-Navigate to **Configuration > Network Settings**:
+Navigate to **VPN Server -> Network Settings**:
 
 - **Hostname or IP Address**: Set this to your public IP or domain name
 - **VPN Server Port**: Default is 1194/UDP (change if needed)
-- **Protocol**: UDP is recommended for better performance
+- **Protocol**: UDP is recommended for better performance, TCP has better security
 
 #### 3. Set Up Routing
 
-Navigate to **Configuration > VPN Settings**:
+Navigate to **Access Controls > Internet Access and DNS**:
 
-- **Routing**:
-  - Enable "Should client Internet traffic be routed through the VPN?" if you want all client traffic to go through the VPN
-  - Or configure specific network routes for split-tunneling
+- Internet Gateway:
+  - Enable "Full-Tunnel"
+	  - This will send all client traffic through the VPN
 
 - **DNS Settings**:
   - Specify DNS servers to push to clients
@@ -219,14 +220,17 @@ Navigate to **Configuration > VPN Settings**:
 
 #### 4. Create User Accounts
 
-Navigate to **User Management > User Permissions**:
+Navigate to **Users**:
 
-1. Click **New Username**
+1. Click Add New User
 2. Enter username
 3. Set permissions:
+   - **User role**: select user for normal account
    - **Allow Auto-login**: Convenient but less secure
-   - **Allow Access From**: Restrict by IP if needed
-4. Set password or use certificate authentication
+   - **Authentication**: Set Password
+   - **Networking**: Leave these as default for ease of use
+	   - Enable VPN gateway if you're using another router that services clients to connect to the VPN
+1. Set password or use certificate authentication
 
 ### Advanced Configuration Options
 
@@ -235,16 +239,17 @@ Navigate to **User Management > User Permissions**:
 For production use, replace the self-signed certificate:
 
 1. Obtain a certificate from Let's Encrypt or your certificate authority
-2. Navigate to **Configuration > Web Server**
-3. Upload your certificate and private key
+2. Navigate to **Certificate Management**
+3. Select `use your own certificate`
+4. Upload your certificate
 
 #### Two-Factor Authentication
 
 Enable 2FA for additional security:
 
 1. Navigate to **Authentication > General**
-2. Enable **Two-Factor Authentication**
-3. Users can set up 2FA using Google Authenticator or similar apps
+2. Enable **Multifactor Authentication (MFA)**
+3. Users can set up MFA using Google Authenticator or similar apps
 
 ------------------------------------------------------------
 
@@ -262,7 +267,7 @@ OpenVPN Access Server supports multiple client platforms with various connection
 ### Windows Client Setup
 
 #### Method 1: Using OpenVPN Connect (Recommended)
-
+> **These setup methods assume that you have local access to the server and are not remote**
 1. **Download OpenVPN Connect**:
    - Visit `https://openvpn.net/client/`
    - Download and install OpenVPN Connect for Windows
@@ -272,7 +277,7 @@ OpenVPN Access Server supports multiple client platforms with various connection
    - Log in with your username and password
    - Click **Download for Windows** or **Get Profile**
 
-3. **Import Profile**:
+1. **(Optional) Import Profile**:
    - Open OpenVPN Connect
    - Click **Import Profile > FILE**
    - Browse to your downloaded `.ovpn` file
