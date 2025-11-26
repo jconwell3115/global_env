@@ -57,9 +57,15 @@ select = [
     "S",   # flake8-bandit
 ]
 ignore = [
-    "E501", # line too long, handled by formatter
-    "B008", # do not perform function calls in argument defaults
-    "C901", # too complex
+    "E501",   # line too long, handled by formatter
+    "B008",   # do not perform function calls in argument defaults
+    "D100",   # missing-module-docstring (handled by pydocstyle)
+    "D101",   # missing-class-docstring (handled by pydocstyle)
+    "D102",   # missing-function-docstring (handled by pydocstyle)
+    "D103",   # missing-function-docstring (handled by pydocstyle)
+    "D104",   # missing-package-docstring (handled by pydocstyle)
+    "D105",   # missing-magic-method-docstring (handled by pydocstyle)
+    "D107",   # missing-init-docstring (handled by pydocstyle)
 ]
 
 [tool.ruff.lint.mccabe]
@@ -81,6 +87,7 @@ known-third-party = []                     # Add common third-party packages if 
 quote-style = "double"          # Use double quotes for strings
 indent-style = "space"          # Spaces for indentation
 line-ending = "auto"            # Auto-detect line endings
+
 [tool.mypy]
 # Static type checking for Python
 python_version = "3.12"
@@ -137,36 +144,3 @@ preserve_blank_lines=true
 profile="jinja"
 use_gitignore=true
 include="J004,J018,T001,T002,T003,T027,T028,T032,T034"
-
-[tool.pylint.main]
-ignore = ["venv", ".venv"]
-jobs = 1
-init-hook = "import sys; sys.path.append('.')"
-
-[tool.pylint.messages_control]
-# Disable some docstring checks (we use pydocstyle separately) and other noisy checks
-disable = [
-    "C0114",  # missing-module-docstring
-    "C0115",  # missing-class-docstring
-    "C0116",  # missing-function-docstring
-    "R0903",  # too-few-public-methods
-    "R0201",  # no-self-use
-]
-
-[tool.pylint.format]
-max-line-length = 90
-indent-string = "    "
-
-[tool.pylint.reports]
-output-format = "colorized"
-score = false
-
-[tool.pylint.typecheck]
-# Allow dynamic members commonly used in network SDKs
-generated-members = ["requests.*", "netmiko.*", "pynautobot.*"]
-
-[tool.pylint.basic]
-good-names = ["i", "j", "k", "ex", "Run", "_", "pk", "id"]
-
-[tool.pylint.similarities]
-min-similarity-lines = 4
