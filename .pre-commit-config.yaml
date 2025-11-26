@@ -22,17 +22,12 @@ repos:
 
       - id: mypy
         name: Mypy
-        entry: mypy
+        entry: uv run -- mypy
         language: system
-        files: \.py$
         log_file: logs/mypy.log
-
-      - id: pylint
-        name: Pylint
-        entry: pylint
-        language: system
-        files: \.py$
-        log_file: logs/pylint.log
+        types: [python]
+        require_serial: true
+        additional_dependencies: []
 
       - id: markdownlint
         name: Markdownlint
