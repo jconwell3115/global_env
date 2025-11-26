@@ -1,10 +1,13 @@
 {
     "plugins": {
+        "blanks-around-headings": {
+            "enabled": false
+        },
+        "single-title": {
+            "enabled": false
+        },
         "line-length": {
-            "enabled": true,
-            "line_length": 90,
-            "heading_line_length": 90,
-            "code_block_line_length": 120
+            "enabled": false
         }
     }
 }
