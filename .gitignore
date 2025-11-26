@@ -48,3 +48,6 @@ logs/
 
 # UV specific
 uv.lock
+
+# Copilot instructions
+*copilot*.md
