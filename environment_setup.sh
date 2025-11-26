@@ -16,6 +16,7 @@ WORK_TOOLS_DIR="$HOME/my_work_tools"
 BIN_DIR=$WORK_TOOLS_DIR/bin/
 GLOBAL_ENV_DIR="$WORK_TOOLS_DIR/global_env"
 SSH_DIR="$HOME/.ssh"
+USERNAME="Jonathan Conwell"
 
 # Set variables for key generation
 KEY_NAME="id_ed25519"
@@ -268,7 +269,7 @@ else
   # Clone project repo (only if REPO_NAME is provided)
   if [[ -n "$REPO_NAME" ]]; then
     info "Cloning project repository..."
-    clone_or_pull "git@git.marriott.com:${REPO_OWNER:-jconwell3115}/$REPO_NAME.git"
+    clone_or_pull "git@github.com:${REPO_OWNER:-jconwell3115}/$REPO_NAME.git"
 
     cd "$PROJECT_DIR/$REPO_NAME" || exit
     info "Changed to repository directory: $(pwd)"
