@@ -556,6 +556,50 @@ copy_precommit_config() {
   info "Copied .pre-commit-config.yaml to $project_path"
 }
 
+copy_copilot_instructions() {
+  local project_path="$1"
+  local global_copilot="$GLOBAL_ENV_DIR/copilot-instructions-template.md"
+  local github_dir="$project_path/.github"
+  local target_file="$github_dir/copilot-instructions.md"
+
+  if [[ -z "$project_path" ]]; then
+    err "Usage: copy_copilot_instructions <project_directory>"
+    return 1
+  fi
+
+  if [[ ! -f "$global_copilot" ]]; then
+    warn "Global copilot-instructions-template.md not found at $global_copilot; skipping"
+    return 0
+  fi
+
+  # Create .github directory if it doesn't exist
+  if [[ ! -d "$github_dir" ]]; then
+    mkdir -p "$github_dir"
+    info "Created .github directory at $github_dir"
+  fi
+
+  # Handle existing copilot-instructions.md
+  if [[ -f "$target_file" ]]; then
+    # Check if existing file is identical to template
+    if diff -q "$global_copilot" "$target_file" >/dev/null 2>&1; then
+      info "Existing copilot-instructions.md is identical to template; skipping"
+      return 0
+    else
+      # Files differ - create a reference copy and warn user
+      local template_copy="$github_dir/copilot-instructions-template.md"
+      cp -pr "$global_copilot" "$template_copy"
+      warn "Existing copilot-instructions.md differs from template"
+      warn "Template saved as $template_copy for reference"
+      warn "Please manually merge changes or replace the existing file"
+      return 0
+    fi
+  fi
+
+  # No existing file - safe to copy
+  cp -pr "$global_copilot" "$target_file"
+  info "Copied copilot-instructions-template.md -> $target_file"
+}
+
 copy_global_requirements() {
   local project_path="$1"
 
