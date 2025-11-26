@@ -31,7 +31,7 @@ repos:
 
       - id: markdownlint
         name: Markdownlint
-        entry: pymarkdown scan
+        entry: pymarkdownlnt scan
         language: system
         types: [markdown]
         log_file: logs/markdownlint.log
