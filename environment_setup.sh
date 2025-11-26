@@ -16,7 +16,6 @@ WORK_TOOLS_DIR="$HOME/my_work_tools"
 BIN_DIR=$WORK_TOOLS_DIR/bin/
 GLOBAL_ENV_DIR="$WORK_TOOLS_DIR/global_env"
 SSH_DIR="$HOME/.ssh"
-USERNAME="Jonathan Conwell"
 
 # Set variables for key generation
 KEY_NAME="id_ed25519"
@@ -56,7 +55,7 @@ fi
 if [[ -z "$REPO_NAME" ]]; then
   warn "No repo name provided - setting up project directory only (no repository will be cloned)"
 else
-  read -rp "Enter the repo owner: (Leave blank for jconwell3115) " REPO_OWNER
+  read -rp "Enter the repo owner: (Leave blank for Network-DevOps) " REPO_OWNER
 fi
 
 # Validate system requirements
@@ -158,7 +157,7 @@ fi
 # ------------- Clone Work Tools Repos -------------
 section "Cloning work tools repositories..."
 
-clone_or_pull "git@github.com:jconwell3115/global_env.git"
+clone_or_pull "git@git.marriott.com:jconw356/global_env.git"
 
 # Setup global_env directory with pre-commit
 cd "$GLOBAL_ENV_DIR" || exit
@@ -175,7 +174,7 @@ cd "$WORK_TOOLS_DIR" || exit
 info "Pausing for 30 seconds or until you press enter ..."
 read -t 30 -rp "" || true
 
-clone_or_pull "git@github.com:jconwell3115/bin.git"
+clone_or_pull "git@git.marriott.com:jconw356/bin.git"
 
 # Setup bin directory with config files and pre-commit
 cd "$BIN_DIR" || exit
@@ -269,7 +268,7 @@ else
   # Clone project repo (only if REPO_NAME is provided)
   if [[ -n "$REPO_NAME" ]]; then
     info "Cloning project repository..."
-    clone_or_pull "git@github.com:${REPO_OWNER:-jconwell3115}/$REPO_NAME.git"
+    clone_or_pull "git@git.marriott.com:${REPO_OWNER:-Network-DevOps}/$REPO_NAME.git"
 
     cd "$PROJECT_DIR/$REPO_NAME" || exit
     info "Changed to repository directory: $(pwd)"
@@ -282,6 +281,8 @@ else
       fi
       # Copy pre-commit config
       copy_precommit_config .
+      # Copy copilot instructions to .github directory
+      copy_copilot_instructions .
   info "Installing pre-commit for $REPO_NAME directory..."
       pre-commit install
     else
