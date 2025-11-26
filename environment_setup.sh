@@ -29,7 +29,7 @@ set -euo pipefail
 
 # Source shared utilities
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
-# shellcheck source=/home/jconw483/my_work_tools/global_env/shell_functions.sh
+# shellcheck source=/home/jconwell3115/my_work_tools/global_env/shell_functions.sh
 source "$SCRIPT_DIR/shell_functions.sh"
 
 # Only set trap if script is run directly (not sourced)
@@ -282,6 +282,8 @@ else
       fi
       # Copy pre-commit config
       copy_precommit_config .
+      # Copy copilot instructions to .github directory
+      copy_copilot_instructions .
   info "Installing pre-commit for $REPO_NAME directory..."
       pre-commit install
     else
