@@ -27,23 +27,30 @@
             "state": {
               "type": "markdown",
               "state": {
-                "file": "Self Hosting/Nextcloud AIO Setup with Portainer on Fedora.md",
+                "file": "Self Hosting/Cloudflare DDNS as a Quadlet Guide.md",
                 "mode": "source",
                 "source": false
               },
               "icon": "lucide-file",
-              "title": "Nextcloud AIO Setup with Portainer on Fedora"
+              "title": "Cloudflare DDNS as a Quadlet Guide"
             }
-          }
-        ],
-        "currentTab": 1
-      },
-      {
-        "id": "b6d9a11014b7b58b",
-        "type": "tabs",
-        "children": [
+          },
           {
-            "id": "aea4ef2ca20d3bea",
+            "id": "13141a12ae761d8f",
+            "type": "leaf",
+            "state": {
+              "type": "markdown",
+              "state": {
+                "file": "_templates/Coding Template.md",
+                "mode": "source",
+                "source": false
+              },
+              "icon": "lucide-file",
+              "title": "Coding Template"
+            }
+          },
+          {
+            "id": "dcde890e712da599",
             "type": "leaf",
             "state": {
               "type": "markdown",
@@ -55,8 +62,23 @@
               "icon": "lucide-file",
               "title": "OpenVPN-as Quadlet"
             }
+          },
+          {
+            "id": "0ae7a353120baf76",
+            "type": "leaf",
+            "state": {
+              "type": "markdown",
+              "state": {
+                "file": "Self Hosting/Podman & Quadlet Files and Volumes Best Practices.md",
+                "mode": "source",
+                "source": false
+              },
+              "icon": "lucide-file",
+              "title": "Podman & Quadlet Files and Volumes Best Practices"
+            }
           }
-        ]
+        ],
+        "currentTab": 4
       }
     ],
     "direction": "vertical"
@@ -88,7 +110,7 @@
             "state": {
               "type": "search",
               "state": {
-                "query": "tag:#Title",
+                "query": "tag:#Cloudflare",
                 "matchingCase": false,
                 "explainSearch": false,
                 "collapseAll": false,
@@ -129,6 +151,7 @@
             "state": {
               "type": "backlink",
               "state": {
+                "file": "Self Hosting/Podman & Quadlet Files and Volumes Best Practices.md",
                 "collapseAll": false,
                 "extraContext": false,
                 "sortOrder": "alphabetical",
@@ -138,7 +161,7 @@
                 "unlinkedCollapsed": true
               },
               "icon": "links-coming-in",
-              "title": "Backlinks"
+              "title": "Backlinks for Podman & Quadlet Files and Volumes Best Practices"
             }
           },
           {
@@ -183,12 +206,12 @@
               "title": "Outline"
             }
           }
-        ]
+        ],
+        "currentTab": 2
       }
     ],
     "direction": "horizontal",
-    "width": 300,
-    "collapsed": true
+    "width": 300
   },
   "left-ribbon": {
     "hiddenItems": {
@@ -202,34 +225,34 @@
       "bases:Create new base": false
     }
   },
-  "active": "c6685168d9991453",
+  "active": "0ae7a353120baf76",
   "lastOpenFiles": [
+    "Self Hosting/🏠 Self-Hosting with Docker & Docker Compose Best Practices.md",
+    "Self Hosting/Podman & Quadlet Files and Volumes Best Practices.md",
+    "Self Hosting/Cloudflare DDNS as a Quadlet Guide.md",
+    "Self Hosting/Interactions.md",
+    "Self Hosting/Next Cloud Information.md",
     "Self Hosting/Nextcloud AIO + Cloudflared with SKIP_DOMAIN_VALIDATION.md",
     "Self Hosting/Nextcloud AIO Podman Compose Setup Guide.md",
-    "Self Hosting/Nextcloud (base) + MariaDB + Redis on Podman-compose with Cloudflare Tunnel (cloudflared).md",
-    "Blog_Posts/OpenVPN-Setup-Fedora-Budgie-Atomic.md",
-    "Self Hosting/OpenVPN-as Quadlet.md",
+    "Self Hosting/Nextcloud Stack with Podman-Compose & Cloudflared Tunnel Quadlet.md",
+    "Self Hosting/Ngnix Proxy Manager.md",
+    "Self Hosting/Portainer Setup with Podman.md",
+    "Self Hosting/Open VPN.md",
+    "Self Hosting/Portainer Install with Docker Compose.md",
     "Self Hosting/OpenVPN-AS Quadlet Troubleshooting Checklist.md",
-    "Self Hosting/OpenVPN-AS Quadlet troubleshooting checklist.md",
-    "Following_Christ/A Call to Humility in Troubling Times.md",
-    "Cheat Sheets/copilot-instruction-ideas.md",
-    "Following_Christ/Faith Without Favoritism.md",
+    "Self Hosting/OpenVPN-AS Quadlet Troubleshooting Checklist2.md",
+    "Self Hosting/OpenVPN-as Quadlet.md",
+    "Self Hosting/OpenVPN-as Quadlet2.md",
+    "Self Hosting/Nextcloud (base) + MariaDB + Redis on Podman-compose with Cloudflare Tunnel (cloudflared).md",
+    "_templates/Coding Template.md",
+    "Self Hosting/Nextcloud AIO Setup with Portainer on Fedora.md",
+    "_templates/Self_Hosting_Template.md",
+    "Self Hosting/cloudflare-ddns-quadlet-guide2.md",
+    "Title.md",
+    "Untitled.md",
     "_templates/Devotional Template.md",
-    "Following_Christ/Truth, Mercy, and Honoring God.md",
-    "Clippings/This data removal service helped me regain control of my personal data.md",
-    "Self Hosting/Next Cloud Information.md",
-    "Following_Christ/Living as One Who Follows Christ.md",
-    "Clippings/From Dataset to DataFrame to Deployed Your First Project with Pandas & Scikit-learn.md",
-    "Following_Christ/Title.md",
-    "Following_Christ/test.md",
-    "Following_Christ/A Warning About Misusing Scripture on Authority.md",
-    "_templates/test_template.md",
-    "Following_Christ/Untitled 4.md",
-    "Following_Christ/Untitled 3.md",
-    "Following_Christ/Untitled 2.md",
-    "Following_Christ/Untitled 1.md",
-    "Following_Christ/Welcoming the Stranger.md",
-    "Following_Christ/The Kingdom Beyond Borders.md",
+    "_templates/Template Ideas.md",
+    "Blog_Posts/OpenVPN-Setup-Fedora-Budgie-Atomic.md",
     "Home Improvement/Crawl Space",
     "Home Improvement",
     "Health",

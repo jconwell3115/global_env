@@ -17,6 +17,10 @@
     {
       "folder": "Following_Christ",
       "template": "_templates/Devotional Template.md"
+    },
+    {
+      "folder": "Self Hosting",
+      "template": "_templates/Self_Hosting_Template.md"
     }
   ],
   "enable_file_templates": false,

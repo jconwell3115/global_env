@@ -1,3 +1,14 @@
+---
+title: OpenVPN-as Quadlet
+tags:
+  - Self-Hosting
+  - OpenVPN
+  - Podman
+  - Quadlet
+created: 2025-11-25
+published:
+status: draft
+---
 # OpenVPN Access Server with Podman Quadlet (Rootful) — Complete Setup
 
 ------------------------------------------------------------
@@ -198,3 +209,4 @@ sudo systemctl restart openvpnas.service
 ## 7) Access URLs
 > Admin UI: https://<host>:943/admin
 > Client UI: https://<host>:943/
+

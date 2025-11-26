@@ -1,3 +1,14 @@
+---
+title: OpenVPN-AS Quadlet Troubleshooting Checklist
+tags:
+  - Self-Hosting
+  - OpenVPN
+  - Podman
+  - Quadlet
+created: 2025-11-25
+published:
+status: draft
+---
 # OpenVPN-AS Quadlet Troubleshooting Checklist
 
 **Summary:** Quick diagnostics and fixes for when the OpenVPN‑AS web UI (ports 943/443) is unreachable or VPN clients connect but have no Internet.
@@ -247,3 +258,4 @@ Also include:
 ---
 
 **Placeholders:** Replace `<UNIT>`, `<VPN_SUBNET>`, `<OUT_IF>`, and `SERVER` with your actual unit name, VPN subnet CIDR, external interface name, and server IP/hostname before running commands.
+

@@ -1,3 +1,17 @@
+---
+title: Nextcloud Stack with Podman-Compose & Cloudflared Tunnel Quadlet
+tags:
+  - Self-Hosting
+  - Podman
+  - podman-compose
+  - Cloudflare
+  - Nextcloud
+  - Quadlet
+created: 2025-11-25
+published:
+status: draft
+---
+
 # Nextcloud (base) + MariaDB + Redis on Podman-compose with Cloudflare Tunnel (cloudflared)
 A complete, practical how‑to to run the Nextcloud "base" image together with MariaDB and Redis using `podman-compose` on a single host, and to expose it via a Cloudflare Tunnel with `cloudflared`. Includes an alternative to run `cloudflared` as a systemd-managed unit (quadlet-style), SELinux notes, backups, and an extended troubleshooting section.
 
