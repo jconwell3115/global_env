@@ -559,6 +559,8 @@ copy_precommit_config() {
 copy_copilot_instructions() {
   local project_path="$1"
   local global_copilot="$GLOBAL_ENV_DIR/copilot-instructions-template.md"
+  local home_github_dir="$HOME/.github"
+  local home_copilot="$home_github_dir/copilot-instructions.md"
   local github_dir="$project_path/.github"
   local target_file="$github_dir/copilot-instructions.md"
 
@@ -572,13 +574,34 @@ copy_copilot_instructions() {
     return 0
   fi
 
+  # Check and update ~/.github/copilot-instructions.md
+  if [[ ! -d "$home_github_dir" ]]; then
+    mkdir -p "$home_github_dir"
+    info "Created .github directory at $home_github_dir"
+  fi
+
+  if [[ -f "$home_copilot" ]]; then
+    # Check if home version differs from template
+    if ! diff -q "$global_copilot" "$home_copilot" >/dev/null 2>&1; then
+      backup_file "$home_copilot"
+      cp -pr "$global_copilot" "$home_copilot"
+      info "Updated ~/.github/copilot-instructions.md (old version backed up)"
+    else
+      info "~/.github/copilot-instructions.md is up to date"
+    fi
+  else
+    # No home version exists - create it
+    cp -pr "$global_copilot" "$home_copilot"
+    info "Created ~/.github/copilot-instructions.md"
+  fi
+
   # Create .github directory if it doesn't exist
   if [[ ! -d "$github_dir" ]]; then
     mkdir -p "$github_dir"
     info "Created .github directory at $github_dir"
   fi
 
-  # Handle existing copilot-instructions.md
+  # Handle existing copilot-instructions.md in project
   if [[ -f "$target_file" ]]; then
     # Check if existing file is identical to template
     if diff -q "$global_copilot" "$target_file" >/dev/null 2>&1; then
