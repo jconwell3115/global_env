@@ -3,8 +3,8 @@ tags:
   - Self-Hosting
 ---
 
-1. [ ] Install Fedora Budgie on main computer
-2. [ ] Cloud flare domain name
+1. [x] Install Fedora Budgie on main computer
+2. [x] Cloud flare domain name
 3. [ ] Cloudflare tunnel - main Linux host 
 4. [ ] Docker mgmt -portainer/dockge
 	- 1 GB of RAM
@@ -21,7 +21,7 @@ tags:
 	- main PC
 8. [ ] Cloud flare ddns container
 	- main PC
-9. [ ] Open VPN - kyle/manna
+9. [x] Open VPN - openvpn/openvpn-as
 	- 1 GB of RAM
 	- main PC
 10. [ ] Nextcloud AIO - Replace O365
@@ -44,5 +44,7 @@ tags:
 	- 4 GB of RAM
 16. [ ] Meetily for Ai note transcription 
 17. [ ] n8n for automation
+	1. 4 GB of RAM
+18. [ ] Duplication - backups
 	- 4 GB of RAM 
 
