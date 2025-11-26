@@ -13,13 +13,13 @@
 - **Version**: [Specify minimum Python version, e.g., Python 3.12+]
 - **Type Hints**: All functions, methods, and classes must include complete type
     hints using the `typing` module (Dict, List, Optional, Union, Any)
-- **Formatting**: Follow PEP 8 with line length of [88/100/120] characters
-- **Linting**: Code must pass `mypy --ignore-missing-imports`, `pylint`, and `ruff`.
+- **Formatting**: Follow PEP 8 with line length of [90/100/120] characters
+- **Linting**: Code must pass `mypy --ignore-missing-imports`, `pydocstyle`, `bandit` and `ruff`.
     Specify any per-tool ignore flags where applicable.
 - **Imports**: Group imports in this order: stdlib, third-party, framework modules
     (when applicable), then local modules. Use `isort` to enforce ordering.
 
-#### [Other Languages - JavaScript/TypeScript/Go/etc.]
+#### [Other Languages - BASH/JavaScript/TypeScript/Go/etc.]
 
 [#### Shell / Bash
 
