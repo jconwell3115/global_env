@@ -44,7 +44,7 @@ Data science workflows have unique challenges that make containerization particu
 
 Now let's go over the five essential steps to master Docker for your data science projects.
 
-## \# Step 1: Learning Docker Fundamentals with Data Science Examples
+## Step 1: Learning Docker Fundamentals with Data Science Examples
 
   
 Before jumping into complex multi-service architectures, you need to understand Docker's core concepts through the lens of data science workflows. The key is starting with simple, real-world examples that demonstrate Docker's value for your daily work.
