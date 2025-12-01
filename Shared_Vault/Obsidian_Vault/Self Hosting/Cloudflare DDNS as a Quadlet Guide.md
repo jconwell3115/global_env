@@ -9,7 +9,7 @@ created: 2025-11-25
 published:
 status: draft
 ---
-# Complete How-To: Running qdm12/cloudflare-ddns as a Podman Quadlet
+# Complete How-To: Running timothymiller/cloudflare-ddns as a Podman Quadlet
 
 This comprehensive guide will walk you through setting up qdm12/cloudflare-ddns as a systemd-managed Podman container using Quadlet, following best practices for security, reliability, and maintainability.
 
@@ -32,7 +32,7 @@ This comprehensive guide will walk you through setting up qdm12/cloudflare-ddns 
 
 ## Step 1: Create Cloudflare API Token
 
-### Generate a scoped API token (recommended over global API key)
+- [x] Generate a scoped API token (recommended over global API key)
 
 1. Log in to Cloudflare Dashboard
 2. Go to **My Profile** → **API Tokens** → **Create Token**
@@ -51,50 +51,84 @@ This comprehensive guide will walk you through setting up qdm12/cloudflare-ddns 
 
 ```bash
 # Create config directory
-sudo mkdir -p /etc/cloudflare-ddns
-sudo chmod 700 /etc/cloudflare-ddns
+mkdir -p /srv/cloudflare-ddns
+chmod 700 /srv/cloudflare-ddns
 ```
 
 ### Store the API token securely
 
 ```bash
 # Create token file (replace YOUR_TOKEN_HERE with your actual token)
-printf '%s' "YOUR_TOKEN_HERE" | sudo tee /etc/cloudflare-ddns/cf_token >/dev/null
-sudo chmod 600 /etc/cloudflare-ddns/cf_token
-sudo chown root:root /etc/cloudflare-ddns/cf_token
+printf '%s' "YOUR_TOKEN_HERE" | tee /srv/cloudflare-ddns/cf_token >/dev/null
+chmod 600 /srv/cloudflare-ddns/cf_token
 ```
 
 ### Create a Podman secret
 
 ```bash
 # Import the token as a Podman secret
-sudo podman secret create cloudflare_ddns_token /etc/cloudflare-ddns/cf_token
+podman secret create cloudflare_ddns_token /srv/cloudflare-ddns/cf_token
 
 # Verify the secret was created
-sudo podman secret ls
+podman secret ls
 ```
 
 **Why use secrets? ** Podman secrets are mounted as read-only tmpfs inside containers and are never written to disk in the container filesystem, reducing exposure. 
 
 ---
 
-## Step 3: Determine Your Configuration
+## Step 3: Create the config.json
+> Remove the comments that start with //, JSON can't parse comments.  They are here for informational purposes
 
-### Common environment variables for qdm12/cloudflare-ddns
+/srv/cloudflare-ddns/config.json
 
-Based on typical usage patterns (verify against the current image documentation):
+```json
+{
+  "cloudflare": [
+    {
+      "authentication": {
+        "api_token": "ZpgjtWEcPbGy4wLuD-5f-PYGhmEStz_SaEnZR9vA"
+      },
+      "zone_id": "b5c8331a20c341189d455d63e6c809c6",  
+      "subdomains": [
+        {
+          "name": "@",  // Subdomain to update (or "@" for root)
+          "proxied": true,  // Set true to enable Cloudflare proxying
+          "ttl": 300  // Time to live in seconds
+        },
+        {
+          "name": "nextcloud",  // Subdomain to update (or "@" for root)
+          "proxied": true,  // Set true to enable Cloudflare proxying
+          "ttl": 300  // Time to live in seconds
+        },
+        {
+          "name": "vpn",  // Subdomain to update (or "@" for root)
+          "proxied": false,  // Set true to enable Cloudflare proxying
+          "ttl": 300  // Time to live in seconds
+        }
+      ]
+    }
+  ],
+  "a": true,  // Update A records (IPv4)
+  "aaaa": true,  // Update AAAA records (IPv6)
+  "purgeUnknownRecords": false,  // Optional: Remove unknown records
+  "ttl": 300  // Default TTL
+}
+```
 
-| Variable | Description | Example |
-|----------|-------------|---------|
-| `ZONE` or `DOMAIN` | Your Cloudflare zone/domain | `example.com` |
-| `SUBDOMAIN` or `RECORD` | DNS record to update (@ for root) | `home` or `@` |
-| `PROXIED` | Cloudflare proxy status | `false` (true/false) |
-| `TTL` | DNS TTL in seconds | `1` (1 = automatic) |
-| `INTERVAL` or `PERIOD` | Update check interval | `5m` or `300s` |
-| `CF_API_TOKEN` | API token (prefer file-based) | Read from secret |
-| `LOG_LEVEL` | Logging verbosity | `info` (debug/info/warning/error) |
+### Create a Podman secret
 
-**Note:** The qdm12 image typically supports reading configuration from environment variables. Check the image's documentation for the exact variable names as they may vary between versions.
+```bash
+# Import the token as a Podman secret
+podman secret create cloudflare_ddns_token /srv/cloudflare-ddns/config.json
+
+# Verify the secret was created
+podman secret ls
+```
+
+**Why use secrets? ** Podman secrets are mounted as read-only tmpfs inside containers and are never written to disk in the container filesystem, reducing exposure. 
+
+Delete the config.json for security after the secret is confirmed created.
 
 ---
 
@@ -102,51 +136,36 @@ Based on typical usage patterns (verify against the current image documentation)
 
 ### Create the systemd container unit file
 
-```ini
-# /etc/containers/systemd/cloudflare-ddns.container
+```bash
+# ~/.config/containers/systemd/cloudflare-ddns.container
 
 [Unit]
-Description=Cloudflare DDNS updater (qdm12)
-Documentation=https://github.com/qdm12/cloudflare-ddns
+Description=Cloudflare DDNS updater
+Documentation=https://github.com/timothymiller/cloudflare-ddns
 Wants=network-online.target
 After=network-online.target
 
 [Container]
 # Image
-Image=docker.io/qmcgaw/cloudflare-ddns:latest
+Image=docker.io/timothyjmiller/cloudflare-ddns:latest
 Pull=newer
 
 # Container name
 ContainerName=cloudflare-ddns
 
+# Environment (adjust PUID/PGID/UMASK as you like; leave root if you want fully rootful)
+# If you prefer running as root inside the container, omit PUID/PGID
+Environment=CF_DDNS_API_TOKEN=/run/secrets/cloudflare-api-token
+Environment=PUID=1000
+Environment=PGID=1000
+Environment=TZ=America/New_York
+Network=host
+
+# Persist the container configuration and PKI
+Volume=/srv/cloudflare-ddns/config.json:/config.json:ro
+
 # Auto-update (requires podman-auto-update. timer)
 AutoUpdate=registry
-
-# Environment variables
-# Adjust these to match your domain and preferences
-Environment=ZONE=example. com
-Environment=SUBDOMAIN=home
-Environment=PROXIED=false
-Environment=TTL=1
-Environment=PERIOD=5m
-Environment=LOG_LEVEL=info
-Environment=HEALTH_SERVER_ADDRESS=127.0.0.1:9999
-
-# Secret mount for API token
-# The image should read CF_API_TOKEN from env, but we'll inject it via secret
-Secret=cloudflare_ddns_token,type=env,target=CF_API_TOKEN
-
-# Health check (runs inside container)
-HealthCmd=/bin/sh -c "wget -q --spider http://127.0.0. 1:9999/healthz || exit 1"
-HealthInterval=30s
-HealthTimeout=10s
-HealthRetries=3
-HealthStartPeriod=10s
-
-# Restart policy
-Restart=on-failure
-RestartSec=10s
-RestartMaxAttempts=5
 
 # Security options
 ReadOnly=true
@@ -155,7 +174,6 @@ SecurityLabelDisable=true
 
 # Resource limits (optional but recommended)
 Memory=128M
-MemorySwap=128M
 
 # Logging
 LogDriver=journald
@@ -164,6 +182,8 @@ LogDriver=journald
 # Allow systemd to manage the service
 TimeoutStartSec=60
 Restart=on-failure
+RestartSec=10s
+RestartMaxAttempts=5
 
 [Install]
 WantedBy=multi-user.target default.target
@@ -173,63 +193,6 @@ WantedBy=multi-user.target default.target
 - System-wide: `/etc/containers/systemd/` (recommended for root services)
 - User-specific: `~/.config/containers/systemd/`
 
-### Alternative configuration if the image doesn't support health server
-
-If the qdm12 image doesn't expose a health endpoint, use this simpler approach:
-
-```ini
-# /etc/containers/systemd/cloudflare-ddns.container
-
-[Unit]
-Description=Cloudflare DDNS updater (qdm12)
-Documentation=https://github.com/qdm12/cloudflare-ddns
-Wants=network-online.target
-After=network-online.target
-
-[Container]
-# Image
-Image=docker.io/qmcgaw/cloudflare-ddns:latest
-Pull=newer
-
-# Container name
-ContainerName=cloudflare-ddns
-
-# Auto-update
-AutoUpdate=registry
-
-# Environment variables - CUSTOMIZE THESE
-Environment=ZONE=example.com
-Environment=SUBDOMAIN=home
-Environment=PROXIED=false
-Environment=TTL=1
-Environment=PERIOD=5m
-Environment=LOG_LEVEL=info
-
-# Secret mount for API token
-Secret=cloudflare_ddns_token,type=env,target=CF_API_TOKEN
-
-# Restart policy
-Restart=always
-RestartSec=30s
-
-# Security options
-ReadOnly=true
-NoNewPrivileges=true
-
-# Resource limits
-Memory=128M
-
-# Logging
-LogDriver=journald
-
-[Service]
-TimeoutStartSec=60
-Restart=always
-
-[Install]
-WantedBy=multi-user.target default.target
-```
-
 ---
 
 ## Step 5: Enable and Start the Service
@@ -238,16 +201,13 @@ WantedBy=multi-user.target default.target
 
 ```bash
 # Reload systemd to discover the new Quadlet unit
-sudo systemctl daemon-reload
-
-# Enable the service (start at boot)
-sudo systemctl enable cloudflare-ddns. service
+systemctl --user daemon-reload
 
 # Start the service now
-sudo systemctl start cloudflare-ddns.service
+systemctl --user start cloudflare-ddns.service
 
 # Check status
-sudo systemctl status cloudflare-ddns.service
+systemctl --user status cloudflare-ddns.service
 ```
 
 **Note:** Quadlet automatically converts `. container` files to systemd service units. The service will be named `cloudflare-ddns. service`. 
@@ -269,13 +229,19 @@ sudo systemctl status cloudflare-ddns.service
 
 ```bash
 # Follow logs in real-time
-sudo journalctl -u cloudflare-ddns.service -f
+journalctl --user -u cloudflare-ddns.service -f
 
 # View recent logs
-sudo journalctl -u cloudflare-ddns.service -n 50
+journalctl --user -u cloudflare-ddns.service -n 50
 
 # Logs since last boot
-sudo journalctl -u cloudflare-ddns. service -b
+journalctl --user -u cloudflare-ddns.service  -b
+
+# Quadlet specific logs
+journalctl --user -b | grep -i quadlet
+
+# Ultra detailed logs
+journalctl --user -xeu cloudflare-ddns.service
 ```
 
 ### Check container status
@@ -312,16 +278,16 @@ nslookup home.example.com
 
 ```bash
 # Enable the auto-update timer (checks for new images daily)
-sudo systemctl enable --now podman-auto-update. timer
+systemctl --user enable --now podman-auto-update.timer
 
 # Check timer status
-sudo systemctl status podman-auto-update.timer
+systemctl --user status podman-auto-update.timer
 
 # Manually trigger an update check
-sudo podman auto-update
+podman auto-update
 
 # View auto-update logs
-sudo journalctl -u podman-auto-update.service
+journalctl -u podman-auto-update.service
 ```
 
 The `AutoUpdate=registry` line in the Quadlet unit tells Podman to pull newer images and restart the container when updates are available.
@@ -334,7 +300,7 @@ The `AutoUpdate=registry` line in the Quadlet unit tells Podman to pull newer im
 
 **Symptoms:**
 ```
-● cloudflare-ddns.service - Cloudflare DDNS updater (qdm12)
+● cloudflare-ddns.service - Cloudflare DDNS updater
      Loaded: loaded
      Active: failed (Result: exit-code)
 ```
@@ -381,12 +347,12 @@ The `AutoUpdate=registry` line in the Quadlet unit tells Podman to pull newer im
 1. **Increase log verbosity:**
    ```bash
    # Edit the unit file
-   sudo nano /etc/containers/systemd/cloudflare-ddns.container
+   nano ~/.config/containers/systemd/cloudflare-ddns.container
    # Change: Environment=LOG_LEVEL=debug
    
-   sudo systemctl daemon-reload
-   sudo systemctl restart cloudflare-ddns.service
-   sudo journalctl -u cloudflare-ddns.service -f
+   systemctl --user daemon-reload
+   systemctl --user restart cloudflare-ddns.service
+   journalctl --user -u cloudflare-ddns.service -f
    ```
 
 2. **Verify API token permissions:**
@@ -394,10 +360,10 @@ The `AutoUpdate=registry` line in the Quadlet unit tells Podman to pull newer im
    - Check token has Zone → DNS → Edit for the correct zone
    - Regenerate token if needed and update secret:
      ```bash
-     printf '%s' "NEW_TOKEN" | sudo tee /etc/cloudflare-ddns/cf_token >/dev/null
-     sudo podman secret rm cloudflare_ddns_token
-     sudo podman secret create cloudflare_ddns_token /etc/cloudflare-ddns/cf_token
-     sudo systemctl restart cloudflare-ddns.service
+     printf '%s' "NEW_TOKEN" | tee /srv/cloudflare-ddns/cf_token >/dev/null
+     podman secret rm cloudflare_ddns_token
+     podman secret create cloudflare_ddns_token /srv/cloudflare-ddns/cf_token
+     systemctl --user restart cloudflare-ddns.service
      ```
 
 3. **Check IP detection:**
@@ -419,7 +385,7 @@ The `AutoUpdate=registry` line in the Quadlet unit tells Podman to pull newer im
 
 **Symptoms:**
 ```
-sudo podman ps -a
+podman ps -a
 # Shows container repeatedly restarting
 ```
 
@@ -427,8 +393,8 @@ sudo podman ps -a
 
 1. **Check restart count and reason:**
    ```bash
-   sudo podman inspect cloudflare-ddns | grep -A 5 "State"
-   sudo journalctl -u cloudflare-ddns.service | grep -i error
+   podman inspect cloudflare-ddns | grep -A 5 "State"
+   journalctl --user -u cloudflare-ddns.service | grep -i error
    ```
 
 2. **Common causes:**
@@ -439,8 +405,8 @@ sudo podman ps -a
 3. **Disable restart temporarily for debugging:**
    ```bash
    # Edit unit file, change Restart=on-failure to Restart=no
-   sudo systemctl daemon-reload
-   sudo systemctl restart cloudflare-ddns.service
+   systemctl --user daemon-reload
+   systemctl --user restart cloudflare-ddns.service
    # Check logs without auto-restart interference
    ```
 
@@ -455,27 +421,27 @@ sudo podman ps -a
 
 1. **Verify service is enabled:**
    ```bash
-   sudo systemctl is-enabled cloudflare-ddns.service
+   systemctl --user is-enabled cloudflare-ddns.service
    # Should show "enabled"
    ```
 
 2. **Enable if not enabled:**
-   ```bash
-   sudo systemctl enable cloudflare-ddns.service
-   ```
+```bash
+systemctl --user enable cloudflare-ddns.service
+```
 
 3. **Check dependencies:**
    ```bash
    # Ensure network-online.target is reached
-   sudo systemctl status network-online.target
+   systemctl --user status network-online.target
    
    # Enable network wait service if needed
-   sudo systemctl enable systemd-networkd-wait-online.service
+   systemctl --user enable systemd-networkd-wait-online.service
    ```
 
 4. **Check boot logs:**
    ```bash
-   sudo journalctl -u cloudflare-ddns.service -b
+   journalctl --user -u cloudflare-ddns.service -b
    ```
 
 ---
@@ -496,15 +462,15 @@ Failed to start cloudflare-ddns.service: Unit cloudflare-ddns.service not found.
 
 2. **Reload systemd daemon:**
    ```bash
-   sudo systemctl daemon-reload
+   systemctl --user daemon-reload
    ```
 
 3. **Check for syntax errors:**
    ```bash
    # Quadlet should generate the unit; check for errors
-   sudo /usr/libexec/podman/quadlet --dryrun
+   /usr/libexec/podman/quadlet --dryrun
    # Or on some systems:
-   sudo /usr/lib/podman/quadlet --dryrun
+   /usr/lib/podman/quadlet --dryrun
    ```
 
 4.  **Verify Podman Quadlet support:**
@@ -515,101 +481,6 @@ Failed to start cloudflare-ddns.service: Unit cloudflare-ddns.service not found.
    # Check if quadlet generator exists
    ls -la /usr/lib/systemd/system-generators/*quadlet*
    ```
-
----
-
-### Problem: Memory or resource issues
-
-**Symptoms:**
-- Container killed due to OOM (Out of Memory)
-- High CPU usage
-
-**Solutions:**
-
-1. **Check resource usage:**
-   ```bash
-   sudo podman stats cloudflare-ddns
-   ```
-
-2. **Increase memory limit in unit file:**
-   ```ini
-   Memory=256M
-   MemorySwap=256M
-   ```
-
-3. **Reduce update frequency:**
-   ```ini
-   Environment=PERIOD=10m
-   ```
-
----
-
-### Problem: IPv6 not updating (if dual-stack)
-
-**Symptoms:**
-- IPv4 (A record) updates correctly
-- IPv6 (AAAA record) not updating
-
-**Solutions:**
-
-1.  **Check image documentation** for IPv6 support and configuration
-2. **Verify your host has IPv6:**
-   ```bash
-   ip -6 addr show
-   curl -6 https://ifconfig.co
-   ```
-
-3. **May need additional environment variables** for IPv6 support (check qdm12 docs)
-
----
-
-## Advanced Configuration
-
-### Running in a Podman Pod with cloudflared
-
-If you want to run this alongside a cloudflared tunnel in the same pod (shared network namespace):
-
-```ini
-# /etc/containers/systemd/web-pod.pod
-
-[Unit]
-Description=Web services pod (cloudflared + ddns)
-Wants=network-online.target
-After=network-online.target
-
-[Pod]
-PodName=web-pod
-PublishPort=8080:8080
-
-[Install]
-WantedBy=multi-user.target
-```
-
-```ini
-# /etc/containers/systemd/cloudflare-ddns-pod.container
-
-[Unit]
-Description=Cloudflare DDNS in web-pod
-Requires=web-pod.service
-After=web-pod.service
-
-[Container]
-Image=docker.io/qmcgaw/cloudflare-ddns:latest
-Pod=web-pod. pod
-Secret=cloudflare_ddns_token,type=env,target=CF_API_TOKEN
-Environment=ZONE=example.com
-Environment=SUBDOMAIN=home
-Environment=PERIOD=5m
-
-[Install]
-WantedBy=multi-user.target
-```
-
-Enable both:
-```bash
-sudo systemctl daemon-reload
-sudo systemctl enable --now web-pod.service cloudflare-ddns-pod. service
-```
 
 ---
 
@@ -634,10 +505,10 @@ sudo systemctl enable --now web-pod.service cloudflare-ddns-pod. service
 
 ```bash
 # Pull latest image
-sudo podman pull docker.io/qmcgaw/cloudflare-ddns:latest
+podman pull docker.io/qmcgaw/cloudflare-ddns:latest
 
 # Restart service (Quadlet will use new image)
-sudo systemctl restart cloudflare-ddns.service
+systemctl --user restart cloudflare-ddns.service
 ```
 
 ### Rotate API token
@@ -645,12 +516,12 @@ sudo systemctl restart cloudflare-ddns.service
 ```bash
 # Create new token in Cloudflare Dashboard
 # Update secret
-printf '%s' "NEW_TOKEN" | sudo tee /etc/cloudflare-ddns/cf_token >/dev/null
-sudo podman secret rm cloudflare_ddns_token
-sudo podman secret create cloudflare_ddns_token /etc/cloudflare-ddns/cf_token
+printf '%s' "NEW_TOKEN" | tee /srv/cloudflare-ddns/cf_token >/dev/null
+podman secret rm cloudflare_ddns_token
+podman secret create cloudflare_ddns_token /srv/cloudflare-ddns/cf_token
 
 # Restart service
-sudo systemctl restart cloudflare-ddns. service
+systemctl --user restart cloudflare-ddns.service
 ```
 
 ### Backup configuration
@@ -658,32 +529,32 @@ sudo systemctl restart cloudflare-ddns. service
 ```bash
 # Backup the Quadlet unit and token
 sudo tar czf cloudflare-ddns-backup.tar.gz \
-  /etc/containers/systemd/cloudflare-ddns.container \
-  /etc/cloudflare-ddns/
+  ~/.config/containers/systemd/cloudflare-ddns.container \
+  /srv/cloudflare-ddns/
 ```
 
 ### Remove/uninstall
 
 ```bash
 # Stop and disable service
-sudo systemctl stop cloudflare-ddns.service
-sudo systemctl disable cloudflare-ddns.service
+systemctl --user stop cloudflare-ddns.service
+systemctl --user disable cloudflare-ddns.service
 
 # Remove Quadlet unit
-sudo rm /etc/containers/systemd/cloudflare-ddns.container
+rm ~/.config/containers/systemd/cloudflare-ddns.container
 
 # Remove secret
-sudo podman secret rm cloudflare_ddns_token
+podman secret rm cloudflare_ddns_token
 
 # Remove config directory
-sudo rm -rf /etc/cloudflare-ddns/
+rm -rf /srv/cloudflare-ddns/
 
 # Remove container and image
-sudo podman rm -f cloudflare-ddns
-sudo podman rmi docker.io/qmcgaw/cloudflare-ddns:latest
+podman rm -f cloudflare-ddns
+podman rmi docker.io/qmcgaw/cloudflare-ddns:latest
 
 # Reload systemd
-sudo systemctl daemon-reload
+systemctl --user daemon-reload
 ```
 
 ---
@@ -692,37 +563,37 @@ sudo systemctl daemon-reload
 
 ```bash
 # View status
-sudo systemctl status cloudflare-ddns.service
+systemctl --user status cloudflare-ddns.service
 
 # View logs (live)
-sudo journalctl -u cloudflare-ddns.service -f
+journalctl --user -u cloudflare-ddns.service -f
 
 # Restart service
-sudo systemctl restart cloudflare-ddns.service
+systemctl --user restart cloudflare-ddns.service
 
 # Stop service
-sudo systemctl stop cloudflare-ddns.service
+systemctl --user stop cloudflare-ddns.service
 
 # Start service
-sudo systemctl start cloudflare-ddns.service
+systemctl --user start cloudflare-ddns.service
 
 # Disable service (don't start at boot)
-sudo systemctl disable cloudflare-ddns.service
+systemctl --user disable cloudflare-ddns.service
 
 # Enable service (start at boot)
-sudo systemctl enable cloudflare-ddns.service
+systemctl --user enable cloudflare-ddns.service
 
 # Check container stats
-sudo podman stats cloudflare-ddns
+podman stats cloudflare-ddns
 
 # Execute command in running container
-sudo podman exec -it cloudflare-ddns /bin/sh
+podman exec -it cloudflare-ddns /bin/sh
 
 # View environment variables
-sudo podman inspect cloudflare-ddns | grep -A 20 "Env"
+podman inspect cloudflare-ddns | grep -A 20 "Env"
 
 # Test auto-update
-sudo podman auto-update --dry-run
+podman auto-update --dry-run
 ```
 
 ---

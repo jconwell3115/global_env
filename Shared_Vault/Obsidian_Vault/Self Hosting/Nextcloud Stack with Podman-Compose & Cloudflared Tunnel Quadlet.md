@@ -77,6 +77,7 @@ version: "3.7"
 
 services:
   db:
+    container_name: nextcloud_db
     image: docker.io/library/mariadb:10.11
     restart: always
     environment:
@@ -93,6 +94,7 @@ services:
       retries: 5
 
   redis:
+    container_name: nextcloud_redis
     image: docker.io/redis:7-alpine
     restart: always
     command: ["redis-server", "--save", "", "--appendonly", "no"]
@@ -105,10 +107,13 @@ services:
       retries: 5
 
   nextcloud:
+    container_name: nextcloud_app
     image: docker.io/nextcloud:latest
     restart: always
     ports:
-      - "127.0.0.1:8080:80"    # bind to localhost; public access via Cloudflare Tunnel
+      - "8080:80"     # HTTP access
+      - "8443:443"    # HTTPS access (if you configure SSL in Nextcloud)
+      #  - "127.0.0.1:8080:80"    # bind to localhost; public access via Cloudflare Tunnel
     depends_on:
       db:
         condition: service_healthy
@@ -130,12 +135,13 @@ services:
     labels:
       - "io.containers.autoupdate=registry"
     healthcheck:
-      test: ["CMD", "curl", "-f", "http://localhost/ || exit 1"]
+	  test: ["CMD-SHELL", "curl -f http://localhost/ || exit 1"]
       interval: 30s
       timeout: 5s
       retries: 4
 
   adminer:
+    container_name: nextcloud_adminer
     image: docker.io/adminer:latest
     restart: "no"
     ports:
@@ -156,6 +162,7 @@ Notes:
 - Binding Nextcloud to `127.0.0.1:8080` keeps it inaccessible publicly except through the Cloudflare Tunnel. Adjust if you prefer a different setup.  
 - `:Z` relabels mounts for SELinux. Use `:z` if you want shared labeling instead.  
 - Pin images to specific tags (recommended) for controlled upgrades.
+
 
 ---
 
@@ -258,7 +265,50 @@ podman logs nextcloud
 ## Initial Nextcloud setup
 - If the DB env vars are correct, Nextcloud should perform initial setup automatically on first boot. You can visit `http://localhost:8080` locally or the public hostname via Cloudflare once the Tunnel is active.
 - After initial install you MUST configure trusted proxies and overwrite settings so Nextcloud knows its external URL and trusts the tunnel.
+## Nextcloud Untrusted Domain Fix
 
+Nextcloud blocks connections from domains/IPs that aren't in the trusted domains list. 
+
+### Add Trusted Domain
+
+```bash
+podman exec -u www-data nextcloud_app php occ config:system:set trusted_domains 1 --value='YOUR_DOMAIN_OR_IP'
+```
+
+Replace `YOUR_DOMAIN_OR_IP` with what you're using to access it. 
+
+### Examples
+
+**Localhost:**
+```bash
+podman exec -u www-data nextcloud_app php occ config:system:set trusted_domains 1 --value='localhost:8080'
+```
+
+**IP Address:**
+```bash
+podman exec -u www-data nextcloud_app php occ config:system:set trusted_domains 1 --value='192.168.1.100:8080'
+```
+
+**Domain Name (for Cloudflare Tunnel):**
+```bash
+podman exec -u www-data nextcloud_app php occ config:system:set trusted_domains 1 --value='nextcloud.yourdomain. com'
+```
+
+### Add Multiple Domains
+
+```bash
+podman exec -u www-data nextcloud_app php occ config:system:set trusted_domains 1 --value='localhost:8080'
+podman exec -u www-data nextcloud_app php occ config:system:set trusted_domains 2 --value='192.168.1.100:8080'
+podman exec -u www-data nextcloud_app php occ config:system:set trusted_domains 3 --value='nextcloud.yourdomain.com'
+```
+
+### Verify Configuration
+
+```bash
+podman exec -u www-data nextcloud_app php occ config:system:get trusted_domains
+```
+
+After adding the domain, refresh your browser. 
 ---
 
 ## Configure trusted proxy, overwrite URL, and Redis locking
