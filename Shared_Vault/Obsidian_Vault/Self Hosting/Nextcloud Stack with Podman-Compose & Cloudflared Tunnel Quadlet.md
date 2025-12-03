@@ -409,67 +409,76 @@ $CONFIG = array (
 ### Run Nextcloud cron
 Nextcloud requires a cron job every 5 minutes to run background jobs. Use a systemd timer that runs `podman exec` into the `nextcloud` container.
 
-1. Create `/etc/systemd/system/nextcloud-cron.service`:
+1. Create service `~/.config/systemd/user/nextcloud-cron.service:
 ```ini
-# /etc/systemd/system/nextcloud-cron.service
+# ~/.config/systemd/user/nextcloud-cron.service
 [Unit]
 Description=Nextcloud cron job (runs php cron.php)
-After=network.target
+After=network-online.target
 
 [Service]
 Type=oneshot
-User=root
-# Run as root so podman can run container exec; adjust User if using rootless podman and run as that user.
 ExecStart=/usr/bin/podman exec -u www-data nextcloud_app php -f /var/www/html/cron.php
+Restart=no
+
+[Install]
+WantedBy=default.target
 ```
 
-2. Create `/etc/systemd/system/nextcloud-cron.timer`:
+2. Create timer
 ```ini
-# /etc/systemd/system/nextcloud-cron.timer
+# ~/.config/systemd/user/nextcloud-cron.timer
 [Unit]
 Description=Run Nextcloud cron every 5 minutes
 
 [Timer]
 OnBootSec=2min
 OnUnitActiveSec=5min
+Persistent=true
 
 [Install]
 WantedBy=timers.target
 ```
 
-3. Enable and start:
+3. Enable user linger so the user systemd instance runs even when not logged in
 ```bash
-sudo systemctl daemon-reload
-sudo systemctl enable --now nextcloud-cron.timer
+sudo loginctl enable-linger rhlabs
 ```
 
-4. Check Timer Status
+4. reload user daemon, enable and start timer
+```bash
+# reload user daemon, enable and start timer
+systemctl --user daemon-reload
+systemctl --user enable --now nextcloud-cron.timer
+```
+
+5. Check Timer Status
 ```bash 
 # Check if the timer is active and when it will run next
 sudo systemctl status nextcloud-cron.timer
 
 # List all timers and find yours
 # Shows time since last run and time until next run
-sudo systemctl list-timers | grep nextcloud
+systemctl --user list-timers --all | grep nextcloud-cron
+
 
 # Show detailed timer information
-systemctl show nextcloud-cron. timer
+systemctl --user show nextcloud-cron.timer
 ```
 
 5. Check Service Execution
 ```bash
 # Check the last execution of the service
-sudo systemctl status nextcloud-cron.service
+systemctl --user status nextcloud-cron.service
 
 # View recent logs from the service
-sudo journalctl -u nextcloud-cron.service -n 50
+journalctl --user -u nextcloud-cron.service -n 50 --no-pager
 
 # Follow logs in real-time (wait for next execution)
-sudo journalctl -u nextcloud-cron.service -f
+journalctl -u nextcloud-cron.service -f
 ```
 
 6. Check Within Nextcloud
-
 ```bash
 # Check background job mode (should show "cron")
 podman exec -u www-data nextcloud_app php /var/www/html/occ config:app:get core backgroundjobs_mode
@@ -478,7 +487,11 @@ podman exec -u www-data nextcloud_app php /var/www/html/occ config:app:get core 
 podman exec -u www-data nextcloud_app php /var/www/html/occ config:app:get core lastcron
 
 # View background job status
-podman exec -u www-data nextcloud_app php /var/www/html/occ background:job:list
+podman exec -u www-data nextcloud_app php /var/www/html/occ background-job:list
+
+# View Top in the container
+podman top nextcloud_app
+
 ```
 ---
 
