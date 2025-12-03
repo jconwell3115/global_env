@@ -55,12 +55,12 @@
             "state": {
               "type": "markdown",
               "state": {
-                "file": "_templates/Self_Hosting_Template.md",
+                "file": "Self Hosting/Nextcloud Stack with Podman-Compose & Cloudflared Tunnel Quadlet.md",
                 "mode": "source",
                 "source": false
               },
               "icon": "lucide-file",
-              "title": "Self_Hosting_Template"
+              "title": "Nextcloud Stack with Podman-Compose & Cloudflared Tunnel Quadlet"
             }
           }
         ],
