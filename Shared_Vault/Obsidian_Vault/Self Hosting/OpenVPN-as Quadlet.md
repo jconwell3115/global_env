@@ -104,7 +104,7 @@ sudo systemctl start openvpn-as.service
 
 # Check status/logs
 systemctl status openvpn-as.service
-journalctl -u openvpnas.service -f
+journalctl -u openvpn-as.service -f
 ```
 
 ------------------------------------------------------------

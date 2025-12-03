@@ -53,14 +53,18 @@
             "id": "280f6268085e746b",
             "type": "leaf",
             "state": {
-              "type": "empty",
-              "state": {},
+              "type": "markdown",
+              "state": {
+                "file": "_templates/Self_Hosting_Template.md",
+                "mode": "source",
+                "source": false
+              },
               "icon": "lucide-file",
-              "title": "New tab"
+              "title": "Self_Hosting_Template"
             }
           }
         ],
-        "currentTab": 2
+        "currentTab": 3
       }
     ],
     "direction": "vertical"
@@ -207,14 +211,14 @@
       "bases:Create new base": false
     }
   },
-  "active": "d6f27b12d4bbe3cb",
+  "active": "280f6268085e746b",
   "lastOpenFiles": [
-    "_templates/Template Ideas.md",
-    "_templates/Self_Hosting_Template.md",
     "_templates/Devotional Template.md",
+    "_templates/Self_Hosting_Template.md",
+    "_templates/Template Ideas.md",
+    "_templates/Coding Template.md",
     "Self Hosting/Nextcloud Stack with Podman-Compose & Cloudflared Tunnel Quadlet.md",
     "Self Hosting/OpenVPN-as Quadlet.md",
-    "_templates/Coding Template.md",
     "Shopping List.md",
     "Self Hosting/🏠 Self-Hosting with Docker & Docker Compose Best Practices.md",
     "Self Hosting/Self Hosting.md.2025-10-12_06.52.44.foldersync.old",
