@@ -54,7 +54,7 @@ sudo chown $USER:$USER /srv/nextcloud -R   # for rootless podman use your user; 
 
 ## Files to create
 
-### 1) .env — put secrets here (do NOT commit)
+### Create .env — put secrets here (do NOT commit)
 ```bash
 # /srv/nextcloud/.env
 NEXTCLOUD_ADMIN_USER=admin
@@ -69,7 +69,7 @@ PODMAN_PROJECT=nextcloud
 
 ---
 
-### 2) docker-compose.yml (podman-compose compatible)
+### Create Nextcloud stack podman-compose
 This deploys `mariadb`, `redis`, `nextcloud`, and `adminer` (adminer optional).
 ```yaml
 # /srv/nextcloud/docker-compose.yml
@@ -165,94 +165,99 @@ Notes:
 
 
 ---
+### Cloudflare Tunnel creation (quick steps)
+1. Install `cloudflared` on your workstation or run temporarily in a container and authenticate:
+```bash
+cloudflared tunnel login
+```
+This opens a browser and creates the initial cert; writes to `~/.cloudflared`.
 
-### 3) cloudflared config.yml (Cloudflare Tunnel)
-Put at `/srv/nextcloud/cloudflared/config.yml` (replace placeholders).
+2. Create a named tunnel:
+```bash
+cloudflared tunnel create nextcloud
+```
+Writes a credentials JSON to `~/.cloudflared/<tunnel-uuid>.json`.
+
+3. Route DNS:
+```bash
+cloudflared tunnel route dns nextcloud nextcloud.example.com
+```
+
+4. Create config.yml 
 ```yaml
 # /srv/nextcloud/cloudflared/config.yml
-tunnel: TUNNEL-UUID-OR-NAME
-credentials-file: /home/user/.cloudflared/TUNNEL-UUID.json
+tunnel: d6c14af6-3e9d-4230-898f-b94460442695
+credentials-file: /home/nonroot/.cloudflared/d6c14af6-3e9d-4230-898f-b94460442695.json
 
 ingress:
-  - hostname: nextcloud.example.com
-    service: http://nextcloud:80
+  - hostname: nextcloud.rhlabs.org
+    service: http://127.0.0.1:8080
   - service: http_status:404
 ```
 
-Notes:
-- `credentials-file` is created by `cloudflared tunnel create <name>` and is a JSON you must copy into the mounted directory. For rootless Podman, store it under `/home/youruser/.cloudflared` and mount the folder.
+5. Copy credentials JSON, cert.pem and the `config.yml` to `/srv/nextcloud/cloudflared` and ensure the container/systemd unit mounts that directory.
 
 ---
-
-## Running cloudflared
-
-Two options:
-
-### Option A: Run cloudflared as part of podman-compose
-Append a service to `docker-compose.yml`:
-```yaml
-  cloudflared:
-    image: cloudflare/cloudflared:latest
-    restart: unless-stopped
-    volumes:
-      - ./cloudflared:/home/nonroot/.cloudflared:Z
-    command: ["tunnel", "--config", "/home/nonroot/.cloudflared/config.yml", "run"]
-    networks:
-      - default
-    # no ports exposed
-```
-- Ensure credentials and config are present in `./cloudflared` and owned appropriately.
-
-### Option B (recommended): Run cloudflared via systemd unit (quadlet-style)
+### Run cloudflared via systemd unit (quadlet-style)
 Run `cloudflared` as a separately managed Podman container under systemd for independent lifecycle and resilience.
 
-Create systemd unit `/etc/systemd/system/cloudflared.service`:
+Create systemd unit `/etc/containers/systemd/cloudflared.service`:
 ```ini
-# /etc/systemd/system/cloudflared.service
+# /etc/containers/systemd/cloudflared.service
 [Unit]
-Description=Cloudflare Tunnel (cloudflared) container via Podman
-Wants=network-online.target
+Description=cloudflared Tunnel (quadlet)
 After=network-online.target
+Wants=network-online.target
+
+[Container]
+ContainerName=cloudflared-tunnel
+Image=docker.io/cloudflare/cloudflared:latest
+Network=host
+
+# Use root in the container
+User=0
+
+# Use Volumes for mounts (quadlet maps this to podman --volume)
+# Replace 'rhlabs' if your home path is different.
+Volume=/srv/nextcloud/cloudflared:/home/nonroot/.cloudflared:Z
+
+# Ensure cloudflared finds the credentials and config at /home/nonroot/.cloudflared
+Environment=HOME=/home/nonroot
+
+# Run the tunnel by name (tunnel must already be created and the JSON present in the bound dir)
+Exec=tunnel run d6c14af6-3e9d-4230-898f-b94460442695
 
 [Service]
 Restart=always
-RestartSec=5
-# If running rootless cloudflared as your user, set User=youruser and proper HOME
-User=root
-Environment=HOME=/root
-ExecStartPre=-/usr/bin/podman rm -f cloudflared
-ExecStart=/usr/bin/podman run --name cloudflared \
-  --network nextcloud_default \
-  -v /srv/nextcloud/cloudflared:/home/nonroot/.cloudflared:Z \
-  -u 0 \
-  docker.io/cloudflare/cloudflared:latest tunnel --no-autoupdate --config /home/nonroot/.cloudflared/config.yml run
-ExecStop=/usr/bin/podman stop -t 10 cloudflared
-ExecStopPost=/usr/bin/podman rm -f cloudflared
+RestartSec=5s
 
 [Install]
 WantedBy=multi-user.target
 ```
 
-Notes:
-- `--network nextcloud_default` is the default network name created by `podman-compose` if your project name is `nextcloud`. To be explicit, create and use a named network:
-```bash
-sudo podman network create nextcloud_net
+### Enable the systemd unit
+
+```shell
+# Reload Quadlets -> systemd units
+sudo systemctl daemon-reload
+
+# Enable at boot and start now
+sudo systemctl enable cloudflared.service
+sudo systemctl start cloudflared.service
+
+# Check status/logs
+systemctl status cloudflared.service
+journalctl -u cloudflared.service -f
+sudo journalctl -b | grep -i quadlet -n || true
+sudo journalctl -b | grep -i podman -n || true
 ```
-Then in `docker-compose.yml` add:
-```yaml
-networks:
-  default:
-    external:
-      name: nextcloud_net
-```
-And use `--network nextcloud_net` in the unit.
 
 ---
 
-## Bring up the podman-compose stack
+### Bring up the Nextcloud podman-compose stack
 From `/srv/nextcloud`:
 ```bash
-podman-compose up -d
+cd /srv/nextcloud && podman-compose up -d
 ```
 Check status:
 ```bash
@@ -262,91 +267,149 @@ podman logs nextcloud
 
 ---
 
-## Initial Nextcloud setup
+### Initial Nextcloud setup
 - If the DB env vars are correct, Nextcloud should perform initial setup automatically on first boot. You can visit `http://localhost:8080` locally or the public hostname via Cloudflare once the Tunnel is active.
 - After initial install you MUST configure trusted proxies and overwrite settings so Nextcloud knows its external URL and trusts the tunnel.
-## Nextcloud Untrusted Domain Fix
+#### Nextcloud Untrusted Domain Setup
+-  Nextcloud blocks connections from domains/IPs that aren't in the trusted domains list. 
 
-Nextcloud blocks connections from domains/IPs that aren't in the trusted domains list. 
-
-### Add Trusted Domain
-
+1. Add Trusted Domain
 ```bash
 podman exec -u www-data nextcloud_app php occ config:system:set trusted_domains 1 --value='YOUR_DOMAIN_OR_IP'
 ```
+- Replace `YOUR_DOMAIN_OR_IP` with what you're using to access it. 
 
-Replace `YOUR_DOMAIN_OR_IP` with what you're using to access it. 
-
-### Examples
-
-**Localhost:**
+2. Add Multiple Domains
 ```bash
 podman exec -u www-data nextcloud_app php occ config:system:set trusted_domains 1 --value='localhost:8080'
+podman exec -u www-data nextcloud_app php occ config:system:set trusted_domains 2 --value='192.168.0.100:8080'
+podman exec -u www-data nextcloud_app php occ config:system:set trusted_domains 3 --value='nextcloud.rhlabs.org'
 ```
 
-**IP Address:**
+3. Add trusted proxy (cloudflared connects from localhost)
 ```bash
-podman exec -u www-data nextcloud_app php occ config:system:set trusted_domains 1 --value='192.168.1.100:8080'
+podman exec -u www-data nextcloud_app php occ config:system:set trusted_proxies 0 --value='127.0.0.1'
 ```
 
-**Domain Name (for Cloudflare Tunnel):**
+4. Ensure HTTPS URLs and host
 ```bash
-podman exec -u www-data nextcloud_app php occ config:system:set trusted_domains 1 --value='nextcloud.yourdomain. com'
+podman exec -u www-data nextcloud_app php occ config:system:set overwriteprotocol --value='https'
+podman exec -u www-data nextcloud_app php occ config:system:set overwritehost --value='nextcloud.rhlabs.org'
+podman exec -u www-data nextcloud_app php occ config:system:set overwrite.cli.url --value='https://nextcloud.rhlabs.org'
 ```
 
-### Add Multiple Domains
-
-```bash
-podman exec -u www-data nextcloud_app php occ config:system:set trusted_domains 1 --value='localhost:8080'
-podman exec -u www-data nextcloud_app php occ config:system:set trusted_domains 2 --value='192.168.1.100:8080'
-podman exec -u www-data nextcloud_app php occ config:system:set trusted_domains 3 --value='nextcloud.yourdomain.com'
-```
-
-### Verify Configuration
-
+5. Verify Configuration
 ```bash
 podman exec -u www-data nextcloud_app php occ config:system:get trusted_domains
+podman exec -u www-data nextcloud_app php occ config:system:get trusted_proxies
+podman exec -u www-data nextcloud_app php occ config:system:get overwriteprotocol
+podman exec -u www-data nextcloud_app php occ config:system:get overwritehost
+podman exec -u www-data nextcloud_app php occ config:system:get overwrite.cli.url
 ```
 
 After adding the domain, refresh your browser. 
+
 ---
 
-## Configure trusted proxy, overwrite URL, and Redis locking
+### Configure Redis Memcache and Locking
 
-1. Find `cloudflared` container IP (if running in container):
+1. Nano isn't installed in the Nextcloud container by default
 ```bash
-podman inspect -f '{{range .NetworkSettings.Networks}}{{.IPAddress}}{{end}}' cloudflared
+# Inside the container (you're already in: root@ae6edd369331:/var/www/html#)
+apt-get update && apt-get install -y nano
 ```
 
-2. Add `cloudflared` to trusted proxies (replace `X.X.X.X` with the appropriate IP; or use `127.0.0.1` if cloudflared accesses via localhost):
+2. Backup config/config.php 
 ```bash
-podman exec -it nextcloud /bin/sh -c "cd /var/www/html && php occ config:system:set trusted_proxies 1 --value='X.X.X.X'"
+cp -pr config/config.php config/config.php.bak
 ```
 
-3. Set `overwrite.cli.url` and `overwriteprotocol`:
+3. Open the config/cofnig.php file for editing:
 ```bash
-podman exec -it nextcloud /bin/sh -c "cd /var/www/html && php occ config:system:set overwrite.cli.url --value='https://nextcloud.example.com'"
-podman exec -it nextcloud /bin/sh -c "cd /var/www/html && php occ config:system:set overwriteprotocol --value='https'"
+nano config/config.php
 ```
 
 4. Configure Redis for memcache and file locking:
-- Enable the Redis app:
-```bash
-podman exec -it nextcloud /bin/sh -c "cd /var/www/html && php occ app:enable redis"
+```php
+  'memcache.local' => '\\OC\\Memcache\\APCu',
+  'memcache.distributed' => '\\OC\\Memcache\\Redis',
+  'memcache.locking' => '\\OC\\Memcache\\Redis',
+  'redis' => 
+  array (
+    'host' => 'redis',
+    'port' => 6379,
+    'password' => '',
+    'dbindex' => 0,
+  )
 ```
-- Configure memcache/locking in `config.php`. You can edit `config.php` or use occ where possible. Example (editing `config.php` programmatically is error‑prone; prefer manual editing or occ helpers):
-```bash
-# Example (illustrative only) — prefer safe editing/methods described in Nextcloud docs
-podman exec -it nextcloud /bin/sh -c "cd /var/www/html && php -r \"\$config = include 'config/config.php'; \$config['memcache.locking'] = '\\\\OC\\\\Memcache\\\\Redis'; \$config['memcache.local'] = '\\\\OC\\\\Memcache\\\\APCu'; \$config['redis'] = ['host' => 'redis', 'port' => 6379]; file_put_contents('config/config.php', '<?php\\nreturn '.var_export(array_merge(\$config), true).';\\n');\""
+
+5. Whole file show for clarity
+```php
+<?php
+$CONFIG = array (
+  'htaccess.RewriteBase' => '/',
+  'memcache.local' => '\\OC\\Memcache\\APCu',
+  'memcache.distributed' => '\\OC\\Memcache\\Redis',
+  'memcache.locking' => '\\OC\\Memcache\\Redis',
+  'redis' => 
+  array (
+    'host' => 'redis',
+    'port' => 6379,
+    'password' => '',
+    'dbindex' => 0,
+  ),
+  'apps_paths' =>
+  array (
+    0 =>
+    array (
+      'path' => '/var/www/html/apps',
+      'url' => '/apps',
+      'writable' => false,
+    ),
+    1 =>
+    array (
+      'path' => '/var/www/html/custom_apps',
+      'url' => '/custom_apps',
+      'writable' => true,
+    ),
+  ),
+  'upgrade.disable-web' => true,
+  'passwordsalt' => 'aV1egjinEjJUdh1E2C+DVYJmtMBZB9',
+  'secret' => 'aIJMjMDbeY6wpZMA1dlwShdaLmUogHYz+Tyatz0xJ8P4tML1',
+  'trusted_domains' =>
+  array (
+    0 => 'localhost',
+    1 => 'localhost:8080',
+    2 => '192.168.0. 100:8080',
+    3 => 'nextcloud.rhlabs.org',
+  ),
+  'datadirectory' => '/var/www/html/data',
+  'dbtype' => 'mysql',
+  'version' => '32.0. 2.2',
+  'overwrite.cli.url' => 'https://nextcloud.rhlabs.org',
+  'dbname' => 'nextcloud',
+  'dbhost' => 'db',
+  'dbtableprefix' => 'oc_',
+  'mysql. utf8mb4' => true,
+  'dbuser' => 'ncuser',
+  'dbpassword' => 'nextcloudpass',
+  'installed' => true,
+  'instanceid' => 'ocqvk4uwtw3q',
+  'overwritehost' => 'nextcloud.rhlabs.org',
+  'overwriteprotocol' => 'https',
+  'trusted_proxies' =>
+  array (
+    0 => '127.0.0.1',
+  ),
+);
 ```
-Safer: log into Nextcloud web UI as admin → Settings → Admin → enable Redis via documented steps, or follow Nextcloud docs for `occ` commands to set memcache and locking.
 
 ---
 
-## Run Nextcloud cron
-Nextcloud requires a cron job every 5 minutes. Use a systemd timer that runs `podman exec` into the `nextcloud` container.
+### Run Nextcloud cron
+Nextcloud requires a cron job every 5 minutes to run background jobs. Use a systemd timer that runs `podman exec` into the `nextcloud` container.
 
-Create `/etc/systemd/system/nextcloud-cron.service`:
+1. Create `/etc/systemd/system/nextcloud-cron.service`:
 ```ini
 # /etc/systemd/system/nextcloud-cron.service
 [Unit]
@@ -357,10 +420,10 @@ After=network.target
 Type=oneshot
 User=root
 # Run as root so podman can run container exec; adjust User if using rootless podman and run as that user.
-ExecStart=/usr/bin/podman exec -it nextcloud php -f /var/www/html/cron.php
+ExecStart=/usr/bin/podman exec -u www-data nextcloud_app php -f /var/www/html/cron.php
 ```
 
-Create `/etc/systemd/system/nextcloud-cron.timer`:
+2. Create `/etc/systemd/system/nextcloud-cron.timer`:
 ```ini
 # /etc/systemd/system/nextcloud-cron.timer
 [Unit]
@@ -374,12 +437,49 @@ OnUnitActiveSec=5min
 WantedBy=timers.target
 ```
 
-Enable and start:
+3. Enable and start:
 ```bash
 sudo systemctl daemon-reload
 sudo systemctl enable --now nextcloud-cron.timer
 ```
 
+4. Check Timer Status
+```bash 
+# Check if the timer is active and when it will run next
+sudo systemctl status nextcloud-cron.timer
+
+# List all timers and find yours
+# Shows time since last run and time until next run
+sudo systemctl list-timers | grep nextcloud
+
+# Show detailed timer information
+systemctl show nextcloud-cron. timer
+```
+
+5. Check Service Execution
+```bash
+# Check the last execution of the service
+sudo systemctl status nextcloud-cron.service
+
+# View recent logs from the service
+sudo journalctl -u nextcloud-cron.service -n 50
+
+# Follow logs in real-time (wait for next execution)
+sudo journalctl -u nextcloud-cron.service -f
+```
+
+6. Check Within Nextcloud
+
+```bash
+# Check background job mode (should show "cron")
+podman exec -u www-data nextcloud_app php /var/www/html/occ config:app:get core backgroundjobs_mode
+
+# Check last cron execution time
+podman exec -u www-data nextcloud_app php /var/www/html/occ config:app:get core lastcron
+
+# View background job status
+podman exec -u www-data nextcloud_app php /var/www/html/occ background:job:list
+```
 ---
 
 ## Backups & disaster recovery
