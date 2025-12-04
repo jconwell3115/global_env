@@ -27,12 +27,12 @@
             "state": {
               "type": "markdown",
               "state": {
-                "file": "Ecobee install/Untitled.md",
+                "file": "Following_Christ/Love Beyond Partisan Loyalty.md",
                 "mode": "source",
                 "source": false
               },
               "icon": "lucide-file",
-              "title": "Untitled"
+              "title": "Love Beyond Partisan Loyalty"
             }
           },
           {
@@ -186,8 +186,9 @@
   },
   "active": "18798ea46e9c7a22",
   "lastOpenFiles": [
-    "Clippings/5 Practical Docker Configurations.md",
     "Ecobee install/Untitled.md",
+    "Following_Christ/Love Beyond Partisan Loyalty.md",
+    "Clippings/5 Practical Docker Configurations.md",
     "Ecobee install",
     "Clippings/GitHub Copilot Chat Cookbook.md",
     "Clippings/From Dataset to DataFrame to Deployed Your First Project with Pandas & Scikit-learn.md",
@@ -212,7 +213,6 @@
     "Clippings/5 Simple Steps to Mastering Docker for Data Science.md",
     "Clippings/5 tips for writing better custom instructions for Copilot.md",
     "Clippings/5 systemd tweaks that really boost my boot time.md",
-    "Self Hosting/OpenVPN-AS Quadlet Troubleshooting Checklist.md",
     "Self Hosting/Self Hosting.md.2025-10-12_06.52.44.foldersync.old",
     "Self Hosting.md.2025-10-12_06.52.30.foldersync.old",
     "Following_Christ",
