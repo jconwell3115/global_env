@@ -21,6 +21,10 @@
     {
       "folder": "Self Hosting",
       "template": "_templates/Self_Hosting_Template.md"
+    },
+    {
+      "folder": "Self Hosting/NextCloud",
+      "template": "_templates/Self_Hosting_Template.md"
     }
   ],
   "enable_file_templates": false,

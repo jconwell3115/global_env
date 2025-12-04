@@ -5,7 +5,7 @@ tags:
 
 1. [x] Install Fedora Budgie on main computer
 2. [x] Cloud flare domain name
-3. [ ] Cloudflare tunnel - main Linux host 
+3. [x] Cloudflare tunnel - main Linux host 
 4. [ ] Docker mgmt -portainer/dockge
 	- 1 GB of RAM
 	- main PC
@@ -19,12 +19,12 @@ tags:
 	- main PC
 7. [ ] Dozzle - logs/alerts
 	- main PC
-8. [ ] Cloud flare ddns container
+8. [x] Cloud flare ddns container
 	- main PC
 9. [x] Open VPN - openvpn/openvpn-as
 	- 1 GB of RAM
 	- main PC
-10. [ ] Nextcloud AIO - Replace O365
+10. [x] Nextcloud base, Redis & MariaDB - Replace O365
 	- 2 Core
 	- 6 GB of RAM 
 	- 2nd PC 
