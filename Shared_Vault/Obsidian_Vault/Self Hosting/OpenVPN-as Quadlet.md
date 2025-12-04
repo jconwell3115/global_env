@@ -184,7 +184,7 @@ sudo systemctl restart openvpnas.service
 
 ------------------------------------------------------------
 
-
+[[OpenVPN-AS Quadlet Troubleshooting Checklist]]
 ## 6) Troubleshooting checklist
 
 1. Network mode
@@ -207,6 +207,7 @@ sudo systemctl restart openvpnas.service
 ------------------------------------------------------------
 
 ## 7) Access URLs
-> Admin UI: https://<host>:943/admin
-> Client UI: https://<host>:943/
+> Admin UI: https://{{host}}:943/admin
+> Client UI: https://{{host}}:943/
+
 
