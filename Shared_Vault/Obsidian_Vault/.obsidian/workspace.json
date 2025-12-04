@@ -153,9 +153,23 @@
               "icon": "lucide-file",
               "title": "Enable Nextcloud to Restart After Reboot"
             }
+          },
+          {
+            "id": "de81bf236e6fe6d2",
+            "type": "leaf",
+            "state": {
+              "type": "markdown",
+              "state": {
+                "file": "Self Hosting/NextCloud/Pre-Flight Checks and Setup.md",
+                "mode": "source",
+                "source": false
+              },
+              "icon": "lucide-file",
+              "title": "Pre-Flight Checks and Setup"
+            }
           }
         ],
-        "currentTab": 6
+        "currentTab": 7
       }
     ],
     "direction": "vertical"
@@ -304,8 +318,9 @@
   },
   "active": "b07139eca3bc7f89",
   "lastOpenFiles": [
-    "Self Hosting/NextCloud/Enable Nextcloud to Restart After Reboot.md",
+    "Self Hosting/NextCloud/Pre-Flight Checks and Setup.md",
     "Self Hosting/NextCloud/Nextcloud Stack with Podman-Compose & Cloudflared Tunnel Quadlet.md",
+    "Self Hosting/NextCloud/Enable Nextcloud to Restart After Reboot.md",
     "Self Hosting/NextCloud/Run Nextcloud cron.md",
     "Self Hosting/NextCloud/Run cloudflared via systemd unit (quadlet-style).md",
     "Self Hosting/NextCloud/Configure Redis Memcache and Locking.md",
@@ -331,7 +346,6 @@
     "Self Hosting/Nextcloud AIO Podman Compose Setup Guide.md",
     "Self Hosting/Nextcloud AIO + Cloudflared with SKIP_DOMAIN_VALIDATION.md",
     "Self Hosting/Next Cloud Information.md",
-    "Self Hosting/Interactions.md",
     "Self Hosting.md.2025-10-12_06.52.30.foldersync.old",
     "Home Improvement/Crawl Space",
     "Home Improvement",

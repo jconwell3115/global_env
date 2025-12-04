@@ -26,56 +26,15 @@ A complete, practical how‑to to run the Nextcloud "base" image together with M
 
 ---
 
-## Prerequisites
-- Linux host with Podman >= 4.x and `podman-compose` installed.  
-- `systemd` (for cron and optional cloudflared unit).  
-- Cloudflare account and a domain managed by Cloudflare (to create a Cloudflare Tunnel).  
-- Familiarity with the shell as root or a user with podman permissions (examples use rootless Podman where reasonable).  
-- At least 1–2 GB RAM for a small install (more for multiple users).
-
----
-
-## Suggested directory layout
-Create a working directory (example `/srv/nextcloud`) with:
-- `/srv/nextcloud/.env`
-- `/srv/nextcloud/docker-compose.yml`
-- `/srv/nextcloud/cloudflared/config.yml` + tunnel credentials JSON
-- `/srv/nextcloud/data` (Nextcloud data)
-- `/srv/nextcloud/db` (MariaDB data)
-- `/srv/nextcloud/config` (optional preseeded `config.php`)
-
-Create directories and set ownership for rootless Podman:
-```bash
-sudo mkdir -p /srv/nextcloud/{data,db,config,cloudflared}
-sudo chown $USER:$USER /srv/nextcloud -R   # for rootless podman use your user; if running podman as root adjust accordingly
-```
-
----
-
-## Files to create
-
-### Create .env — put secrets here (do NOT commit)
-```bash
-# /srv/nextcloud/.env
-NEXTCLOUD_ADMIN_USER=admin
-NEXTCLOUD_ADMIN_PASSWORD=ChangeMeStrongPassword!
-MYSQL_ROOT_PASSWORD=ChangeDbRootPass!
-MYSQL_PASSWORD=nextcloudpass
-MYSQL_DATABASE=nextcloud
-MYSQL_USER=ncuser
-NEXTCLOUD_TRUSTED_DOMAIN=nextcloud.example.com
-PODMAN_PROJECT=nextcloud
-```
-
----
 ## Setup Workflow
-1.  [[Create Nextcloud stack podman-compose]]
-2.  [[Cloudflare Tunnel creation (quick steps)]]
-3. [[ Run cloudflared via systemd unit (quadlet-style)]]
-4.  [[Initial Nextcloud setup]]
-5.  [[Configure Redis Memcache and Locking]]
-6.  [[Run Nextcloud cron]]
-7. [[Enable Nextcloud to Restart After Reboot]]
+1.  [[Pre-Flight Checks and Setup ]]
+2.  [[Create Nextcloud stack podman-compose]]
+3.  [[Cloudflare Tunnel creation (quick steps)]]
+4. [[ Run cloudflared via systemd unit (quadlet-style)]]
+5.  [[Initial Nextcloud setup]]
+6.  [[Configure Redis Memcache and Locking]]
+7.  [[Run Nextcloud cron]]
+8.  [[Enable Nextcloud to Restart After Reboot]]
 
 ---
 ## Backups & disaster recovery
@@ -104,10 +63,10 @@ podman exec -it db sh -c 'exec mysqldump --databases nextcloud -u root -p"${MYSQ
 ---
 
 ## SELinux and file permissions
-- If SELinux is enforcing, use the `:Z` mount option to relabel bind mounts (as used in `docker-compose.yml`).  
+- If SELinux is enforcing, use the `:Z` mount option to relabel bind mounts (as used in podman-compose.yml`).  
 - Ensure Nextcloud files are owned by `www-data:www-data` inside the container. If using host bind mounts, adjust host ownership or run:
 ```bash
-podman exec -it nextcloud chown -R www-data:www-data /var/www/html/data
+podman exec -it nextcloud_app chown -R www-data:www-data /var/www/html/data
 ```
 
 ---
@@ -117,7 +76,7 @@ podman exec -it nextcloud chown -R www-data:www-data /var/www/html/data
 ### Check container/service status & logs
 ```bash
 podman ps -a
-podman logs nextcloud
+podman logs nextcloud_app
 podman logs db
 podman logs cloudflared   # if cloudflared is a container
 systemctl status cloudflared   # if using systemd unit
