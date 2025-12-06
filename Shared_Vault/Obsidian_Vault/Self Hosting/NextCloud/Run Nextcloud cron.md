@@ -47,10 +47,7 @@ Wants=network-online.target
 
 [Service]
 Type=oneshot
-ExecStart=%h/bin/nextcloud-cron-run
-TimeoutStartSec=120
-KillMode=control-group
-KillSignal=SIGTERM
+ExecStart=/bin/sh -c '! /usr/bin/podman exec nextcloud_app pgrep -f "/var/www/html/cron.php" >/dev/null 2>&1 && /usr/bin/podman exec -u www-data nextcloud_app php -d memory_limit=768M -f /var/www/html/cron.php || exit 0'
 StandardOutput=journal
 StandardError=journal
 Restart=no

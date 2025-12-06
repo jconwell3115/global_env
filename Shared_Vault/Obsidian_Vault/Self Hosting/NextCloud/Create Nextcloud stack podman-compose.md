@@ -67,6 +67,8 @@ services:
       NEXTCLOUD_ADMIN_USER: "${NEXTCLOUD_ADMIN_USER}"
       NEXTCLOUD_ADMIN_PASSWORD: "${NEXTCLOUD_ADMIN_PASSWORD}"
       NEXTCLOUD_TRUSTED_DOMAINS: "${NEXTCLOUD_TRUSTED_DOMAIN}"
+      REDIS_HOST: "nextcloud_redis"
+      REDIS_HOST_PORT: "6379"
     volumes:
       - nextcloud_data:/var/www/html/data:Z
       - nextcloud_config:/var/www/html/config:Z

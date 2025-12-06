@@ -32,7 +32,7 @@ nano config/config.php
   'memcache.locking' => '\\OC\\Memcache\\Redis',
   'redis' => 
   array (
-    'host' => 'redis',
+    'host' => 'nextcloud_redis',
     'port' => 6379,
     'password' => '',
     'dbindex' => 0,
@@ -49,7 +49,7 @@ $CONFIG = array (
   'memcache.locking' => '\\OC\\Memcache\\Redis',
   'redis' => 
   array (
-    'host' => 'redis',
+    'host' => 'nextcloud_redis',
     'port' => 6379,
     'password' => '',
     'dbindex' => 0,
