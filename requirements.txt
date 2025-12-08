@@ -24,7 +24,6 @@ md_toc
 molecule
 ncclient
 netaddr
-netdev
 netmiko
 ntlm-auth
 oauthlib

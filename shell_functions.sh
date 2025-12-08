@@ -104,10 +104,6 @@ customize_pyproject_toml() {
 [tool.uv]
 # Primary index
 index-url = "https://pypi.org/simple"
-# Extra indexes to check for packages not found in primary
-extra-index-url = ["https://artifactory.marriott.com/artifactory/api/pypi/network-devops-pypi-local/simple/"]
-# Extra build dependencies for packages that don't declare them properly
-extra-build-dependencies = { "mind-libs" = ["setuptools"] }
 
 EOF
       info "Added UV configuration to pyproject.toml"

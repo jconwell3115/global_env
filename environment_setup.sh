@@ -23,7 +23,7 @@ KEY_NAME="id_ed25519"
 KEY_PATH="$HOME/.ssh/$KEY_NAME"
 KEY_TYPE="ed25519"
 KEY_SIZE="2048"
-EMAIL="jonathan.conwell@marriott-sp.com"
+EMAIL="jconwell3115@gmail.com"
 
 set -euo pipefail
 
@@ -238,11 +238,6 @@ fi
 # shellcheck disable=SC1090
 [ -f "$HOME/.bashrc" ] && source "$HOME/.bashrc"
 
-info "Copying the .pem for AAP CLI..."
-create_dir_if_not_exists "$SSH_DIR" "SSH directory"
-cp -pr "$GLOBAL_ENV_DIR/ansible-prod-user.pem" "$SSH_DIR"
-ls -al "$SSH_DIR"
-sleep 5
 
 # ------------- Setup Project Environment -------------
 section "Setting up project environment..."

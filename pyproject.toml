@@ -2,7 +2,7 @@
 name = "my-project"
 version = "0.1.0"
 description = "Example project using UV and pre-commit"
-requires-python = ">=3.9,<3.13"
+requires-python = ">=3.11,<3.13"
 
 [tool.ruff]
 line-length = 90
@@ -23,7 +23,6 @@ select = [
     "C4",  # flake8-comprehensions
     "T10", # flake8-debugger
     "DJ",  # flake8-django
-    "D",   # flake8-docstrings
     "EM",  # flake8-errmsg
     "EXE", # flake8-executable
     "FA",  # flake8-future-annotations
@@ -59,13 +58,6 @@ select = [
 ignore = [
     "E501",   # line too long, handled by formatter
     "B008",   # do not perform function calls in argument defaults
-    "D100",   # missing-module-docstring (handled by pydocstyle)
-    "D101",   # missing-class-docstring (handled by pydocstyle)
-    "D102",   # missing-function-docstring (handled by pydocstyle)
-    "D103",   # missing-docstring-in-public-function (handled by pydocstyle)
-    "D104",   # missing-package-docstring (handled by pydocstyle)
-    "D105",   # missing-magic-method-docstring (handled by pydocstyle)
-    "D107",   # missing-init-docstring (handled by pydocstyle)
 ]
 
 [tool.ruff.lint.mccabe]
