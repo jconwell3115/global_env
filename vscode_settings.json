@@ -1,0 +1,150 @@
+{
+    "terminal.integrated.scrollback": 1000000,
+    "[python]": {
+        "editor.defaultFormatter": "charliermarsh.ruff",
+        "editor.formatOnSave": true
+    },
+    "redhat.telemetry.enabled": false,
+    "diffEditor.renderSideBySide": false,
+    "workbench.colorTheme": "GitHub Dark",
+    "peacock.elementAdjustments": {
+        "activityBar": "lighten",
+        "statusBar": "none",
+        "titleBar": "none"
+    },
+    "editor.rulers": [
+        {
+            "column": 88,
+            "color": "#0011ff"
+        },
+        {
+            "column": 120,
+            "color": "#FF0000"
+        }
+    ],
+    "github.copilot.enable": {
+        "*": true,
+        "plaintext": false,
+        "markdown": true,
+        "scminput": false,
+        "python": true,
+        "json": false,
+        "yaml": true,
+        "jinja": false
+    },
+    "git.suggestSmartCommit": false,
+    "files.autoSave": "afterDelay",
+    "github.copilot.nextEditSuggestions.enabled": true,
+    "remote.autoForwardPortsSource": "hybrid",
+    "security.allowedUNCHosts": [
+        "wsl.localhost"
+    ],
+    "todo-tree.general.tags": [
+        "TODO",
+        "FIXME",
+        "NOTE",
+        "BUG"
+    ],
+    "todo-tree.filtering.excludeGlobs": [
+        "**/node_modules/**",
+        "**/.git/**",
+        "**/.venv/**",
+        "**/venv/**",
+        "**/.pytest_cache/**"
+    ],
+    "todo-tree.general.showActivityBarBadge": true,
+    "todo-tree.general.statusBar": "total",
+    "todo-tree.filtering.ignoreGitSubmodules": true,
+    "todo-tree.general.tagGroups": {
+        "To Do": [
+            "TODO"
+        ],
+        "Notes": [
+            "NOTE"
+        ],
+        "Error": [
+            "BUG",
+            "FIXME"
+        ]
+    },
+    "todo-tree.highlights.customHighlight": {
+        "# TODO:": {
+            "icon": "checklist",
+            "foreground": "#000000",
+            "iconColour": "#ffff00",
+            "background": "#ffff00",
+            "gutterIcon": true,
+            "type": "text-and-comment",
+            "opacity": 100
+        },
+        "# FIXME:": {
+            "icon": "tools",
+            "foreground": "#dfe212",
+            "iconColour": "#FF0000",
+            "background": "#FF0000",
+            "gutterIcon": true,
+            "type": "text-and-comment",
+            "opacity": 75
+        },
+        "# NOTE:": {
+            "icon": "code-review",
+            "foreground": "#90EE90",
+            "iconColour": "#00FF00",
+            "background": "#00FF00",
+            "gutterIcon": true,
+            "type": "text-and-comment",
+            "opacity": 25
+        },
+        "# BUG:": {
+            "icon": "bug",
+            "foreground": "#dfe212",
+            "iconColour": "#FF0000",
+            "background": "#FF0000",
+            "gutterIcon": true,
+            "type": "text-and-comment",
+            "opacity": 75
+        },
+    },
+    "todo-tree.tree.scanMode": "workspace",
+    "todo-tree.tree.showCountsInTree": true,
+    "todo-tree.regex.regex": "(#\\s*(?:TODO|FIXME|NOTE|BUG):)",
+    "[dockercompose]": {
+        "editor.insertSpaces": true,
+        "editor.tabSize": 2,
+        "editor.autoIndent": "advanced",
+        "editor.defaultFormatter": "redhat.vscode-yaml"
+    },
+    "[github-actions-workflow]": {
+        "editor.defaultFormatter": "redhat.vscode-yaml"
+    },
+    "diffEditor.ignoreTrimWhitespace": false,
+    "ruff.interpreter": [
+        ".venv/bin/python"
+    ],
+    "ruff.lineLength": 90,
+    "ruff.logLevel": "info",
+    "ruff.logFile": "pypi_package/logs/ruff.log",
+    "git.confirmSync": false,
+    "terminal.integrated.defaultProfile.linux": "bash",
+    "terminal.integrated.profiles.linux": {
+
+        "bash": {
+            "path": "bash",
+            "icon": "terminal-bash"
+        },
+        "zsh": {
+            "path": "zsh"
+        },
+        "fish": {
+            "path": "fish"
+        },
+        "tmux": {
+            "path": "tmux",
+            "icon": "terminal-tmux"
+        },
+        "pwsh": {
+            "path": "pwsh",
+            "icon": "terminal-powershell"
+        }
+    }
+}
