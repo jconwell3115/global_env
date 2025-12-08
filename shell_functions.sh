@@ -530,7 +530,7 @@ update_project_pyproject_tools() {
   fi
 
   info "Updating pyproject.toml tool configurations for project: $project_path"
-  python "$BIN_DIR/update_pyproject_tools.py" "$global_pyproject" "$project_pyproject"
+  "$project_path/.venv/bin/python" "$BIN_DIR/update_pyproject_tools.py" "$global_pyproject" "$project_pyproject"
 }
 
 copy_precommit_config() {
