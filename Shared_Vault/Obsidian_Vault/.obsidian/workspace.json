@@ -41,15 +41,16 @@
             "state": {
               "type": "markdown",
               "state": {
-                "file": "Self Hosting/NextCloud/Configure Redis Memcache and Locking.md",
+                "file": "Self Hosting/OpenVPN-as Quadlet.md",
                 "mode": "source",
                 "source": false
               },
               "icon": "lucide-file",
-              "title": "Configure Redis Memcache and Locking"
+              "title": "OpenVPN-as Quadlet"
             }
           }
-        ]
+        ],
+        "currentTab": 1
       }
     ],
     "direction": "vertical"
@@ -187,28 +188,29 @@
   },
   "left-ribbon": {
     "hiddenItems": {
-      "templater-obsidian:Templater": false,
       "switcher:Open quick switcher": false,
       "graph:Open graph view": false,
       "canvas:Create new canvas": false,
       "daily-notes:Open today's daily note": false,
       "templates:Insert template": false,
       "command-palette:Open command palette": false,
-      "bases:Create new base": false
+      "bases:Create new base": false,
+      "templater-obsidian:Templater": false
     }
   },
-  "active": "a14b984db4e2f7b4",
+  "active": "c662e2f484524ff3",
   "lastOpenFiles": [
-    "Self Hosting/NextCloud/Create Nextcloud stack podman-compose.md",
+    "Self Hosting/OpenVPN-as Quadlet.md",
+    "Self Hosting/Portainer Setup with Podman.md",
     "Self Hosting/NextCloud/Configure Redis Memcache and Locking.md",
-    "Self Hosting/NextCloud/Nextcloud Stack with Podman-Compose & Cloudflared Tunnel Quadlet.md",
     "Self Hosting/NextCloud/Run Nextcloud cron.md",
+    "Self Hosting/NextCloud/Create Nextcloud stack podman-compose.md",
+    "Self Hosting/NextCloud/Nextcloud Stack with Podman-Compose & Cloudflared Tunnel Quadlet.md",
     "Self Hosting/NextCloud/Cloudflare Tunnel creation (quick steps).md",
     "Self Hosting/NextCloud/Run cloudflared via systemd unit (quadlet-style).md",
     "Self Hosting/NextCloud/Initial Nextcloud setup.md",
     "Self Hosting/NextCloud/Enable Nextcloud to Restart After Reboot.md",
     "Self Hosting/OpenVPN-AS Quadlet Troubleshooting Checklist.md",
-    "Self Hosting/OpenVPN-as Quadlet.md",
     "Self Hosting/Podman & Quadlet Files and Volumes Best Practices.md",
     "Self Hosting/NextCloud/Pre-Flight Checks and Setup.md",
     "Self Hosting/Cloudflare DDNS as a Quadlet Guide.md",
@@ -223,7 +225,6 @@
     "Shopping List.md",
     "Self Hosting/🏠 Self-Hosting with Docker & Docker Compose Best Practices.md",
     "Self Hosting/Self Hosting.md.2025-10-12_06.52.44.foldersync.old",
-    "Self Hosting/Portainer Setup with Podman.md",
     "Self Hosting/Portainer Install with Docker Compose.md",
     "Self Hosting/Ngnix Proxy Manager.md",
     "Self Hosting/Nextcloud AIO Podman Compose Setup Guide.md",
