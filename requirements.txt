@@ -12,6 +12,7 @@ colorama
 colour
 cryptography<44,>=41.0.5
 dnacentersdk
+python-dotenv
 fqdn
 infoblox-netmri
 ipaddr
@@ -24,6 +25,7 @@ md_toc
 molecule
 ncclient
 netaddr
+netdev
 netmiko
 ntlm-auth
 oauthlib
@@ -31,6 +33,7 @@ openpyxl
 pandas
 pynautobot
 pysnmp
+setuptools
 simplejson
 tabulate
 tomli_w
@@ -40,3 +43,4 @@ treelib
 xlrd
 xlsxwriter
 yq
+
