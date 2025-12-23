@@ -72,6 +72,8 @@ alias du='du -h'
 alias mkdir='mkdir -p'  # Create parent dirs automatically
   
 # Macro aliases
+alias srcsh='source $HOME/my_work_tools/global_env/shell_functions.sh'
+alias scb="search_config_blocks"
 alias cgf='copy_global_files'
 alias doit='pipenv shell'
 alias findpip="python3 -m pip config debug"
