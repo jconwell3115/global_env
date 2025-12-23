@@ -707,4 +707,88 @@ renew_project() {
 
   info "Renew completed for project: $project_path"
 }
+search_config_blocks() {
+    local dir="${1:-}"
+    local pattern="${2:-}"
+    local start_re="${3:-}"
+    local mode="${4:-match}"   # mode: match | invert | all
+    local end_re="${5:-^!}"
+
+    # Validate required parameters
+    if [[ -z "$dir" || -z "$pattern" || -z "$start_re" ]]; then
+      err "Usage: search_config_blocks <dir> <pattern> <start_re> [mode] [end_re]"
+      err "  mode: match (default) | invert (non-matching blocks) | all (every block)"
+      return 2
+    fi
+
+    if [[ ! -d "$dir" ]]; then
+      err "Directory not found: $dir"
+      return 3
+    fi
+
+    if [[ ! "$mode" =~ ^(match|invert|all)$ ]]; then
+      err "Invalid mode: $mode (must be match|invert|all)"
+      return 4
+    fi
+
+    # Save original IFS and set to handle filenames with spaces/newlines
+    local OLD_IFS="$IFS"
+    IFS=$'\n\t'
+
+    # iterate files safely (handles spaces/newlines in names)
+    find "$dir" -type f -print0 | while IFS= read -r -d '' file; do
+      awk -v start_re="$start_re" -v end_re="$end_re" -v pat="$pattern" -v fname="$file" -v mode="$mode" '
+        BEGIN { IGNORECASE = 1; inblock = 0; block = ""; header_printed = 0; hname = fname; sub(".*/", "", hname) }
+        {
+          if ($0 ~ /^[[:space:]]*hostname[[:space:]]+/) {
+            split($0, a, /[[:space:]]+/)
+            if (a[2] != "") hname = a[2]
+          }
+
+          if (!inblock && $0 ~ start_re) {
+            inblock = 1
+            block = $0 "\n"
+            next
+          }
+          if (inblock) {
+            if ($0 ~ end_re) {
+              matched = (tolower(block) ~ tolower(pat))
+              do_print = (mode == "all") || (mode == "match" && matched) || (mode == "invert" && !matched)
+              if (do_print) {
+                if (!header_printed) {
+                  printf("%s\n", hname)
+                  header_printed = 1
+                }
+                n = split(block, lines, "\n")
+                for (i = 1; i <= n; i++)
+                  if (length(lines[i])) printf("  %s\n", lines[i])
+              }
+              inblock = 0
+              block = ""
+            } else {
+              block = block $0 "\n"
+            }
+          }
+        }
+        END {
+          if (inblock) {
+            matched = (tolower(block) ~ tolower(pat))
+            do_print = (mode == "all") || (mode == "match" && matched) || (mode == "invert" && !matched)
+            if (do_print) {
+              if (!header_printed) {
+                printf("%s\n", hname)
+                header_printed = 1
+              }
+              n = split(block, lines, "\n")
+              for (i = 1; i <= n; i++)
+                if (length(lines[i])) printf("  %s\n", lines[i])
+            }
+          }
+        }
+      ' "$file"
+    done
+
+    # restore IFS
+    IFS="$OLD_IFS"
+}
 # ------------- End of shell_functions.sh -------------
