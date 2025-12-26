@@ -707,6 +707,50 @@ renew_project() {
 
   info "Renew completed for project: $project_path"
 }
+
+# search_config_blocks
+# --------------------
+# Search configuration-like files under a directory, grouping lines into blocks
+# and printing only the blocks that match the requested criteria.
+#
+# A "block" is defined by:
+#   - start_re: regular expression that marks the beginning of a block
+#   - end_re:   regular expression that marks the end of a block (optional)
+#
+# Parameters:
+#   $1 dir       : Root directory to search. Must exist.
+#   $2 pattern   : Pattern to test within each block (typically a regex used
+#                  inside the AWK script). How it is interpreted depends on
+#                  the AWK logic inside this function.
+#   $3 start_re  : Regular expression that identifies the first line of each
+#                  block (e.g., '^\\[tool\\.uv\\]' or '^\\[project\\]').
+#   $4 mode      : Block selection mode (optional, default: "match"):
+#                    - match : print only blocks where the block content
+#                              matches "pattern"
+#                    - invert: print only blocks where the block content does
+#                              NOT match "pattern"
+#                    - all   : print every block regardless of "pattern"
+#   $5 end_re    : Regular expression that marks the end of a block
+#                  (optional; default '^!' which is unlikely to occur,
+#                  effectively treating the file end as the block terminator).
+#
+# Return codes:
+#   0 : Success (one or more blocks processed; whether anything was printed
+#       may depend on "mode" and "pattern").
+#   1 : General failure from underlying commands / AWK (if used in the body).
+#   2 : Invalid arguments (missing dir, pattern, or start_re).
+#   3 : Directory not found.
+#   4 : Invalid mode (must be 'match', 'invert', or 'all').
+#
+# Usage examples:
+#   # Print [tool.uv] blocks that reference "pytest" within a project:
+#   #   search_config_blocks "$PROJECT_DIR" "pytest" "^\\[tool\\.uv\\]"
+#   #
+#   # Print all [project] blocks, regardless of content:
+#   #   search_config_blocks "$PROJECT_DIR" ".*" "^\\[project\\]" "all"
+#   #
+#   # Print blocks starting at '# BEGIN CUSTOM' that do NOT mention 'legacy':
+#   #   search_config_blocks "." "legacy" "^# BEGIN CUSTOM" "invert" "^# END CUSTOM"
 search_config_blocks() {
     local dir="${1:-}"
     local pattern="${2:-}"
@@ -730,10 +774,6 @@ search_config_blocks() {
       err "Invalid mode: $mode (must be match|invert|all)"
       return 4
     fi
-
-    # Save original IFS and set to handle filenames with spaces/newlines
-    local OLD_IFS="$IFS"
-    IFS=$'\n\t'
 
     # iterate files safely (handles spaces/newlines in names)
     find "$dir" -type f -print0 | while IFS= read -r -d '' file; do
@@ -787,8 +827,5 @@ search_config_blocks() {
         }
       ' "$file"
     done
-
-    # restore IFS
-    IFS="$OLD_IFS"
 }
 # ------------- End of shell_functions.sh -------------
