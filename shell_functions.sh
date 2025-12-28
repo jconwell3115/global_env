@@ -731,10 +731,6 @@ search_config_blocks() {
       return 4
     fi
 
-    # Save original IFS and set to handle filenames with spaces/newlines
-    local OLD_IFS="$IFS"
-    IFS=$'\n\t'
-
     # iterate files safely (handles spaces/newlines in names)
     find "$dir" -type f -print0 | while IFS= read -r -d '' file; do
       awk -v start_re="$start_re" -v end_re="$end_re" -v pat="$pattern" -v fname="$file" -v mode="$mode" '
@@ -787,8 +783,5 @@ search_config_blocks() {
         }
       ' "$file"
     done
-
-    # restore IFS
-    IFS="$OLD_IFS"
 }
 # ------------- End of shell_functions.sh -------------
