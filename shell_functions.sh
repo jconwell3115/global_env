@@ -707,4 +707,125 @@ renew_project() {
 
   info "Renew completed for project: $project_path"
 }
+
+# search_config_blocks
+# --------------------
+# Search configuration-like files under a directory, grouping lines into blocks
+# and printing only the blocks that match the requested criteria.
+#
+# A "block" is defined by:
+#   - start_re: regular expression that marks the beginning of a block
+#   - end_re:   regular expression that marks the end of a block (optional)
+#
+# Parameters:
+#   $1 dir       : Root directory to search. Must exist.
+#   $2 pattern   : Pattern to test within each block (typically a regex used
+#                  inside the AWK script). How it is interpreted depends on
+#                  the AWK logic inside this function.
+#   $3 start_re  : Regular expression that identifies the first line of each
+#                  block (e.g., '^\\[tool\\.uv\\]' or '^\\[project\\]').
+#   $4 mode      : Block selection mode (optional, default: "match"):
+#                    - match : print only blocks where the block content
+#                              matches "pattern"
+#                    - invert: print only blocks where the block content does
+#                              NOT match "pattern"
+#                    - all   : print every block regardless of "pattern"
+#   $5 end_re    : Regular expression that marks the end of a block
+#                  (optional; default '^!' which is unlikely to occur,
+#                  effectively treating the file end as the block terminator).
+#
+# Return codes:
+#   0 : Success (one or more blocks processed; whether anything was printed
+#       may depend on "mode" and "pattern").
+#   1 : General failure from underlying commands / AWK (if used in the body).
+#   2 : Invalid arguments (missing dir, pattern, or start_re).
+#   3 : Directory not found.
+#   4 : Invalid mode (must be 'match', 'invert', or 'all').
+#
+# Usage examples:
+#   # Print [tool.uv] blocks that reference "pytest" within a project:
+#   #   search_config_blocks "$PROJECT_DIR" "pytest" "^\\[tool\\.uv\\]"
+#   #
+#   # Print all [project] blocks, regardless of content:
+#   #   search_config_blocks "$PROJECT_DIR" ".*" "^\\[project\\]" "all"
+#   #
+#   # Print blocks starting at '# BEGIN CUSTOM' that do NOT mention 'legacy':
+#   #   search_config_blocks "." "legacy" "^# BEGIN CUSTOM" "invert" "^# END CUSTOM"
+search_config_blocks() {
+    local dir="${1:-}"
+    local pattern="${2:-}"
+    local start_re="${3:-}"
+    local mode="${4:-match}"   # mode: match | invert | all
+    local end_re="${5:-^!}"
+
+    # Validate required parameters
+    if [[ -z "$dir" || -z "$pattern" || -z "$start_re" ]]; then
+      err "Usage: search_config_blocks <dir> <pattern> <start_re> [mode] [end_re]"
+      err "  mode: match (default) | invert (non-matching blocks) | all (every block)"
+      return 2
+    fi
+
+    if [[ ! -d "$dir" ]]; then
+      err "Directory not found: $dir"
+      return 3
+    fi
+
+    if [[ ! "$mode" =~ ^(match|invert|all)$ ]]; then
+      err "Invalid mode: $mode (must be match|invert|all)"
+      return 4
+    fi
+
+    # iterate files safely (handles spaces/newlines in names)
+    find "$dir" -type f -print0 | while IFS= read -r -d '' file; do
+      awk -v start_re="$start_re" -v end_re="$end_re" -v pat="$pattern" -v fname="$file" -v mode="$mode" '
+        BEGIN { IGNORECASE = 1; inblock = 0; block = ""; header_printed = 0; hname = fname; sub(".*/", "", hname) }
+        {
+          if ($0 ~ /^[[:space:]]*hostname[[:space:]]+/) {
+            split($0, a, /[[:space:]]+/)
+            if (a[2] != "") hname = a[2]
+          }
+
+          if (!inblock && $0 ~ start_re) {
+            inblock = 1
+            block = $0 "\n"
+            next
+          }
+          if (inblock) {
+            if ($0 ~ end_re) {
+              matched = (tolower(block) ~ tolower(pat))
+              do_print = (mode == "all") || (mode == "match" && matched) || (mode == "invert" && !matched)
+              if (do_print) {
+                if (!header_printed) {
+                  printf("%s\n", hname)
+                  header_printed = 1
+                }
+                n = split(block, lines, "\n")
+                for (i = 1; i <= n; i++)
+                  if (length(lines[i])) printf("  %s\n", lines[i])
+              }
+              inblock = 0
+              block = ""
+            } else {
+              block = block $0 "\n"
+            }
+          }
+        }
+        END {
+          if (inblock) {
+            matched = (tolower(block) ~ tolower(pat))
+            do_print = (mode == "all") || (mode == "match" && matched) || (mode == "invert" && !matched)
+            if (do_print) {
+              if (!header_printed) {
+                printf("%s\n", hname)
+                header_printed = 1
+              }
+              n = split(block, lines, "\n")
+              for (i = 1; i <= n; i++)
+                if (length(lines[i])) printf("  %s\n", lines[i])
+            }
+          }
+        }
+      ' "$file"
+    done
+}
 # ------------- End of shell_functions.sh -------------
