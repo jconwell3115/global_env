@@ -4,24 +4,57 @@
 
 [Provide a concise description of the project, its purpose, and main technologies used]
 
+## Workspace Layout (Multi-Repo)
+
+- This workspace is a parent project containing multiple repositories.
+- Tooling configuration is centralized in the workspace-root `pyproject.toml` (Ruff, and mypy).
+- Each repo typically has its own `.pre-commit-config.yaml`; run `pre-commit` from the repo root when validating changes.
+
 ## Code Style and Standards
 
 ### Language-Specific Guidelines
 
 #### Python
 
-- **Version**: [Specify minimum Python version, e.g., Python 3.12+]
-- **Type Hints**: All functions, methods, and classes must include complete type
-    hints using the `typing` module (Dict, List, Optional, Union, Any)
-- **Formatting**: Follow PEP 8 with line length of [90/100/120] characters
-- **Linting**: Code must pass `mypy --ignore-missing-imports`, `pydocstyle`, `bandit` and `ruff`.
-    Specify any per-tool ignore flags where applicable.
-- **Imports**: Group imports in this order: stdlib, third-party, framework modules
-    (when applicable), then local modules. Use `isort` to enforce ordering.
+- **Version**: Python 3.12+
+- **Type Hints**: All functions, methods, and classes must include complete type hints using `typing` module (Dict, List, Optional, Union, Any)
+- **Formatting**: Follow PEP 8 with line length of 90 characters (aligned with Ruff configuration)
+- **String Quotes**: Use double quotes for all strings (enforced by Ruff formatter)
+- **Linting**: Code must pass `mypy` (strict, with `ignore_missing_imports=true`) and `ruff` (lint + import sorting)
+- **Imports**: Group imports as: stdlib, third-party, framework modules (e.g., Ansible: `ansible.module_utils.*`), local modules (use `isort` for sorting)
+
+**Import grouping example:**
+
+```python
+# Standard library
+from pathlib import Path
+import re
+from typing import Dict, List, Optional
+
+# Third-party
+import yaml
+
+# Framework modules (Ansible)
+from ansible.module_utils.basic import AnsibleModule  # type: ignore
+
+# Local modules
+from [package_name].helpers import CustomComplianceInputs
+```
+
+### Repo-Specific Conventions
+
+#### [Repo Name]
+
+- **Playbooks**: Top-level files named `[pattern]*.yml` are orchestration playbooks.
+- **Custom Ansible modules**: Python modules under `library/` are Ansible module entrypoints.
+- **Non-Ansible code**: Python packages at repo root (e.g., `[package_name]/`) for code that is NOT an Ansible module.
+- **Packaged YAML rules**: Store operator-editable YAML inside Python packages (e.g., `[package_name]/rules.yaml`).
+  - Use `importlib.resources.files(__package__).joinpath("rules.yaml")` to load packaged resources.
+  - For repo-root rules (legacy): use `Path(__file__).parent.parent / "rules" / "rules.yml"`.
 
 #### [Other Languages - BASH/JavaScript/TypeScript/Go/etc.]
 
-[#### Shell / Bash
+#### Shell / Bash
 
 - **Shell**: Use `bash` for scripts that require Bash features and POSIX
     sh when portability is required. Specify version if you depend on
@@ -71,13 +104,35 @@ Example for Ansible:
 
 ### Python Docstrings
 
-All Python modules, classes, methods, and functions must use reStructuredText (reST)
-format with the following enhanced structure:
+All Python modules, classes, methods, and functions must use reStructuredText (reST) format following these conventions:
+
+**Convention Guidelines:**
+
+- **Modules and Classes**: Use Numpy-style section headings (Parameters, Returns, Raises, etc.) for better readability
+- **Functions and Methods**: Use reST field lists (`:param:`, `:returns:`, `:rtype:`) + Raises section heading for consistency
+- **pydocstyle configuration** (from workspace pyproject.toml):
+  - Base convention: PEP 257
+  - Enforces D200 (one-line docstrings fit on one line), D205 (blank line after summary), D210 (no surrounding whitespace), D211 (no blank before class), D214/D215 (section indentation), D300 (triple double quotes), D301 (raw strings for backslashes)
+  - Ignores D203 (blank line before class, conflicts with D211), D212 (multi-line summary position)
+  - Applies to all Python files except tests
+
+**Universal Requirements:**
+
+- Use `"""triple double quotes"""` for all docstrings (D300)
+- One-line docstrings must fit on one line with opening and closing quotes (D200)
+- Multi-line docstrings: summary line, blank line, optional section heading with underline, blank line, then detailed description (D205)
+- No blank line before class docstrings (D211, ignores conflicting D203)
+- Module docstrings: start with one-line summary, then module name as section heading
+- Multi-line summary starts on first line (D212 ignored for flexibility)
+- Always include a blank line before any section heading
+- Use double backticks for inline code: \`\`variable_name\`\`
+- Section underlines: `=` for module title, `-` for subsections
+- Type annotations in code must match docstring type declarations
+- Document all exceptions, side effects, and edge cases
 
 #### Module Docstrings
 
-Module docstrings should be comprehensive and serve as the primary reference
-documentation for the module.
+Module docstrings should be comprehensive and serve as the primary reference documentation.
 
 **Required sections:**
 
@@ -99,10 +154,10 @@ documentation for the module.
 Example:
 
 ```python
-"""module_name
-==============
+"""A brief one-line description of what this module does.
 
-A brief one-line description of what this module does.
+module_name
+===========
 
 Extended description explaining the module's purpose, architectural context,
 and how it fits into the larger system. Include any important background
@@ -271,22 +326,26 @@ class ClassName:
 
 #### Method/Function Docstrings
 
-Method docstrings should provide complete operational documentation.
+Method and function docstrings use reST field lists for parameters, return values and raises, with Numpy-style section headings for additional documentation.
 
-**Required sections:**
+**Required elements:**
 
 - One-line summary (imperative mood: "Do X" not "Does X")
 - Extended description (algorithm, approach, edge cases)
-- **Parameters** (`:param name:` and `:type name:`)
-- **Returns** (`:returns:` and `:rtype:`)
+- **Field lists**: `:param name:` and `:type name:` for each parameter
+- **Field lists**: `:returns:` and `:rtype:` for return value
+- **Field lists**: `:raises:` for exceptions
 
-**Enhanced sections to add:**
+**Optional sections** (use Numpy-style headings with blank line before each):
 
-- **Raises** (document all exceptions that can be raised)
-- **Examples** (show typical usage and edge cases)
-- **Complexity** (Big-O notation for non-trivial algorithms)
-- **Side effects** (all mutations, I/O, state changes)
-- **Warnings** (common pitfalls, gotchas)
+- **Examples** -- Show typical usage and edge cases
+- **Complexity** -- Big-O notation for non-trivial algorithms  
+- **Side effects** -- All mutations, I/O, state changes
+- **Warnings** -- Common pitfalls, gotchas
+- **Notes** -- Additional context, performance considerations
+- **See Also** -- Cross-references to related functions
+
+**Critical formatting rule**: Always include a blank line before the Raises section heading (and any other section heading).
 
 **Improvements:**
 
@@ -466,26 +525,36 @@ def method_with_side_effects(
 
 ### Formatting Rules
 
-**Strict requirements:**
+**Strict requirements (enforced by pydocstyle via pyproject.toml):**
 
+- First line must end with a period (D400)
+- First line must use imperative mood for functions/methods (D401)
+- First word must be capitalized (D403)
+- **Blank line required before and after each section heading** (critical for readability)
 - Use double backticks for inline code: \`\`variable_name\`\`
-- Use 4-space indentation for continuation lines in bulleted lists
 - Section headings use title case
 - Section underlines: `=` for module title, `-` for all subsections
 - Code examples use `::` followed by 8-space indented blocks
-- Multi-line return descriptions align with first line
+- Multi-line descriptions align with first line (4-space continuation indent)
 - Type annotations in code must match `:type:` and `:rtype:` directives
-- Blank line required before and after each section heading
 
-**Enhanced rules:**
+**Style conventions:**
 
-- Use consistent tense: present tense for descriptions, imperative for summaries
+- Use 4-space indentation for continuation lines in field lists and bulleted lists
+- Use consistent tense: present tense for descriptions, imperative for function summaries
 - Begin parameter descriptions with articles (a/an/the) for clarity
 - Include units in parameter descriptions (e.g., "timeout in seconds")
 - Use Oxford commas in lists
 - Capitalize Python types: List, Dict, Optional, etc.
 - Use "Returns None" not "Returns nothing" or "Returns: None"
 - Document mutations explicitly with **bold** emphasis
+
+**Docstring convention mixing:**
+
+- **Functions/methods**: reST field lists (`:param:`, `:type:`, `:returns:`, `:rtype:`, `:raises:`)
+- Always blank line before different fields (e.g., before `:param:` or `:returns:` or `:raises:`)
+- **Modules/classes**: Numpy-style section headings (Parameters, Returns, Raises) throughout
+- Always blank line before transitioning from field lists to section headings
 
 **Cross-referencing:**
 
@@ -526,8 +595,7 @@ Before finalizing docstrings, verify:
 
 [Define project-specific naming patterns]
 
-- **Module names**: [pattern, e.g., lowercase_with_underscores, or
-    prefix_name for custom modules]
+- **Module names**: [pattern, e.g., lowercase_with_underscores, or prefix_name for custom modules]
 - **Class names**: [pattern, e.g., PascalCase, or PrefixClassName for project classes]
 - **Function names**: [pattern, e.g., lowercase_with_underscores]
 - **Constants**: [pattern, e.g., UPPER_CASE_WITH_UNDERSCORES]
@@ -536,12 +604,9 @@ Before finalizing docstrings, verify:
 
 Example project-specific patterns:
 
-- Use `[prefix]_` for all custom modules in `library/`. For example, MiND Pulse uses
-    `mp_` as the prefix (e.g., `mp_process_compliance.py`).
-- Use a `[ProjectName]` prefix for Python classes when appropriate. For example,
-    MiND Pulse uses `MiNDPulseProcessCompliance` as a class name.
-- File names should follow the pattern: `[prefix]_<action>_<object>.[ext]`.
-    Example: `mp_compliance_report.yml` for MiND Pulse reports.
+- Use `[prefix]_` for all custom modules in `library/` (e.g., ProjectName uses `pn_` for `pn_process_compliance.py`)
+- Use `[ProjectName]` prefix for Python classes (e.g., ProjectName uses `ProjectNameProcessCompliance`)
+- File names follow pattern: `[prefix]_<action>_<object>.[ext]` (e.g., ProjectName uses `pn_compliance_report.yml`)
 
 ### Domain-Specific Patterns
 
@@ -565,8 +630,7 @@ Example:
 Example for framework-specific error handling:
 
 - Ansible modules should use `module.fail_json()` for errors, not `sys.exit()`
--- Custom modules should restore default signal handlers using:
-    `signal.signal(signal.SIGINT, signal.SIG_DFL)`
+- Custom modules should restore default signal handlers: `signal.signal(signal.SIGINT, signal.SIG_DFL)`
 - Always provide meaningful error messages with context (object name, identifier, etc.)
 - Log debug information to help troubleshoot issues in production
 
@@ -580,8 +644,7 @@ Example for framework-specific error handling:
 - **Test edge cases**: None, empty, single item, many items
 - **Verify type hints**: Run `mypy --ignore-missing-imports` (or stricter)
 - **Test input variations**: Test with various input shapes/envelopes
-- **Test normalization**: Test edge cases such as leading/trailing whitespace,
-  case differences, and special characters.
+- **Test normalization**: Test edge cases (whitespace, case differences, special characters)
 
 ## File Organization
 
@@ -857,26 +920,175 @@ if __name__ == "__main__":
 
 ## Best Practices
 
-1. **Always use type hints** - Every function/method parameter and return value must be
-    typed for better IDE support and for earlier error detection by type checkers.
-2. **Document side effects** - Clearly document any mutations, I/O, or state changes
-    in docstrings using **bold** emphasis so callers understand side effects.
-3. **Handle multiple input shapes** - Data may arrive in different envelopes or formats;
-    normalize input early in the pipeline to simplify downstream processing.
-4. **Normalize before matching** - Always normalize identifiers (strip, lowercase)
-    before comparison or lookup to avoid subtle mismatches.
-5. **Deep copy when merging** - Prevent unintended mutations with
-    `copy.deepcopy()` when merging complex data structures.
-6. **Provide realistic examples** - Include runnable code examples in module/class
-    docstrings that show typical usage and edge cases.
-7. **Test with type checkers** - Verify type hints are correct and complete by
-    running `mypy` (or a similar tool) as part of CI.
-8. **Use conservative defaults** - Prefer safe operations that preserve data rather
-    than destructive defaults.
-9. **Log comprehensively** - Use appropriate log levels and include contextual
-    information (identifiers, operation, values) to aid debugging.
-10. **Follow the principle of least surprise** - Design APIs and behaviors that
-     match user expectations and avoid surprising side effects.
+1. **Always use type hints** - Every function/method parameter and return value must be typed for better IDE support and error detection
+2. **Document side effects** - Clearly document any mutations, I/O, or state changes in docstrings with **bold** emphasis
+3. **Handle multiple input shapes** - Data can come in various envelopes/formats; normalize early in the pipeline
+4. **Normalize before matching** - Always normalize identifiers (strip, lowercase) before comparison or lookup operations
+5. **Deep copy when merging** - Prevent unintended mutations with `copy.deepcopy()` when merging data structures
+6. **Provide realistic examples** - Include runnable code examples in module/class docstrings showing actual usage
+7. **Test with type checkers** - Ensure type hints are correct and complete by running mypy or similar tools
+8. **Use conservative defaults** - Prefer safe operations that preserve data rather than destructive operations
+9. **Log comprehensively** - Use appropriate log levels and include context (identifiers, operation, values)
+10. **Follow the principle of least surprise** - Design APIs and behaviors that match user expectations
+
+## Do/Don't Rules
+
+### Dataclasses and Defaults
+
+- **Do** use `field(default_factory=list)` for mutable defaults in dataclasses
+- **Don't** use `[]` or `{}` as default values directly (creates shared references)
+
+```python
+# Good
+from dataclasses import dataclass, field
+
+@dataclass
+class Config:
+    items: List[str] = field(default_factory=list)
+
+# Bad
+@dataclass
+class Config:
+    items: List[str] = []  # All instances share same list!
+```
+
+### Exception Handling
+
+- **Do** use specific exceptions (`FileNotFoundError`, `KeyError`, `TypeError`) over generic `ValueError` when possible
+- **Do** include context in error messages: object name, identifier, platform, rule token, YAML path, etc.
+- **Don't** swallow exceptions without logging context
+- **Do** standardize error message format: `"Action failed: {context}. {suggestion}"`
+
+```python
+# Good
+if not yaml_path.exists():
+    raise FileNotFoundError(
+        f"Rules YAML file not found: {yaml_path}. "
+        "Ensure [package_name]/rules.yaml exists."
+    )
+
+# Bad
+if not yaml_path.exists():
+    raise ValueError("File not found")  # Which file? Where?
+```
+
+### Identifier Normalization
+
+- **Do** normalize identifiers consistently using `identifier.strip().lower()` before using as dict keys or comparisons
+- **Do** normalize early in the pipeline (at input extraction)
+- **Don't** compare raw user input without normalization
+
+```python
+# Good
+platform = inputs.platform_network_driver.strip().lower()
+if platform in rule.platforms:
+    # ...
+
+# Bad
+if inputs.platform_network_driver in rule.platforms:  # Case mismatch breaks lookup
+```
+
+### Logging
+
+- **Do** log at appropriate levels: `debug` for detailed traces, `info` for major steps, `warning` for recoverable issues, `error` for failures
+- **Do** include context: device name, platform, rule name, operation
+- **Don't** log sensitive data (tokens, passwords, credentials)
+- **Do** use the standard logging setup pattern (see below)
+
+**Standard logging setup:**
+
+```python
+import logging
+from pathlib import Path
+
+# Set up logging
+LOGLEVEL = logging.INFO
+logger = logging.getLogger(__name__)
+detailed_formatter = logging.Formatter(
+    "%(asctime)s - %(name)s - %(levelname)s - [%(lineno)d] - %(message)s"
+)
+
+# Ensure logs directory exists
+log_dir = Path("logs")
+log_dir.mkdir(exist_ok=True)
+
+file_handler = logging.FileHandler("logs/module_name.log")
+stream_handler = logging.StreamHandler()
+file_handler.setFormatter(detailed_formatter)
+stream_handler.setFormatter(detailed_formatter)
+logger.addHandler(file_handler)
+logger.addHandler(stream_handler)
+logger.setLevel(LOGLEVEL)
+```
+
+**Key elements:**
+
+- Use `logging.getLogger(__name__)` for module-level logger
+- Detailed formatter includes: timestamp, module name, level, line number, message
+- Dual output: file handler (`logs/module_name.log`) + stream handler (console)
+- Auto-create `logs/` directory with `mkdir(exist_ok=True)`
+- Default to `INFO` level; adjust as needed for debugging
+
+### Type Hints and Validation
+
+- **Do** prefer `Sequence[str]` over `List[str]` for read-only parameters (accepts tuples, lists)
+- **Do** use `Path | Traversable` for file parameters that may be packaged resources
+- **Do** validate input early and fail fast with clear error messages
+
+## Repo Commands
+
+Run these commands from the repository root to validate code:
+
+### Linting and Type Checking
+
+```bash
+# Run ruff linter
+python -m ruff check .
+
+# Run ruff import sorting
+python -m ruff check --select I --fix .
+
+# Run mypy type checker
+python -m mypy --ignore-missing-imports library/
+python -m mypy --ignore-missing-imports [package_name]/
+```
+
+### Code Formatting
+
+```bash
+# Format with Black (90 char line length)
+python -m black --line-length 90 .
+
+# Check formatting without making changes
+python -m black --check --line-length 90 .
+```
+
+### Testing and Validation
+
+```bash
+# Byte-compile Python files to check syntax
+python -m py_compile library/*.py
+python -m py_compile [package_name]/*.py
+
+# Run doctest on modules with >>> examples
+python -m doctest [package_name]/handlers.py -v
+
+# Run pytest (if tests exist)
+python -m pytest -q
+
+# Run pre-commit hooks
+pre-commit run --all-files
+```
+
+### Ansible Validation
+
+```bash
+# Lint playbooks
+ansible-lint [playbook_pattern]*.yml
+
+# Check playbook syntax
+ansible-playbook --syntax-check [playbook_pattern]*.yml
+```
 
 ## Dependencies and Integration
 
