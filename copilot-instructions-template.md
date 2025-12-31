@@ -326,7 +326,7 @@ class ClassName:
 
 #### Method/Function Docstrings
 
-Method and function docstrings use reST field lists for parameters, return values and raises, with Numpy-style section headings for additional documentation.
+Method and function docstrings use reST field lists for parameters, return values, and raises, with Numpy-style section headings for additional documentation.
 
 **Required elements:**
 
