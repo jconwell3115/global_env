@@ -83,6 +83,7 @@ alias cpc='copy_precommit_config'
 alias cci='copy_copilot_instructions'
 alias cgr='copy_global_requirements'
 alias rp='renew_project'
+alias lh="$HOME/my_work_tools/bin/bash/lookup_hosts.sh"
 
 # Git aliases
 alias gital='git config --get-regexp alias'
