@@ -7,7 +7,7 @@
 ## Workspace Layout (Multi-Repo)
 
 - This workspace is a parent project containing multiple repositories.
-- Tooling configuration is centralized in the workspace-root `pyproject.toml` (Ruff, and mypy).
+- Tooling configuration is centralized in the workspace-root `pyproject.toml` (Ruff and mypy).
 - Each repo typically has its own `.pre-commit-config.yaml`; run `pre-commit` from the repo root when validating changes.
 
 ## Code Style and Standards
