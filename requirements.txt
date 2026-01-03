@@ -25,7 +25,6 @@ md_toc
 molecule
 ncclient
 netaddr
-netdev
 netmiko
 ntlm-auth
 oauthlib
@@ -33,6 +32,7 @@ openpyxl
 pandas
 pynautobot
 pysnmp
+pyyaml
 setuptools
 simplejson
 tabulate
@@ -40,6 +40,7 @@ tomli_w
 tomlkit
 tqdm
 treelib
+xmltodict
 xlrd
 xlsxwriter
 yq

@@ -11,7 +11,7 @@ types-pyyaml>=6.0.12.20250915
 types-jsonschema>=4.17.3
 
 # Ansible-Specific
-ansible-lint>=25.1.0
+ansible-lint
 molecule>=7.0.0
 pytest-ansible>=4.1.0
 ansible-runner>=2.3.0
