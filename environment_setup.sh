@@ -11,10 +11,10 @@
 # Function calls are made to shared utilities defined in shell_functions.sh
 
 # ------------- Config -------------
-WORK_ENV_DIR="$HOME/Work_Environments"
-WORK_TOOLS_DIR="$HOME/my_work_tools"
-BIN_DIR=$WORK_TOOLS_DIR/bin/
-GLOBAL_ENV_DIR="$WORK_TOOLS_DIR/global_env"
+export WORK_ENV_DIR="$HOME/Work_Environments"
+export WORK_TOOLS_DIR="$HOME/my_work_tools"
+export BIN_DIR=$WORK_TOOLS_DIR/bin/
+export GLOBAL_ENV_DIR="$WORK_TOOLS_DIR/global_env"
 SSH_DIR="$HOME/.ssh"
 USERNAME="Jonathan Conwell"
 
@@ -24,6 +24,7 @@ KEY_PATH="$HOME/.ssh/$KEY_NAME"
 KEY_TYPE="ed25519"
 KEY_SIZE="2048"
 EMAIL="jconwell3115@gmail.com"
+export PYTHON_VERSION="${PYTHON_VERSION:-3.12}"
 
 set -euo pipefail
 
@@ -42,7 +43,9 @@ fi
 
 # ---- Project-specific configurations ----
 read -rp "Enter the project name (Leave blank to only set up shared my_work_tools): " PROJECT_NAME
+export PROJECT_NAME
 read -rp "Enter the repo name: (Leave blank if just setting up the project directory) " REPO_NAME
+export REPO_NAME
 
 # Allow empty project name to mean "only set up shared my_work_tools"
 if [[ -z "$PROJECT_NAME" ]]; then
@@ -57,6 +60,7 @@ if [[ -z "$REPO_NAME" ]]; then
   warn "No repo name provided - setting up project directory only (no repository will be cloned)"
 else
   read -rp "Enter the repo owner: (Leave blank for jconwell3115) " REPO_OWNER
+  export REPO_OWNER
 fi
 
 # Validate system requirements
@@ -65,7 +69,7 @@ validate_requirements
 ensure_shell_tools_installed
 
 # Define project directory
-PROJECT_DIR="$WORK_ENV_DIR/$PROJECT_NAME"
+export PROJECT_DIR="$WORK_ENV_DIR/$PROJECT_NAME"
 
 # If a project name was provided, collect project-specific metadata
 if [[ "${SKIP_PROJECT_SETUP:-false}" != true ]]; then
