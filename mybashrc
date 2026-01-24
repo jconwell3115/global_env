@@ -57,6 +57,9 @@ alias T="cd ~/my_work_tools"
 alias ll='ls -Alh'  # List all files including hidden
 alias l='ls -CF'  # List with indicators
 
+# SSH Shortcuts
+alias rhlabs='ssh rhlabs@192.168.0.100'
+
 # Python shortcuts
 alias py='python3'
 alias uvdo='source .venv/bin/activate'  # For local virtual envs
@@ -83,6 +86,8 @@ alias cpc='copy_precommit_config'
 alias cci='copy_copilot_instructions'
 alias cgr='copy_global_requirements'
 alias rp='renew_project'
+
+# Shell Shortcuts
 alias lh="$HOME/my_work_tools/bin/bash/lookup_hosts.sh"
 alias dc="$HOME/my_work_tools/bin/bash/data_converter.sh"
 
