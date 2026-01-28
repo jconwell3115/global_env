@@ -837,4 +837,26 @@ podman_volume_mounts() {
     echo
   done
 }
+
+# List the contents of a Podman volume by name
+podman_volume_ls() {
+  if [ $# -lt 1 ]; then
+    echo "Usage: podman_volume_ls <volume-name> [ls-args]" >&2
+    return 2
+  fi
+
+  local vol="$1"; shift
+  local mp
+  mp=$(podman volume inspect "$vol" --format '{{.Mountpoint}}' 2>/dev/null) || {
+    echo "podman: volume not found: $vol" >&2
+    return 3
+  }
+
+  if [ -z "$mp" ]; then
+    echo "podman: mountpoint not found for volume: $vol" >&2
+    return 4
+  fi
+
+  ls -la "$mp" "$@"
+}
 # ------------- End of shell_functions.sh -------------
