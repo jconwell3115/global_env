@@ -581,14 +581,14 @@ copy_copilot_instructions() {
     if ! diff -q "$global_copilot" "$home_copilot" >/dev/null 2>&1; then
       backup_file "$home_copilot"
       cp -pr "$global_copilot" "$home_copilot"
-      info "Updated ~/.github/copilot-instructions.md (old version backed up)"
+      info "Updated $HOME/.github/copilot-instructions.md (old version backed up)"
     else
-      info "~/.github/copilot-instructions.md is up to date"
+      info "$HOME/.github/copilot-instructions.md is up to date"
     fi
   else
     # No home version exists - create it
     cp -pr "$global_copilot" "$home_copilot"
-    info "Created ~/.github/copilot-instructions.md"
+    info "Created $HOME/.github/copilot-instructions.md"
   fi
 
   # Create .github directory if it doesn't exist
@@ -832,8 +832,8 @@ search_config_blocks() {
 podman_volume_mounts() {
   # Or get detailed mount info for all containers
   for container in $(podman ps -aq); do
-    echo "Container: $(podman inspect $container --format '{{.Name}}')"
-    podman inspect $container | jq -r '.[0].Mounts[] | select(.Name != null) | "  \(.Name) -> \(.Destination)"'
+    echo "Container: $(podman inspect "$container" --format '{{.Name}}')"
+    podman inspect "$container" | jq -r '.[0].Mounts[] | select(.Name != null) | "  \(.Name) -> \(.Destination)"'
     echo
   done
 }
