@@ -828,4 +828,13 @@ search_config_blocks() {
       ' "$file"
     done
 }
+
+podman_volume_mounts() {
+  # Or get detailed mount info for all containers
+  for container in $(podman ps -aq); do
+    echo "Container: $(podman inspect $container --format '{{.Name}}')"
+    podman inspect $container | jq -r '.[0].Mounts[] | select(.Name != null) | "  \(.Name) -> \(.Destination)"'
+    echo
+  done
+}
 # ------------- End of shell_functions.sh -------------
