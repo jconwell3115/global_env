@@ -841,8 +841,8 @@ podman_volume_mounts() {
 # List the contents of a Podman volume by name
 podman_volume_ls() {
   if [ $# -lt 1 ]; then
-    echo "Usage: podman_volume_ls <volume-name> [ls-args]" >&2
-    return 2
+    podman volume ls
+    return 0
   fi
 
   local vol="$1"; shift
