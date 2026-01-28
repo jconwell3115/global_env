@@ -86,6 +86,7 @@ alias cpc='copy_precommit_config'
 alias cci='copy_copilot_instructions'
 alias cgr='copy_global_requirements'
 alias rp='renew_project'
+alias pvm='podman_volume_mounts'
 
 # Shell Shortcuts
 alias lh="$HOME/my_work_tools/bin/bash/lookup_hosts.sh"
