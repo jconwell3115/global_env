@@ -29,9 +29,14 @@ export UV_CHANNEL="https://astral.sh/uv/install.sh"
 # Source shared shell functions
 [ -f "$HOME/my_work_tools/global_env/shell_functions.sh" ] && source "$HOME/my_work_tools/global_env/shell_functions.sh"
 
-echo ""
-echo "*** Read ~/.bashrc ***"
-echo ""
+# Only output for interactive shells
+if [[ $- == *i* ]]; then
+    echo ""
+    echo "*** Read ~/.bashrc ***"
+    echo ""
+    # other commands that produce output
+fi
+
 
 PS1='\[\e[0;32m\]\u@\h \[\e[1;33m\]\w \[\e[0;36m\]$ \[\e[m\]'
 PROMPT_DIRTRIM=2
@@ -56,6 +61,8 @@ alias T="cd ~/my_work_tools"
 # Enhanced listing
 alias ll='ls -Alh'  # List all files including hidden
 alias l='ls -CF'  # List with indicators
+alias lld='du -sh'  # List directory sizes
+alias duh='du -sh * | sort -h'  # List all items in current dir by size
 
 # SSH Shortcuts
 alias rhlabs='ssh rhlabs@192.168.0.100'
