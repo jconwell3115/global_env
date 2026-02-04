@@ -28,10 +28,26 @@ export PYTHON_VERSION="${PYTHON_VERSION:-3.12}"
 
 set -euo pipefail
 
-# Source shared utilities
+# Bootstrap: Download shell_functions.sh if not present (for standalone execution)
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+SHELL_FUNCTIONS="$SCRIPT_DIR/shell_functions.sh"
+
+if [[ ! -f "$SHELL_FUNCTIONS" ]]; then
+  echo "shell_functions.sh not found, downloading from GitHub..."
+  if command -v curl >/dev/null 2>&1; then
+    curl -fsSL https://raw.githubusercontent.com/jconwell3115/global_env/roadhouse/shell_functions.sh -o "$SHELL_FUNCTIONS"
+  elif command -v wget >/dev/null 2>&1; then
+    wget -qO "$SHELL_FUNCTIONS" https://raw.githubusercontent.com/jconwell3115/global_env/roadhouse/shell_functions.sh
+  else
+    echo "ERROR: Neither curl nor wget found. Cannot download shell_functions.sh"
+    exit 1
+  fi
+  echo "Downloaded shell_functions.sh"
+fi
+
+# Source shared utilities
 # shellcheck source=/home/jconwell3115/my_work_tools/global_env/shell_functions.sh
-source "$SCRIPT_DIR/shell_functions.sh"
+source "$SHELL_FUNCTIONS"
 
 # Only set trap if script is run directly (not sourced)
 if [[ "${BASH_SOURCE[0]}" == "${0}" ]]; then
