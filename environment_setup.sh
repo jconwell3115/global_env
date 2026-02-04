@@ -32,17 +32,23 @@ set -euo pipefail
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 SHELL_FUNCTIONS="$SCRIPT_DIR/shell_functions.sh"
 
+# If running from process substitution, SCRIPT_DIR won't be writable
+# Download to /tmp instead
+if [[ ! -w "$SCRIPT_DIR" ]] || [[ "$SCRIPT_DIR" =~ ^/dev/fd/ ]]; then
+  SHELL_FUNCTIONS="/tmp/shell_functions.sh"
+fi
+
 if [[ ! -f "$SHELL_FUNCTIONS" ]]; then
   echo "shell_functions.sh not found, downloading from GitHub..."
   if command -v curl >/dev/null 2>&1; then
-    curl -fsSL https://raw.githubusercontent.com/jconwell3115/global_env/roadhouse/shell_functions.sh -o "$SHELL_FUNCTIONS"
+    curl -fsSL https://github.com/jconwell3115/global_env/raw/roadhouse/shell_functions.sh -o "$SHELL_FUNCTIONS"
   elif command -v wget >/dev/null 2>&1; then
-    wget -qO "$SHELL_FUNCTIONS" https://raw.githubusercontent.com/jconwell3115/global_env/roadhouse/shell_functions.sh
+    wget -qO "$SHELL_FUNCTIONS" https://github.com/jconwell3115/global_env/raw/roadhouse/shell_functions.sh
   else
     echo "ERROR: Neither curl nor wget found. Cannot download shell_functions.sh"
     exit 1
   fi
-  echo "Downloaded shell_functions.sh"
+  echo "Downloaded shell_functions.sh to $SHELL_FUNCTIONS"
 fi
 
 # Source shared utilities
