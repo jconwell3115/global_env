@@ -7,8 +7,9 @@
 # - UV package manager and Python environments
 # - Pre-commit hooks and linting tools
 # Usage:
+#   curl -fsSL https://github.com/jconwell3115/global_env/raw/roadhouse/environment_setup.sh -o environment_setup.sh
+#   chmod +x environment_setup.sh
 #   ./environment_setup.sh
-# Function calls are made to shared utilities defined in shell_functions.sh
 
 # ------------- Config -------------
 export WORK_ENV_DIR="$HOME/Work_Environments"
@@ -28,36 +29,45 @@ export PYTHON_VERSION="${PYTHON_VERSION:-3.12}"
 
 set -euo pipefail
 
-# Bootstrap: Download shell_functions.sh if not present (for standalone execution)
-SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
-SHELL_FUNCTIONS="$SCRIPT_DIR/shell_functions.sh"
+# ------------- Bootstrap: Clone Work Tools Repos First -------------
+echo "=== Bootstrapping work tools environment ==="
 
-# Check if running from a local directory with shell_functions.sh already present
-if [[ ! -f "$SHELL_FUNCTIONS" ]]; then
-  # Download to /tmp for bootstrap execution
-  SHELL_FUNCTIONS="/tmp/shell_functions_$$.sh"
-  echo "shell_functions.sh not found locally, downloading from GitHub..."
-  
-  if command -v curl >/dev/null 2>&1; then
-    if ! curl -fsSL https://github.com/jconwell3115/global_env/raw/roadhouse/shell_functions.sh > "$SHELL_FUNCTIONS"; then
-      echo "ERROR: Failed to download shell_functions.sh"
-      exit 1
-    fi
-  elif command -v wget >/dev/null 2>&1; then
-    if ! wget -qO "$SHELL_FUNCTIONS" https://github.com/jconwell3115/global_env/raw/roadhouse/shell_functions.sh; then
-      echo "ERROR: Failed to download shell_functions.sh"
-      exit 1
-    fi
-  else
-    echo "ERROR: Neither curl nor wget found. Cannot download shell_functions.sh"
-    exit 1
-  fi
-  echo "Downloaded shell_functions.sh to $SHELL_FUNCTIONS"
+# Create work tools directory if it doesn't exist
+if [[ ! -d "$WORK_TOOLS_DIR" ]]; then
+  echo "Creating work tools directory: $WORK_TOOLS_DIR"
+  mkdir -p "$WORK_TOOLS_DIR"
 fi
 
-# Source shared utilities
+cd "$WORK_TOOLS_DIR" || exit
+echo "Changed to work tools directory: $(pwd)"
+
+# Clone or pull global_env repo
+if [[ -d "$GLOBAL_ENV_DIR/.git" ]]; then
+  echo "Found existing global_env repository, pulling latest changes..."
+  (cd "$GLOBAL_ENV_DIR" && git pull) || echo "Warning: Could not pull latest changes"
+else
+  echo "Cloning global_env repository..."
+  if ! git clone git@github.com:jconwell3115/global_env.git; then
+    echo "ERROR: Failed to clone global_env repository. Ensure SSH keys are set up."
+    exit 1
+  fi
+fi
+
+# Now source shell_functions.sh from the cloned repo
 # shellcheck source=/home/jconwell3115/my_work_tools/global_env/shell_functions.sh
-source "$SHELL_FUNCTIONS"
+source "$GLOBAL_ENV_DIR/shell_functions.sh"
+
+echo "Loaded shell_functions.sh successfully"
+echo
+
+# Clone or pull bin repo
+if [[ -d "$BIN_DIR/.git" ]]; then
+  info "Found existing bin repository, pulling latest changes..."
+  (cd "$BIN_DIR" && git pull) || warn "Could not pull latest changes"
+else
+  info "Cloning bin repository..."
+  clone_or_pull "git@github.com:jconwell3115/bin.git"
+fi
 
 # Only set trap if script is run directly (not sourced)
 if [[ "${BASH_SOURCE[0]}" == "${0}" ]]; then
@@ -185,10 +195,8 @@ else
   info "Shared my_work_tools setup skipped."
 fi
 
-# ------------- Clone Work Tools Repos -------------
-section "Cloning work tools repositories..."
-
-clone_or_pull "git@github.com:jconwell3115/global_env.git"
+# ------------- Setup Repos with Pre-commit -------------
+section "Setting up work tools repositories..."
 
 # Setup global_env directory with pre-commit
 cd "$GLOBAL_ENV_DIR" || exit
@@ -200,12 +208,6 @@ else
 fi
 create_log_files
 cd "$WORK_TOOLS_DIR" || exit
-
-# Wait for 30 seconds
-info "Pausing for 30 seconds or until you press enter ..."
-read -t 30 -rp "" || true
-
-clone_or_pull "git@github.com:jconwell3115/bin.git"
 
 # Setup bin directory with config files and pre-commit
 cd "$BIN_DIR" || exit
