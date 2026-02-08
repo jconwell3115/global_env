@@ -65,7 +65,7 @@ alias lld='du -sh'  # List directory sizes
 alias duh='du -sh * | sort -h'  # List all items in current dir by size
 
 # SSH Shortcuts
-alias rhlabs='ssh rhlabs@192.168.0.100'
+alias rhlabs='ssh rhlabs-server'
 
 # Python shortcuts
 alias py='python3'
