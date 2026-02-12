@@ -729,13 +729,15 @@ renew_homepage() {
     warn "renew_homepage: sudo chown failed (you may need to run manually)"
   fi
 
-  if [[ -d .git ]]; then
-    info "renew_homepage: pulling latest from git"
+  if [[ -d ../.git ]]; then
+    info "renew_homepage: pulling latest from git (in parent directory)"
+    cd ..
     if ! git pull; then
       warn "renew_homepage: git pull failed"
     fi
+    cd "$dir"
   else
-    warn "renew_homepage: no .git directory found, skipping git pull"
+    warn "renew_homepage: no .git directory found in parent, skipping git pull"
   fi
 
   info "renew_homepage: starting containers (podman-compose up -d)"
