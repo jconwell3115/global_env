@@ -708,6 +708,46 @@ renew_project() {
   info "Renew completed for project: $project_path"
 }
 
+# Renew the homepage container stack
+renew_homepage() {
+  local dir="$HOME/containers/homepage"
+
+  if [[ ! -d "$dir" ]]; then
+    err "renew_homepage: directory not found: $dir"
+    return 1
+  fi
+
+  cd "$dir" || { err "renew_homepage: failed to change directory to $dir"; return 1; }
+
+  info "renew_homepage: stopping containers (podman-compose down)"
+  if ! podman-compose down; then
+    warn "renew_homepage: podman-compose down failed"
+  fi
+
+  info "renew_homepage: fixing ownership of config/"
+  if ! sudo chown -R rhlabs:rhlabs config; then
+    warn "renew_homepage: sudo chown failed (you may need to run manually)"
+  fi
+
+  if [[ -d .git ]]; then
+    info "renew_homepage: pulling latest from git"
+    if ! git pull; then
+      warn "renew_homepage: git pull failed"
+    fi
+  else
+    warn "renew_homepage: no .git directory found, skipping git pull"
+  fi
+
+  info "renew_homepage: starting containers (podman-compose up -d)"
+  if ! podman-compose up -d; then
+    err "renew_homepage: podman-compose up failed"
+    return 1
+  fi
+
+  info "renew_homepage: completed"
+  return 0
+}
+
 # search_config_blocks
 # --------------------
 # Search configuration-like files under a directory, grouping lines into blocks
