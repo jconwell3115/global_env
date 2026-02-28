@@ -86,6 +86,34 @@ setup_uv_if_needed() {
   fi
 }
 
+# Ensure [tool.uv] section with package = false exists in a pyproject.toml.
+# Idempotent: safe to call on both fresh and already-customized files.
+# Usage: ensure_package_false <path-to-pyproject.toml>
+ensure_package_false() {
+  local pyproject_file="$1"
+  if [[ ! -f "$pyproject_file" ]]; then
+    warn "ensure_package_false: $pyproject_file not found, skipping"
+    return 0
+  fi
+  if ! grep -q "^\[tool\.uv\]" "$pyproject_file"; then
+    # No [tool.uv] section at all — append one
+    cat >> "$pyproject_file" << 'EOF'
+
+[tool.uv]
+# Treat this as a virtual project (dependencies only, not an installable package).
+# Without this, UV >=0.4 tries to build and install this directory as a Python package.
+package = false
+index-url = "https://pypi.org/simple"
+
+EOF
+    info "ensure_package_false: added [tool.uv] with package = false to $pyproject_file"
+  elif ! grep -q "^package = false" "$pyproject_file"; then
+    # [tool.uv] exists but package = false is missing — insert it on the next line
+    sed -i '/^\[tool\.uv\]/a package = false' "$pyproject_file"
+    info "ensure_package_false: inserted 'package = false' into [tool.uv] in $pyproject_file"
+  fi
+}
+
 customize_pyproject_toml() {
   local pyproject_file="$1"
   local project_name="$2"
@@ -93,21 +121,13 @@ customize_pyproject_toml() {
   local project_description="$4"
   if [[ -f "$pyproject_file" && -n "${project_name:-}" && -n "${project_version:-}" && -n "${project_description:-}" ]]; then
     info "Customizing pyproject.toml for project..."
-    sed -i "s/name = \"my-project\"/name = \"$project_name\"/" "$pyproject_file"
-    sed -i "s/version = \"0.1.0\"/version = \"$project_version\"/" "$pyproject_file"
-    sed -i "s/description = \"Example project using UV and pre-commit\"/description = \"$project_description\"/" "$pyproject_file"
+    # Use | as sed delimiter to safely handle project names/descriptions containing /
+    sed -i "s|name = \"my-project\"|name = \"$project_name\"|" "$pyproject_file"
+    sed -i "s|version = \"0.1.0\"|version = \"$project_version\"|" "$pyproject_file"
+    sed -i "s|description = \"Example project using UV and pre-commit\"|description = \"$project_description\"|" "$pyproject_file"
 
     # Add UV sources configuration if not already present
-    if ! grep -q "\[tool.uv\]" "$pyproject_file"; then
-      cat >> "$pyproject_file" << 'EOF'
-
-[tool.uv]
-# Primary index
-index-url = "https://pypi.org/simple"
-
-EOF
-      info "Added UV configuration to pyproject.toml"
-    fi
+    ensure_package_false "$pyproject_file"
   fi
 }
 
@@ -132,7 +152,7 @@ copy_config_files() {
 
   # Get list of config files to potentially copy
   local config_files=()
-  for pattern in "requirements*" "pyproject.toml" ".ansible-lint" ".pre-commit-config.yaml" ".gitignore" ".pymarkdown"; do
+  for pattern in "requirements*" "pyproject.toml" ".pre-commit-config.yaml" ".gitignore"; do
     for file in "$GLOBAL_ENV_DIR"/$pattern; do
       if [[ -f "$file" ]]; then
         config_files+=("$file")
@@ -735,7 +755,7 @@ renew_homepage() {
     if ! git pull; then
       warn "renew_homepage: git pull failed"
     fi
-    cd "$dir"
+    cd "$dir" || return
   else
     warn "renew_homepage: no .git directory found in parent, skipping git pull"
   fi

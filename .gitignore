@@ -50,4 +50,4 @@ logs/
 uv.lock
 
 # Copilot instructions
-*copilot*.md
+.github/*copilot*.md

@@ -17,19 +17,123 @@
 #### Python
 
 - **Version**: Python 3.12+
-- **Type Hints**: All functions, methods, and classes must include complete type hints using `typing` module (Dict, List, Optional, Union, Any)
+- **Type Hints**: Use modern built-in generics and union syntax (see **Modern Python Typing** section below). Do not import deprecated aliases from `typing` (`Dict`, `List`, `Optional`, `Tuple`, `Union`) — use built-in types and `|` syntax instead.
 - **Formatting**: Follow PEP 8 with line length of 90 characters (aligned with Ruff configuration)
 - **String Quotes**: Use double quotes for all strings (enforced by Ruff formatter)
 - **Linting**: Code must pass `mypy` (strict, with `ignore_missing_imports=true`) and `ruff` (lint + import sorting)
 - **Imports**: Group imports as: stdlib, third-party, framework modules (e.g., Ansible: `ansible.module_utils.*`), local modules (use `isort` for sorting)
 
-**Import grouping example:**
+#### Modern Python Typing (3.10+)
+
+Python 3.10+ provides cleaner, built-in syntax for type annotations. **Always use these forms** — Ruff rule `UP` (pyupgrade) will flag the old `typing` module aliases.
+
+**Union types — use `|` instead of `Union`:**
+
+```python
+# Old (deprecated)
+from typing import Union
+def foo(x: Union[str, int]) -> Union[str, None]: ...
+
+# Correct
+def foo(x: str | int) -> str | None: ...
+```
+
+**Optional — use `T | None` instead of `Optional[T]`:**
+
+```python
+# Old (deprecated)
+from typing import Optional
+def foo(x: Optional[str] = None) -> Optional[int]: ...
+
+# Correct
+def foo(x: str | None = None) -> int | None: ...
+```
+
+**Built-in generics — use lowercase instead of `typing` aliases:**
+
+```python
+# Old (deprecated)
+from typing import Dict, List, Tuple, Set, FrozenSet, Type
+def foo(x: List[str], y: Dict[str, int]) -> Tuple[str, int]: ...
+
+# Correct — no import needed
+def foo(x: list[str], y: dict[str, int]) -> tuple[str, int]: ...
+```
+
+**Still import from `typing` when needed:**
+
+```python
+# These have no built-in equivalent — still require typing import
+from typing import Any, Callable, ClassVar, Final, Generator, Iterator
+from typing import Literal, Never, Protocol, TypeAlias, TypeVar, overload
+from collections.abc import Sequence, Mapping, MutableMapping, Iterable
+```
+
+**Prefer `collections.abc` over `typing` for abstract types:**
+
+```python
+# Old
+from typing import Callable, Iterator, Generator, Sequence
+
+# Correct
+from collections.abc import Callable, Iterator, Generator, Sequence
+```
+
+**`TypeAlias` for named aliases (3.10+), `type` statement (3.12+):**
+
+```python
+# 3.10+ explicit alias
+from typing import TypeAlias
+Vector: TypeAlias = list[float]
+
+# 3.12+ soft keyword (preferred on 3.12+)
+type Vector = list[float]
+```
+
+**`Self` for methods returning their own type (3.11+):**
+
+```python
+from typing import Self
+
+class Builder:
+    def set_name(self, name: str) -> Self:
+        self._name = name
+        return self
+```
+
+**`ParamSpec` and `TypeVarTuple` for advanced generics:**
+
+```python
+from typing import ParamSpec, TypeVar
+P = ParamSpec("P")
+T = TypeVar("T")
+
+def decorator(func: Callable[P, T]) -> Callable[P, T]: ...
+```
+
+**Quick reference cheat-sheet:**
+
+| Old (deprecated) | Modern (3.10+) |
+|---|---|
+| `Optional[X]` | `X \| None` |
+| `Union[X, Y]` | `X \| Y` |
+| `List[X]` | `list[X]` |
+| `Dict[K, V]` | `dict[K, V]` |
+| `Tuple[X, Y]` | `tuple[X, Y]` |
+| `Set[X]` | `set[X]` |
+| `FrozenSet[X]` | `frozenset[X]` |
+| `Type[X]` | `type[X]` |
+| `typing.Callable` | `collections.abc.Callable` |
+| `typing.Sequence` | `collections.abc.Sequence` |
+| `typing.Iterator` | `collections.abc.Iterator` |
+
+**Import grouping example (updated for modern typing):**
 
 ```python
 # Standard library
+from collections.abc import Callable, Sequence
 from pathlib import Path
-import re
-from typing import Dict, List, Optional
+from typing import Any, TypeAlias
 
 # Third-party
 import yaml

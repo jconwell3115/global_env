@@ -98,7 +98,9 @@ if $HAS_PIPFILE; then
 
   # Initialize UV project first (only if not already initialized)
   if ! [[ -f pyproject.toml ]]; then
-    uv init .
+    # --no-package creates a virtual project (no [build-system], package = false)
+    # so UV does not try to build/install this directory as a Python package.
+    uv init --no-package .
   fi
   uv venv
   uv add setuptools --no-build-isolation  # Ensure setuptools is present for builds
@@ -128,10 +130,12 @@ elif $HAS_REQS; then
   info "requirements.txt detected without Pipfile. Initializing a UV project and importing..."
   if ! $HAS_PYPROJECT; then
     # Make a project if none exists
-    uv init .
+    # --no-package creates a virtual project (no [build-system], package = false)
+    uv init --no-package .
     uv venv  # Create virtual environment
   else
     info "Existing pyproject.toml found; will import into it."
+    ensure_package_false pyproject.toml
     uv venv  # Ensure venv exists
   fi
 
@@ -154,6 +158,7 @@ elif $HAS_REQS; then
 
 elif $HAS_PYPROJECT; then
   info "pyproject.toml detected (no Pipfile/requirements.txt). Locking & syncing with UV..."
+  ensure_package_false pyproject.toml
   uv venv  # Ensure venv exists
   uv add setuptools --no-build-isolation  # Ensure setuptools is present for builds
 
@@ -166,7 +171,8 @@ elif $HAS_PYPROJECT; then
   uv sync --no-build-isolation
 else
   info "No Pipfile/requirements.txt/pyproject.toml found. Initializing a new UV project..."
-  uv init .
+  # --no-package creates a virtual project (no [build-system], package = false)
+  uv init --no-package .
   uv venv  # Create virtual environment
   uv sync --no-build-isolation
 fi
