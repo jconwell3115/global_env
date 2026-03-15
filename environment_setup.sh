@@ -21,7 +21,7 @@ USERNAME="Jonathan Conwell"
 
 # Set variables for key generation
 KEY_NAME="id_ed25519"
-KEY_PATH="$HOME/.ssh/$KEY_NAME"
+export KEY_PATH="$HOME/.ssh/$KEY_NAME"  # Used by shell_functions.sh ask_renew_ssh()
 KEY_TYPE="ed25519"
 KEY_SIZE="2048"
 EMAIL="jconwell3115@gmail.com"
@@ -80,8 +80,13 @@ fi
 # ---- Project-specific configurations ----
 read -rp "Enter the project name (Leave blank to only set up shared my_work_tools): " PROJECT_NAME
 export PROJECT_NAME
-read -rp "Enter the repo name: (Leave blank if just setting up the project directory) " REPO_NAME
-export REPO_NAME
+# Accept one or more space-separated repo names so a project with multiple repos
+# can all be cloned and configured in a single run.
+read -rp "Enter the repo name(s), space-separated (leave blank if just setting up the project directory): " REPO_NAMES_INPUT
+# Store as an array; REPO_NAME retains the first entry for backward compatibility
+# with functions that only need a single reference (e.g. default description).
+IFS=' ' read -ra REPO_NAMES <<< "$REPO_NAMES_INPUT"
+REPO_NAME="${REPO_NAMES[0]:-}"
 
 # Allow empty project name to mean "only set up shared my_work_tools"
 if [[ -z "$PROJECT_NAME" ]]; then
@@ -91,13 +96,21 @@ else
   SKIP_PROJECT_SETUP=false
 fi
 
-# Warn if no repo name provided
-if [[ -z "$REPO_NAME" ]]; then
+# Warn if no repo names provided
+if [[ ${#REPO_NAMES[@]} -eq 0 || -z "${REPO_NAMES[0]}" ]]; then
   warn "No repo name provided - setting up project directory only (no repository will be cloned)"
 else
   read -rp "Enter the repo owner: (Leave blank for jconwell3115) " REPO_OWNER
   export REPO_OWNER
 fi
+
+# Export variables needed by shell_functions.sh
+# REPO_NAME  - first (or only) repo, for backward-compatible single-repo functions
+# REPO_NAMES - space-separated list for validate_setup() and multi-repo loops
+export REPO_NAME
+export REPO_NAMES="${REPO_NAMES[*]}"
+# bash export flattens arrays to scalars; re-split so the array is usable later in this script
+IFS=' ' read -ra REPO_NAMES <<< "$REPO_NAMES"
 
 # Validate system requirements
 validate_requirements
@@ -105,7 +118,7 @@ validate_requirements
 ensure_shell_tools_installed
 
 # Define project directory
-export PROJECT_DIR="$WORK_ENV_DIR/$PROJECT_NAME"
+export PROJECT_DIR="$WORK_ENV_DIR/$PROJECT_NAME"  # Used by validate_setup()
 
 # If a project name was provided, collect project-specific metadata
 if [[ "${SKIP_PROJECT_SETUP:-false}" != true ]]; then
@@ -113,9 +126,10 @@ if [[ "${SKIP_PROJECT_SETUP:-false}" != true ]]; then
   read -rp "Enter the project version (default 0.1.0): " PROJECT_VERSION
   PROJECT_VERSION=${PROJECT_VERSION:-0.1.0}
 
-  # Set default description based on whether repo name is provided
+  # Set default description based on whether any repo names are provided
   if [[ -n "$REPO_NAME" ]]; then
-    default_desc="Project for $REPO_NAME"
+    # Join all repo names for a more descriptive default
+    default_desc="Project for ${REPO_NAMES[*]}"
   else
     default_desc="Project $PROJECT_NAME"
   fi
@@ -293,32 +307,36 @@ else
   cd "$PROJECT_DIR" || exit
   info "Changed to project directory: $(pwd)"
 
-  # Clone project repo (only if REPO_NAME is provided)
-  if [[ -n "$REPO_NAME" ]]; then
-    info "Cloning project repository..."
-    clone_or_pull "git@github.com:${REPO_OWNER:-jconwell3115}/$REPO_NAME.git"
+  # Clone each project repo (skip if no repos were provided)
+  if [[ ${#REPO_NAMES[@]} -gt 0 && -n "${REPO_NAMES[0]}" ]]; then
+    info "Cloning ${#REPO_NAMES[@]} project repo(s): ${REPO_NAMES[*]}"
+    for _repo in "${REPO_NAMES[@]}"; do
+      clone_or_pull "git@github.com:${REPO_OWNER:-jconwell3115}/$_repo.git"
 
-    cd "$PROJECT_DIR/$REPO_NAME" || exit
-    info "Changed to repository directory: $(pwd)"
-    
-    if is_git_repo; then
-      # Ensure .gitignore exists
-      if [[ ! -f .gitignore ]]; then
-        cp "$GLOBAL_ENV_DIR/.gitignore" ./
-        info "Copied .gitignore to project repository"
+      cd "$PROJECT_DIR/$_repo" || exit
+      info "Changed to repository directory: $(pwd)"
+
+      if is_git_repo; then
+        # Ensure .gitignore exists
+        if [[ ! -f .gitignore ]]; then
+          cp "$GLOBAL_ENV_DIR/.gitignore" ./
+          info "Copied .gitignore to $_repo"
+        fi
+        # Copy pre-commit config
+        copy_precommit_config .
+        # Copy copilot instructions to .github directory
+        copy_copilot_instructions .
+        info "Installing pre-commit for $_repo directory..."
+        pre-commit install
+      else
+        warn "$_repo directory is not a git repository, skipping pre-commit install"
       fi
-      # Copy pre-commit config
-      copy_precommit_config .
-      # Copy copilot instructions to .github directory
-      copy_copilot_instructions .
-  info "Installing pre-commit for $REPO_NAME directory..."
-      pre-commit install
-    else
-      warn "Project repository is not a git repository, skipping pre-commit install"
-    fi
-    create_log_files
+      create_log_files
+
+      cd "$PROJECT_DIR" || exit
+    done
   else
-    warn "No repo name provided, skipping repository clone, pre-commit install, and log file creation"
+    warn "No repo names provided, skipping repository clone, pre-commit install, and log file creation"
   fi
 
   cd "$PROJECT_DIR" || exit
