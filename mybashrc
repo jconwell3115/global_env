@@ -96,6 +96,8 @@ alias rp='renew_project'
 alias rhp='renew_homepage'  # shorthand: renew the homepage containers
 alias pvm='podman_volume_mounts'
 alias pvls='podman_volume_ls'
+alias bootstrap='~/my_work_tools/global_env/bootstrap.sh'
+alias newproject='~/my_work_tools/global_env/setup_project.sh'
 
 # Shell Shortcuts
 alias lh="$HOME/my_work_tools/bin/bash/lookup_hosts.sh"
