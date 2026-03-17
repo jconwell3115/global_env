@@ -20,55 +20,22 @@
 export WORK_TOOLS_DIR="$HOME/my_work_tools"
 export BIN_DIR="$WORK_TOOLS_DIR/bin/"
 export GLOBAL_ENV_DIR="$WORK_TOOLS_DIR/global_env"
+export SSH_DIR="$HOME/.ssh"
+export PYTHON_VERSION="${PYTHON_VERSION:-3.12}"
 
 # SSH key generation variables
 KEY_NAME="id_ed25519"
-KEY_PATH="$HOME/.ssh/$KEY_NAME"
+KEY_PATH="$SSH_DIR/$KEY_NAME"
 KEY_TYPE="ed25519"
 KEY_SIZE="2048"
 EMAIL="jconwell3115@gmail.com"
-export PYTHON_VERSION="${PYTHON_VERSION:-3.12}"
 
 set -euo pipefail
 
-# ------------- Bootstrap: Clone Work Tools Repos First -------------
-echo "=== Bootstrapping work tools environment ==="
-
-# Create work tools directory if it doesn't exist
-if [[ ! -d "$WORK_TOOLS_DIR" ]]; then
-  echo "Creating work tools directory: $WORK_TOOLS_DIR"
-  mkdir -p "$WORK_TOOLS_DIR"
-fi
-
-cd "$WORK_TOOLS_DIR" || exit
-echo "Changed to work tools directory: $(pwd)"
-
-# Clone or pull global_env repo
-if [[ -d "$GLOBAL_ENV_DIR/.git" ]]; then
-  echo "Found existing global_env repository, pulling latest changes..."
-  (cd "$GLOBAL_ENV_DIR" && git pull) || echo "Warning: Could not pull latest changes"
-else
-  echo "Cloning global_env repository..."
-  if ! git clone git@github.com:jconwell3115/global_env.git; then
-    echo "ERROR: Failed to clone global_env repository. Ensure SSH keys are set up."
-    exit 1
-  fi
-fi
-
-# Source shell_functions.sh from the cloned repo
+# Source shared utilities
+SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 # shellcheck disable=SC1091
-source "$GLOBAL_ENV_DIR/shell_functions.sh"
-echo "Loaded shell_functions.sh successfully"
-echo
-
-# Clone or pull bin repo
-if [[ -d "$BIN_DIR/.git" ]]; then
-  info "Found existing bin repository, pulling latest changes..."
-  (cd "$BIN_DIR" && git pull) || warn "Could not pull latest changes"
-else
-  info "Cloning bin repository..."
-  clone_or_pull "git@github.com:jconwell3115/bin.git"
-fi
+source "$SCRIPT_DIR/shell_functions.sh"
 
 # Only set trap if script is run directly (not sourced)
 if [[ "${BASH_SOURCE[0]}" == "${0}" ]]; then
@@ -76,27 +43,30 @@ if [[ "${BASH_SOURCE[0]}" == "${0}" ]]; then
   trap cleanup EXIT
 fi
 
-# Validate system requirements
+# ------------- Preflight -------------
 validate_requirements
-# Ensure shell lint tool is available (shellcheck)
+setup_repos
 ensure_shell_tools_installed
 
-cd ~/ || exit
+# ------------- Bootstrap: Clone Work Tools Repos First -------------
+section "Setting up shared my_work_tools environment..."
 
-# ------------- Setup my_work_tools UV Environment -------------
-section "Setting up my_work_tools environment..."
-
-# Detect if the directory appears already initialized
-if [[ -f "$WORK_TOOLS_DIR/uv.lock" || -d "$WORK_TOOLS_DIR/.venv" ]]; then
-  warn "$WORK_TOOLS_DIR already appears to contain an initialized environment."
-  read -rp "Proceed to update the shared my_work_tools environment? This may modify files under $WORK_TOOLS_DIR (y/N): " PROCEED_SHARED
-  if [[ ! $PROCEED_SHARED =~ ^[Yy]$ ]]; then
-    info "Skipping shared my_work_tools setup to avoid overwriting an existing environment"
-    SKIP_SHARED_SETUP=true
+if [[ -d "$WORK_TOOLS_DIR" ]]; then
+  info "Found existing work tools directory: $WORK_TOOLS_DIR"
+  if [[ -f "$WORK_TOOLS_DIR/uv.lock" || -d "$WORK_TOOLS_DIR/.venv" || -d "$WORK_TOOLS_DIR/.git" ]]; then
+    warn "$WORK_TOOLS_DIR already appears to contain an initialized environment."
+    read -rp "Proceed to update the shared my_work_tools environment? This may modify files under $WORK_TOOLS_DIR (y/N): " PROCEED_SHARED
+    if [[ ! $PROCEED_SHARED =~ ^[Yy]$ ]]; then
+      info "Skipping shared my_work_tools setup to avoid overwriting an existing environment"
+      SKIP_SHARED_SETUP=true
+    else
+      SKIP_SHARED_SETUP=false
+    fi
   else
     SKIP_SHARED_SETUP=false
   fi
 else
+  create_dir_if_not_exists "$WORK_TOOLS_DIR" "work directory"
   SKIP_SHARED_SETUP=false
 fi
 
@@ -119,7 +89,7 @@ if [[ "$SKIP_SHARED_SETUP" == false ]]; then
 
   info "Setting up shared UV environment in my_work_tools..."
   if [[ -f "$WORK_TOOLS_DIR/uv.lock" ]]; then
-    info "Detected existing uv.lock; running 'uv sync' instead of reinitializing."
+    info "Detected existing uv.lock in $WORK_TOOLS_DIR; running 'uv sync' instead of reinitializing."
     (cd "$WORK_TOOLS_DIR" && uv sync) || warn "uv sync failed in $WORK_TOOLS_DIR"
   else
     setup_uv_if_needed "my_work_tools"
@@ -129,10 +99,11 @@ else
   info "Shared my_work_tools setup skipped."
 fi
 
-# ------------- Setup Repos with Pre-commit -------------
-section "Setting up work tools repositories..."
+# ------------- Clone Work Tools Repos -------------
+section "Cloning work tools repositories..."
 
-# Setup global_env directory with pre-commit
+clone_or_pull "git@git.marriott.com:jconw356/global_env.git"
+
 cd "$GLOBAL_ENV_DIR" || exit
 if is_git_repo; then
   info "Installing pre-commit for global_env directory..."
@@ -143,7 +114,11 @@ fi
 create_log_files
 cd "$WORK_TOOLS_DIR" || exit
 
-# Setup bin directory with config files and pre-commit
+info "Pausing for 30 seconds or until you press enter ..."
+read -t 30 -rp "" || true
+
+clone_or_pull "git@git.marriott.com:jconw356/bin.git"
+
 cd "$BIN_DIR" || exit
 info "Setting up bin directory with configuration files..."
 if is_git_repo; then
@@ -162,6 +137,7 @@ cd "$WORK_TOOLS_DIR" || exit
 
 # ------------- Setup SSH -------------
 section "Setting up SSH keys..."
+
 if ask_renew_ssh; then
   ssh-keygen -t "$KEY_TYPE" -b "$KEY_SIZE" -N "" -f "$KEY_PATH" -C "$EMAIL"
   chmod 600 "$KEY_PATH"
@@ -170,7 +146,7 @@ if ask_renew_ssh; then
   read -rp "Press Enter to continue after uploading the key to GitHub ..."
 fi
 
-# ------------- Configure ~/.bashrc -------------
+# ------------- Configure Environment -------------
 section "Configuring work tools environment..."
 
 info "Setting .bashrc parameters..."
@@ -191,11 +167,18 @@ else
   cp "$GLOBAL_ENV_DIR/mybashrc" "$HOME/.bashrc"
   info "Installed template ~/.bashrc"
 fi
-# shellcheck disable=SC1090,SC1091
+# shellcheck disable=SC1091
 [ -f "$HOME/.bashrc" ] && source "$HOME/.bashrc"
+
+info "Copying the .pem for AAP CLI..."
+create_dir_if_not_exists "$SSH_DIR" "SSH directory"
+cp -pr "$GLOBAL_ENV_DIR/ansible-prod-user.pem" "$SSH_DIR"
+ls -al "$SSH_DIR"
+sleep 5
 
 # ------------- Configure Git -------------
 section "Installing global Git config"
+
 GLOBAL_GIT_CONFIG="$GLOBAL_ENV_DIR/global_git_config"
 if [[ -f "$GLOBAL_GIT_CONFIG" ]]; then
   if [[ -f "$HOME/.gitconfig" ]]; then
@@ -207,10 +190,10 @@ else
   warn "Global git config not found at $GLOBAL_GIT_CONFIG; skipping git configuration"
 fi
 
-# ------------- Done -------------
-validate_setup
+# ------------- Validate Bootstrap -------------
+validate_setup "bootstrap"
 
-section "Machine setup complete!"
+section "Bootstrap complete. Please check for errors above."
 
 if [[ "${BASH_SOURCE[0]}" == "${0}" ]]; then
   trap - EXIT

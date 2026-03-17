@@ -1,4 +1,4 @@
-#!/bin/bash
+#!/usr/bin/env bash
 # Shared utility functions for environment setup scripts
 
 # ------------- Helpers -------------
@@ -86,6 +86,10 @@ setup_uv_if_needed() {
   fi
 }
 
+_sed_escape() {
+  printf '%s' "$1" | sed 's/[\\&/]/\\&/g'
+}
+
 # Ensure [tool.uv] section with package = false exists in a pyproject.toml.
 # Idempotent: safe to call on both fresh and already-customized files.
 # Usage: ensure_package_false <path-to-pyproject.toml>
@@ -122,9 +126,13 @@ customize_pyproject_toml() {
   if [[ -f "$pyproject_file" && -n "${project_name:-}" && -n "${project_version:-}" && -n "${project_description:-}" ]]; then
     info "Customizing pyproject.toml for project..."
     # Use | as sed delimiter to safely handle project names/descriptions containing /
-    sed -i "s|name = \"my-project\"|name = \"$project_name\"|" "$pyproject_file"
-    sed -i "s|version = \"0.1.0\"|version = \"$project_version\"|" "$pyproject_file"
-    sed -i "s|description = \"Example project using UV and pre-commit\"|description = \"$project_description\"|" "$pyproject_file"
+    local name_esc version_esc desc_esc
+    name_esc=$(_sed_escape "$project_name")
+    version_esc=$(_sed_escape "$project_version")
+    desc_esc=$(_sed_escape "$project_description")
+    sed -i "s|name = \"my-project\"|name = \"$name_esc\"|" "$pyproject_file"
+    sed -i "s|version = \"0.1.0\"|version = \"$version_esc\"|" "$pyproject_file"
+    sed -i "s|description = \"Example project using UV and pre-commit\"|description = \"$desc_esc\"|" "$pyproject_file"
 
     # Add UV sources configuration if not already present
     ensure_package_false "$pyproject_file"
@@ -152,7 +160,7 @@ copy_config_files() {
 
   # Get list of config files to potentially copy
   local config_files=()
-  for pattern in "requirements*" "pyproject.toml" ".pre-commit-config.yaml" ".gitignore"; do
+  for pattern in "requirements*" "pyproject.toml" ".pre-commit-config.yaml" ; do
     for file in "$GLOBAL_ENV_DIR"/$pattern; do
       if [[ -f "$file" ]]; then
         config_files+=("$file")
@@ -165,6 +173,14 @@ copy_config_files() {
     local filename
     filename=$(basename "$source_file")
     local target_file="$target_dir/$filename"
+
+    # pyproject.toml is treated as a create-once file.
+    # Never overwrite an existing one — it may contain locally-added dependencies
+    # and tool configs that should not be clobbered on subsequent runs.
+    if [[ "$filename" == "pyproject.toml" && -f "$target_file" ]]; then
+      info "Skipped $filename (already exists; will not overwrite to preserve local dependencies)"
+      continue
+    fi
 
     # Only process if file doesn't exist or is different
     if [[ ! -f "$target_file" ]] || ! diff -q "$source_file" "$target_file" >/dev/null 2>&1; then
@@ -201,10 +217,48 @@ validate_requirements() {
   info "All required tools are available"
 }
 
-# Ensure shell tooling (shellcheck) is available; try to install when missing
+# Enable OS package repos needed before tool installs (EPEL, VS Code, GitHub CLI).
+# Safe to call multiple times — repo-manager commands are idempotent.
+setup_repos() {
+  if command -v dnf >/dev/null 2>&1; then
+    info "Enabling EPEL repository via dnf..."
+    if ! sudo dnf install -y epel-release >/dev/null 2>&1; then
+      warn "Could not enable epel-release via dnf; some packages may not be found"
+    else
+      info "epel-release enabled"
+    fi
+
+    info "Enabling VS Code repository..."
+    if [[ ! -f /etc/yum.repos.d/vscode.repo ]]; then
+      sudo rpm --import https://packages.microsoft.com/keys/microsoft.asc 2>/dev/null || warn "Could not import Microsoft GPG key"
+      sudo tee /etc/yum.repos.d/vscode.repo >/dev/null << 'REPOEOF'
+[code]
+name=Visual Studio Code
+baseurl=https://packages.microsoft.com/yumrepos/vscode
+enabled=1
+gpgcheck=1
+gpgkey=https://packages.microsoft.com/keys/microsoft.asc
+REPOEOF
+      info "VS Code repo added"
+    else
+      info "VS Code repo already present"
+    fi
+
+    info "Enabling GitHub CLI repository..."
+    if ! sudo dnf config-manager --add-repo https://cli.github.com/packages/rpm/gh-cli.repo >/dev/null 2>&1; then
+      warn "Could not add GitHub CLI repo; gh may not be available via dnf"
+    else
+      info "GitHub CLI repo added"
+    fi
+  else
+    info "No dnf found; skipping repo setup"
+  fi
+}
+
+# Ensure shell tooling (shellcheck, rg) is available; try to install when missing
 ensure_shell_tools_installed() {
   local missing=()
-  local tools=("shellcheck")
+  local tools=("shellcheck" "rg")
   for tool in "${tools[@]}"; do
     if ! command -v "$tool" >/dev/null 2>&1; then
       missing+=("$tool")
@@ -212,47 +266,60 @@ ensure_shell_tools_installed() {
   done
 
   if [[ ${#missing[@]} -eq 0 ]]; then
-    info "Shell tools present: ShellCheck"
+    info "Shell tools present: ${tools[*]}"
     return 0
   fi
 
   info "Missing shell tools: ${missing[*]}. Attempting automated install..."
 
-  # Prefer rpm-ostree when present (Fedora Silverblue / CoreOS style hosts).
-  if command -v rpm-ostree >/dev/null 2>&1; then
-    warn "Using rpm-ostree to install: ${missing[*]}"
-    # rpm-ostree is used on immutable systems. Installation creates a new
-    # deployment and may require a reboot to activate. Attempt the install
-    # and inform the user about next steps.
-    if ! sudo rpm-ostree install "${missing[@]}"; then
-      warn "rpm-ostree install failed for: ${missing[*]}. You may need to use toolbox, overlays, or install manually"
+  # Map binary names to dnf package names where they differ
+  declare -A pkg_map
+  pkg_map["rg"]="ripgrep"
+  pkg_map["shellcheck"]="shellcheck"
+
+  local install_pkgs=()
+  for bin in "${missing[@]}"; do
+    if [[ -n "${pkg_map[$bin]:-}" ]]; then
+      install_pkgs+=("${pkg_map[$bin]}")
     else
-      info "rpm-ostree install attempted; a reboot or rebase may be required to complete. Run 'sudo systemctl reboot' to apply changes."
+      install_pkgs+=("$bin")
     fi
-  elif command -v apt-get >/dev/null 2>&1; then
-    warn "Using apt-get to install: ${missing[*]} (may prompt for sudo)"
-    sudo apt-get update || warn "apt-get update failed"
-    sudo apt-get install -y "${missing[@]}" || warn "apt-get install failed"
-  elif command -v dnf >/dev/null 2>&1; then
-    warn "Using dnf to install: ${missing[*]}"
-    sudo dnf install -y "${missing[@]}" || warn "dnf install failed"
-  elif command -v yum >/dev/null 2>&1; then
-    warn "Using yum to install: ${missing[*]}"
-    sudo yum install -y epel-release || true
-    sudo yum install -y "${missing[@]}" || warn "yum install failed"
-  elif command -v apk >/dev/null 2>&1; then
-    warn "Using apk to install: ${missing[*]}"
-    sudo apk add "${missing[@]}" || warn "apk add failed"
-  elif command -v brew >/dev/null 2>&1; then
-    warn "Using brew to install: ${missing[*]}"
-    brew install "${missing[@]}" || warn "brew install failed"
+  done
+
+  if command -v dnf >/dev/null 2>&1; then
+    warn "Using dnf to install packages: ${install_pkgs[*]} (binaries: ${missing[*]})"
+    if ! sudo dnf install -y "${install_pkgs[@]}"; then
+      warn "dnf install failed for: ${install_pkgs[*]}"
+    fi
   else
-    warn "No supported package manager found to install: ${missing[*]}"
-    warn "Please install them manually. See https://www.shellcheck.net"
+    warn "No supported package manager found to install: ${install_pkgs[*]}"
+    warn "Please install them manually (binaries: ${missing[*]}) or add them to your PATH."
   fi
 
-  # Re-check and report
+  # Re-check and report what remains missing
   local still_missing=()
+  for tool in "${missing[@]}"; do
+    if ! command -v "$tool" >/dev/null 2>&1; then
+      still_missing+=("$tool")
+    fi
+  done
+
+  # Final fallback: use webi.sh installer for shellcheck if it's still missing
+  if [[ ${#still_missing[@]} -gt 0 ]]; then
+    for tool in "${still_missing[@]}"; do
+      if [[ "$tool" == "shellcheck" ]]; then
+        warn "shellcheck still missing; attempting webi.sh installer as final fallback"
+        if curl -sS https://webi.sh/shellcheck | sh; then
+          info "shellcheck installed via webi.sh"
+        else
+          warn "webi.sh installer failed for shellcheck"
+        fi
+      fi
+    done
+  fi
+
+  # Re-evaluate after fallbacks
+  still_missing=()
   for tool in "${missing[@]}"; do
     if ! command -v "$tool" >/dev/null 2>&1; then
       still_missing+=("$tool")
@@ -268,18 +335,39 @@ ensure_shell_tools_installed() {
 }
 
 validate_setup() {
+  # Usage: validate_setup [bootstrap|project|all]
+  # bootstrap - checks shared work tools dirs and required commands
+  # project   - checks project repo directories
+  # all       - both (default, used by the legacy environment_setup.sh)
+  local mode="${1:-all}"
   local issues=()
 
-  # Check if directories exist
-  [[ -d "$GLOBAL_ENV_DIR" ]] || issues+=("global_env directory missing")
-  [[ -d "$BIN_DIR" ]] || issues+=("bin directory missing")
-  [[ -d "$PROJECT_DIR/$REPO_NAME" ]] || issues+=("project directory missing")
+  # Bootstrap checks: shared infrastructure and required commands
+  if [[ "$mode" == "bootstrap" || "$mode" == "all" ]]; then
+    [[ -d "$GLOBAL_ENV_DIR" ]] || issues+=("global_env directory missing")
+    [[ -d "$BIN_DIR" ]] || issues+=("bin directory missing")
+    command -v uv >/dev/null 2>&1 || issues+=("uv command not available")
+    command -v pre-commit >/dev/null 2>&1 || issues+=("pre-commit command not available")
+  fi
 
-  # Check if UV is available
-  command -v uv >/dev/null 2>&1 || issues+=("uv command not available")
-
-  # Check if pre-commit is available
-  command -v pre-commit >/dev/null 2>&1 || issues+=("pre-commit command not available")
+  # Project checks: repo directories under PROJECT_DIR
+  # REPO_NAMES is a space-separated list; fall back to scalar REPO_NAME for backward compatibility.
+  if [[ "$mode" == "project" || "$mode" == "all" ]]; then
+    if [[ -n "${REPO_NAMES:-}" ]]; then
+      local _any_repo_found=false
+      for _repo in $REPO_NAMES; do
+        if [[ -d "${PROJECT_DIR:-}/$_repo" ]]; then
+          _any_repo_found=true
+          break
+        fi
+      done
+      if [[ "$_any_repo_found" == false ]]; then
+        issues+=("no project repository directories found under ${PROJECT_DIR:-PROJECT_DIR_not_set}")
+      fi
+    elif [[ -n "${REPO_NAME:-}" ]]; then
+      [[ -d "${PROJECT_DIR:-}/$REPO_NAME" ]] || issues+=("project directory missing")
+    fi
+  fi
 
   if [[ ${#issues[@]} -gt 0 ]]; then
     warn "Setup completed with issues:"
@@ -745,7 +833,7 @@ renew_homepage() {
   fi
 
   info "renew_homepage: fixing ownership of config/"
-  if ! sudo chown -R rhlabs:rhlabs config; then
+  if ! sudo chown -R rhlabs:rhlabs "$HOME"/containers/homepage; then
     warn "renew_homepage: sudo chown failed (you may need to run manually)"
   fi
 
@@ -837,6 +925,10 @@ search_config_blocks() {
       return 4
     fi
 
+    # Save original IFS and set to handle filenames with spaces/newlines
+    local OLD_IFS="$IFS"
+    IFS=$'\n\t'
+
     # iterate files safely (handles spaces/newlines in names)
     find "$dir" -type f -print0 | while IFS= read -r -d '' file; do
       awk -v start_re="$start_re" -v end_re="$end_re" -v pat="$pattern" -v fname="$file" -v mode="$mode" '
@@ -889,6 +981,9 @@ search_config_blocks() {
         }
       ' "$file"
     done
+
+    # restore IFS
+    IFS="$OLD_IFS"
 }
 
 podman_volume_mounts() {

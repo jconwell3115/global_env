@@ -1,4 +1,4 @@
-#!/bin/bash
+#!/usr/bin/env bash
 
 # Bootstrap Script
 # One-time machine setup: installs shared work tools, clones infrastructure repos,
@@ -13,13 +13,14 @@
 # ------------- Config -------------
 # Defined here because ~/.bashrc may not be installed yet on a fresh machine.
 # After bootstrap completes these become persistent via mybashrc.
-WORK_TOOLS_DIR="$HOME/my_work_tools"
+export WORK_TOOLS_DIR="$HOME/my_work_tools"
 export BIN_DIR="$WORK_TOOLS_DIR/bin/"
 export GLOBAL_ENV_DIR="$WORK_TOOLS_DIR/global_env"
-SSH_DIR="$HOME/.ssh"
+export SSH_DIR="$HOME/.ssh"
+export PYTHON_VERSION="${PYTHON_VERSION:-3.12}"
 
-export KEY_NAME="id_ed25519"
-export KEY_PATH="$HOME/.ssh/$KEY_NAME"
+KEY_NAME="id_ed25519"
+KEY_PATH="$SSH_DIR/$KEY_NAME"
 KEY_TYPE="ed25519"
 KEY_SIZE="2048"
 EMAIL="jonathan.conwell@marriott.com"
@@ -190,12 +191,14 @@ validate_setup "bootstrap"
 section "Bootstrap complete. Please check for errors above."
 
 # ------------- Optional: Run Project Setup -------------
-read -rp "Run setup_project.sh now to set up a project? (y/N): " RUN_PROJECT_SETUP
+read -rp "Would you like to set up a project now? (y/N): " RUN_PROJECT_SETUP
 if [[ $RUN_PROJECT_SETUP =~ ^[Yy]$ ]]; then
-  "$SCRIPT_DIR/setup_project.sh"
-fi
-
-if [[ "${BASH_SOURCE[0]}" == "${0}" ]]; then
-  trap - EXIT
-  unset SCRIPT_NAME
+  SETUP_PROJECT_SCRIPT="$GLOBAL_ENV_DIR/setup_project.sh"
+  if [[ -f "$SETUP_PROJECT_SCRIPT" ]]; then
+    bash "$SETUP_PROJECT_SCRIPT"
+  else
+    warn "setup_project.sh not found at $SETUP_PROJECT_SCRIPT"
+  fi
+else
+  info "To set up a project later, run: $GLOBAL_ENV_DIR/setup_project.sh"
 fi
