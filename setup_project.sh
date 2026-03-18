@@ -10,25 +10,21 @@
 #   # or from anywhere:
 #   ~/my_work_tools/global_env/setup_project.sh
 
-# ------------- Config -------------
-export WORK_ENV_DIR="$HOME/Work_Environments"
-export WORK_TOOLS_DIR="$HOME/my_work_tools"
-export GLOBAL_ENV_DIR="$WORK_TOOLS_DIR/global_env"
-export PYTHON_VERSION="${PYTHON_VERSION:-3.12}"
+# ------------- Guard: require env vars from ~/.bashrc -------------
+# These are set by mybashrc. If they're missing, bootstrap.sh hasn't been run
+# or ~/.bashrc hasn't been sourced.
+: "${GLOBAL_ENV_DIR:?GLOBAL_ENV_DIR is not set — run bootstrap.sh first or source ~/.bashrc}"
+: "${WORK_ENV_DIR:?WORK_ENV_DIR is not set — run bootstrap.sh first or source ~/.bashrc}"
+: "${BIN_DIR:?BIN_DIR is not set — run bootstrap.sh first or source ~/.bashrc}"
+export BIN_DIR GLOBAL_ENV_DIR
 
-set -euo pipefail
+WORK_TOOLS_DIR="${WORK_TOOLS_DIR:-$HOME/my_work_tools}"
 
 # ------------- Bootstrap: Source shell_functions.sh -------------
-if [[ ! -f "$GLOBAL_ENV_DIR/shell_functions.sh" ]]; then
-  echo "ERROR: shell_functions.sh not found at $GLOBAL_ENV_DIR/shell_functions.sh"
-  echo "Run environment_setup.sh first to configure this machine."
-  exit 1
-fi
-
+# Source shared utilities
+SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 # shellcheck disable=SC1091
-source "$GLOBAL_ENV_DIR/shell_functions.sh"
-echo "Loaded shell_functions.sh successfully"
-echo
+source "$SCRIPT_DIR/shell_functions.sh"
 
 # Only set trap if script is run directly (not sourced)
 if [[ "${BASH_SOURCE[0]}" == "${0}" ]]; then
@@ -36,37 +32,41 @@ if [[ "${BASH_SOURCE[0]}" == "${0}" ]]; then
   trap cleanup EXIT
 fi
 
-# ------------- Project-specific prompts -------------
+# ------------- Input Collection -------------
 read -rp "Enter the project name: " PROJECT_NAME
-export PROJECT_NAME
-
 if [[ -z "$PROJECT_NAME" ]]; then
-  echo "ERROR: Project name cannot be empty." >&2
-  exit 1
+  die "Project name is required"
 fi
 
-read -rp "Enter the repo name (leave blank to skip cloning a repository): " REPO_NAME
-export REPO_NAME
+read -rp "Enter the repo name(s), space-separated (leave blank to skip cloning): " REPO_NAMES_INPUT
+IFS=' ' read -ra REPO_NAMES <<< "$REPO_NAMES_INPUT"
+REPO_NAME="${REPO_NAMES[0]:-}"
 
-if [[ -n "$REPO_NAME" ]]; then
+REPO_OWNER=""
+if [[ ${#REPO_NAMES[@]} -gt 0 && -n "${REPO_NAMES[0]}" ]]; then
   read -rp "Enter the repo owner (leave blank for jconwell3115): " REPO_OWNER
   REPO_OWNER="${REPO_OWNER:-jconwell3115}"
-  export REPO_OWNER
+else
+  warn "No repo names provided - setting up project directory only (no repository will be cloned)"
 fi
 
 read -rp "Enter the project version (default 0.1.0): " PROJECT_VERSION
 PROJECT_VERSION="${PROJECT_VERSION:-0.1.0}"
 
 if [[ -n "$REPO_NAME" ]]; then
-  default_desc="Project for $REPO_NAME"
+  default_desc="Project for ${REPO_NAMES[*]}"
 else
   default_desc="Project $PROJECT_NAME"
 fi
-
 read -rp "Enter the project description (default '$default_desc'): " PROJECT_DESCRIPTION
-PROJECT_DESCRIPTION="${PROJECT_DESCRIPTION:-"$default_desc"}"
+PROJECT_DESCRIPTION="${PROJECT_DESCRIPTION:-$default_desc}"
 
+# Export for shell_functions.sh (validate_setup, etc.)
+export REPO_NAME
+export REPO_NAMES="${REPO_NAMES[*]}"
 export PROJECT_DIR="$WORK_ENV_DIR/$PROJECT_NAME"
+# Re-split after export flattens the array
+IFS=' ' read -ra REPO_NAMES <<< "$REPO_NAMES"
 
 # ------------- Preflight -------------
 validate_requirements
@@ -95,10 +95,6 @@ if [[ -n "$REPO_NAME" ]]; then
   info "Changed to repository directory: $(pwd)"
 
   if is_git_repo; then
-    if [[ ! -f .gitignore ]]; then
-      cp "$GLOBAL_ENV_DIR/.gitignore" ./
-      info "Copied .gitignore to project repository"
-    fi
     copy_precommit_config .
     copy_copilot_instructions .
     info "Installing pre-commit for $REPO_NAME directory..."
@@ -132,7 +128,7 @@ setup_uv_if_needed "$PROJECT_NAME"
 generate_uv_diagnostics
 
 # ------------- Done -------------
-validate_setup
+validate_setup "project"
 
 section "Project setup complete for '$PROJECT_NAME'! Please check for errors."
 

@@ -7,6 +7,11 @@ then
 fi
 export PATH
 
+# BASH Variables
+export HISTFILESIZE=20000        # Commands saved in ~/.bash_history file
+export HISTTIMEFORMAT="%F %T "   # Add timestamps
+shopt -s histappend              # Append to history instead of overwriting
+
 
 # Environment Variables
 export WORK_ENV_DIR="$HOME/Work_Environments"

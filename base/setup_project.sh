@@ -1,4 +1,4 @@
-#!/bin/bash
+#!/usr/bin/env bash
 
 # Project Setup Script
 # Sets up a new project environment: creates directories, clones repos,
@@ -70,9 +70,13 @@ export PROJECT_DIR="$WORK_ENV_DIR/$PROJECT_NAME"
 IFS=' ' read -ra REPO_NAMES <<< "$REPO_NAMES"
 
 # ------------- Preflight -------------
+validate_requirements
+ensure_shell_tools_installed
 cleanup_old_virtualenvs "$PROJECT_NAME"
 
 # ------------- Create Directories -------------
+section "Setting up project environment for '$PROJECT_NAME'..."
+
 create_dir_if_not_exists "$WORK_ENV_DIR" "work environments directory"
 
 cd "$WORK_ENV_DIR" || exit
@@ -87,16 +91,12 @@ info "Changed to project directory: $(pwd)"
 if [[ ${#REPO_NAMES[@]} -gt 0 && -n "${REPO_NAMES[0]}" ]]; then
   info "Cloning ${#REPO_NAMES[@]} project repo(s): ${REPO_NAMES[*]}"
   for _repo in "${REPO_NAMES[@]}"; do
-    clone_or_pull "git@git.marriott.com:${REPO_OWNER:-Network-DevOps}/$_repo.git"
+    clone_or_pull "git@git.marriott.com:${REPO_OWNER}/$_repo.git"
 
     cd "$PROJECT_DIR/$_repo" || exit
     info "Changed to repository directory: $(pwd)"
 
     if is_git_repo; then
-      if [[ ! -f .gitignore ]]; then
-        cp "$GLOBAL_ENV_DIR/.gitignore" ./
-        info "Copied .gitignore to $_repo"
-      fi
       copy_precommit_config .
       copy_copilot_instructions .
       info "Installing pre-commit for $_repo directory..."
