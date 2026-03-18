@@ -97,8 +97,6 @@ if [[ ${#REPO_NAMES[@]} -gt 0 && -n "${REPO_NAMES[0]}" ]]; then
     info "Changed to repository directory: $(pwd)"
 
     if is_git_repo; then
-      copy_precommit_config .
-      copy_copilot_instructions .
       info "Installing pre-commit for $_repo directory..."
       pre-commit install
     else
