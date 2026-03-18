@@ -258,7 +258,7 @@ REPOEOF
 # Ensure shell tooling (shellcheck, rg) is available; try to install when missing
 ensure_shell_tools_installed() {
   local missing=()
-  local tools=("shellcheck" "rg" "tree")
+  local tools=("bat" "btop" "eza" "fd" "fzf" "jq" "ncdu" "procs" "rg" "shellcheck" "tldr" "tree" "zoxide")
   for tool in "${tools[@]}"; do
     if ! command -v "$tool" >/dev/null 2>&1; then
       missing+=("$tool")
@@ -274,9 +274,19 @@ ensure_shell_tools_installed() {
 
   # Map binary names to dnf package names where they differ
   declare -A pkg_map
+  pkg_map["bat"]="bat"
+  pkg_map["btop"]="btop"
+  pkg_map["eza"]="eza"
+  pkg_map["fd"]="fd-find"
+  pkg_map["fzf"]="fzf"
+  pkg_map["jq"]="jq"
+  pkg_map["ncdu"]="ncdu"
+  pkg_map["procs"]="procs"
   pkg_map["rg"]="ripgrep"
   pkg_map["shellcheck"]="shellcheck"
+  pkg_map["tldr"]="tldr"
   pkg_map["tree"]="tree"
+  pkg_map["zoxide"]="zoxide"
 
   local install_pkgs=()
   for bin in "${missing[@]}"; do
