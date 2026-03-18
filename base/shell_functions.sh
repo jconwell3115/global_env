@@ -258,7 +258,7 @@ REPOEOF
 # Ensure shell tooling (shellcheck, rg) is available; try to install when missing
 ensure_shell_tools_installed() {
   local missing=()
-  local tools=("bat" "btop" "duf" "eza" "fzf" "jq" "ncdu" "procs" "rg" "shellcheck" "tldr" "tree" "zoxide")
+  local tools=("bat" "btop" "eza" "fd" "fzf" "jq" "ncdu" "procs" "rg" "shellcheck" "tldr" "tree" "zoxide")
   for tool in "${tools[@]}"; do
     if ! command -v "$tool" >/dev/null 2>&1; then
       missing+=("$tool")
