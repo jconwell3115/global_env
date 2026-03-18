@@ -87,8 +87,35 @@ setup_uv_if_needed() {
 }
 
 _sed_escape() {
-  # Escapes characters that are special in a sed replacement string: \, &, and /
   printf '%s' "$1" | sed 's/[\\&/]/\\&/g'
+}
+
+# Ensure [tool.uv] section with package = false exists in a pyproject.toml.
+# Idempotent: safe to call on both fresh and already-customized files.
+# Usage: ensure_package_false <path-to-pyproject.toml>
+ensure_package_false() {
+  local pyproject_file="$1"
+  if [[ ! -f "$pyproject_file" ]]; then
+    warn "ensure_package_false: $pyproject_file not found, skipping"
+    return 0
+  fi
+  if ! grep -q "^\[tool\.uv\]" "$pyproject_file"; then
+    # No [tool.uv] section at all — append one
+    cat >> "$pyproject_file" << 'EOF'
+
+[tool.uv]
+# Treat this as a virtual project (dependencies only, not an installable package).
+# Without this, UV >=0.4 tries to build and install this directory as a Python package.
+package = false
+index-url = "https://pypi.org/simple"
+
+EOF
+    info "ensure_package_false: added [tool.uv] with package = false to $pyproject_file"
+  elif ! grep -q "^package = false" "$pyproject_file"; then
+    # [tool.uv] exists but package = false is missing — insert it on the next line
+    sed -i '/^\[tool\.uv\]/a package = false' "$pyproject_file"
+    info "ensure_package_false: inserted 'package = false' into [tool.uv] in $pyproject_file"
+  fi
 }
 
 customize_pyproject_toml() {
@@ -98,43 +125,17 @@ customize_pyproject_toml() {
   local project_description="$4"
   if [[ -f "$pyproject_file" && -n "${project_name:-}" && -n "${project_version:-}" && -n "${project_description:-}" ]]; then
     info "Customizing pyproject.toml for project..."
+    # Use | as sed delimiter to safely handle project names/descriptions containing /
     local name_esc version_esc desc_esc
     name_esc=$(_sed_escape "$project_name")
     version_esc=$(_sed_escape "$project_version")
     desc_esc=$(_sed_escape "$project_description")
-    sed -i "s/name = \"my-project\"/name = \"${name_esc}\"/" "$pyproject_file"
-    sed -i "s/version = \"0.1.0\"/version = \"${version_esc}\"/" "$pyproject_file"
-    sed -i "s/description = \"Example project using UV and pre-commit\"/description = \"${desc_esc}\"/" "$pyproject_file"
+    sed -i "s|name = \"my-project\"|name = \"$name_esc\"|" "$pyproject_file"
+    sed -i "s|version = \"0.1.0\"|version = \"$version_esc\"|" "$pyproject_file"
+    sed -i "s|description = \"Example project using UV and pre-commit\"|description = \"$desc_esc\"|" "$pyproject_file"
 
     # Add UV sources configuration if not already present
-    if ! grep -q "\[tool.uv\]" "$pyproject_file"; then
-      cat >> "$pyproject_file" << 'EOF'
-
-[tool.uv]
-# Treat this as a non-installable workspace / scripts project.
-# Prevents UV from trying to resolve the project name as a PyPI package.
-package = false
-# Extra build dependencies for packages that don't declare them properly
-extra-build-dependencies = { "mind-libs" = ["setuptools"] }
-
-[[tool.uv.index]]
-name = "network-devops"
-url = "https://artifactory.marriott.com/artifactory/api/pypi/network-devops-pypi-local/simple/"
-authenticate = "always"
-default = true
-
-[[tool.uv.index]]
-name = "idss"
-url = "https://artifactory.marriott.com/artifactory/api/pypi/idss-pypi-local/simple/"
-authenticate = "always"
-
-[[tool.uv.index]]
-name = "pypi"
-url = "https://pypi.org/simple"
-
-EOF
-      info "Added UV configuration to pyproject.toml"
-    fi
+    ensure_package_false "$pyproject_file"
   fi
 }
 
@@ -257,7 +258,7 @@ REPOEOF
 # Ensure shell tooling (shellcheck, rg) is available; try to install when missing
 ensure_shell_tools_installed() {
   local missing=()
-  local tools=("shellcheck" "rg")
+  local tools=("shellcheck" "rg" "tree")
   for tool in "${tools[@]}"; do
     if ! command -v "$tool" >/dev/null 2>&1; then
       missing+=("$tool")
@@ -275,6 +276,7 @@ ensure_shell_tools_installed() {
   declare -A pkg_map
   pkg_map["rg"]="ripgrep"
   pkg_map["shellcheck"]="shellcheck"
+  pkg_map["tree"]="tree"
 
   local install_pkgs=()
   for bin in "${missing[@]}"; do
@@ -393,34 +395,6 @@ remove_file() {
   if [[ -f "$f" ]]; then
     rm -f "$f"
     info "Removed $f"
-  fi
-}
-
-# Ensure [tool.uv] section with package = false exists in a pyproject.toml.
-# Idempotent: safe to call on both fresh and already-customized files.
-# Usage: ensure_package_false <path-to-pyproject.toml>
-ensure_package_false() {
-  local pyproject_file="$1"
-  if [[ ! -f "$pyproject_file" ]]; then
-    warn "ensure_package_false: $pyproject_file not found, skipping"
-    return 0
-  fi
-  if ! grep -q "^\[tool\.uv\]" "$pyproject_file"; then
-    # No [tool.uv] section at all — append one
-    cat >> "$pyproject_file" << 'EOF'
-
-[tool.uv]
-# Treat this as a virtual project (dependencies only, not an installable package).
-# Without this, UV >=0.4 tries to build and install this directory as a Python package.
-package = false
-index-url = "https://pypi.org/simple"
-
-EOF
-    info "ensure_package_false: added [tool.uv] with package = false to $pyproject_file"
-  elif ! grep -q "^package = false" "$pyproject_file"; then
-    # [tool.uv] exists but package = false is missing — insert it on the next line
-    sed -i '/^\[tool\.uv\]/a package = false' "$pyproject_file"
-    info "ensure_package_false: inserted 'package = false' into [tool.uv] in $pyproject_file"
   fi
 }
 
@@ -665,7 +639,7 @@ update_project_pyproject_tools() {
   fi
 
   info "Updating pyproject.toml tool configurations for project: $project_path"
-  "$project_path/.venv/bin/python" "$BIN_DIR/python/update_pyproject_tools.py" "$global_pyproject" "$project_pyproject"
+  "$project_path/.venv/bin/python" "$BIN_DIR/update_pyproject_tools.py" "$global_pyproject" "$project_pyproject"
 }
 
 copy_precommit_config() {
@@ -716,14 +690,14 @@ copy_copilot_instructions() {
     if ! diff -q "$global_copilot" "$home_copilot" >/dev/null 2>&1; then
       backup_file "$home_copilot"
       cp -pr "$global_copilot" "$home_copilot"
-      info "Updated ~/.github/copilot-instructions.md (old version backed up)"
+      info "Updated $HOME/.github/copilot-instructions.md (old version backed up)"
     else
       info "$HOME/.github/copilot-instructions.md is up to date"
     fi
   else
     # No home version exists - create it
     cp -pr "$global_copilot" "$home_copilot"
-    info "Created ~/.github/copilot-instructions.md"
+    info "Created $HOME/.github/copilot-instructions.md"
   fi
 
   # Create .github directory if it doesn't exist
@@ -841,6 +815,48 @@ renew_project() {
   }
 
   info "Renew completed for project: $project_path"
+}
+
+# Renew the homepage container stack
+renew_homepage() {
+  local dir="$HOME/containers/homepage"
+
+  if [[ ! -d "$dir" ]]; then
+    err "renew_homepage: directory not found: $dir"
+    return 1
+  fi
+
+  cd "$dir" || { err "renew_homepage: failed to change directory to $dir"; return 1; }
+
+  info "renew_homepage: stopping containers (podman-compose down)"
+  if ! podman-compose down; then
+    warn "renew_homepage: podman-compose down failed"
+  fi
+
+  info "renew_homepage: fixing ownership of config/"
+  if ! sudo chown -R rhlabs:rhlabs "$HOME"/containers/homepage; then
+    warn "renew_homepage: sudo chown failed (you may need to run manually)"
+  fi
+
+  if [[ -d ../.git ]]; then
+    info "renew_homepage: pulling latest from git (in parent directory)"
+    cd ..
+    if ! git pull; then
+      warn "renew_homepage: git pull failed"
+    fi
+    cd "$dir" || return
+  else
+    warn "renew_homepage: no .git directory found in parent, skipping git pull"
+  fi
+
+  info "renew_homepage: starting containers (podman-compose up -d)"
+  if ! podman-compose up -d; then
+    err "renew_homepage: podman-compose up failed"
+    return 1
+  fi
+
+  info "renew_homepage: completed"
+  return 0
 }
 
 # search_config_blocks
@@ -969,5 +985,36 @@ search_config_blocks() {
 
     # restore IFS
     IFS="$OLD_IFS"
+}
+
+podman_volume_mounts() {
+  # Or get detailed mount info for all containers
+  for container in $(podman ps -aq); do
+    echo "Container: $(podman inspect "$container" --format '{{.Name}}')"
+    podman inspect "$container" | jq -r '.[0].Mounts[] | select(.Name != null) | "  \(.Name) -> \(.Destination)"'
+    echo
+  done
+}
+
+# List the contents of a Podman volume by name
+podman_volume_ls() {
+  if [ $# -lt 1 ]; then
+    podman volume ls
+    return 0
+  fi
+
+  local vol="$1"; shift
+  local mp
+  mp=$(podman volume inspect "$vol" --format '{{.Mountpoint}}' 2>/dev/null) || {
+    echo "podman: volume not found: $vol" >&2
+    return 3
+  }
+
+  if [ -z "$mp" ]; then
+    echo "podman: mountpoint not found for volume: $vol" >&2
+    return 4
+  fi
+
+  ls -la "$mp" "$@"
 }
 # ------------- End of shell_functions.sh -------------
