@@ -75,8 +75,8 @@ alias ltree='tree -C -L 2'  # Tree view (if tree installed)
 
 # Enhanced Disk Useage Listing
 alias du='du -h' # List directory sizes
-alias d1='d1: du -h --max-depth=1 2>/dev/null | sort -h' # Top level directories by size
-alias dtop='dtop: du -h --max-depth=2 2>/dev/null | sort -hr | head -n 20' # Top 20 largest directories by size
+alias d1='du -h --max-depth=1 2>/dev/null | sort -h' # Top level directories by size
+alias dtop='du -h --max-depth=2 2>/dev/null | sort -hr | head -n 20' # Top 20 largest directories by size
 alias duh='du -sh * | sort -h'  # List all items in current dir by size
 alias df='df -h'
 alias dfi='df -hi'  # Show inode usage
