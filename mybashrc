@@ -66,8 +66,23 @@ alias T="cd ~/my_work_tools"
 # Enhanced listing
 alias ll='ls -Alh'  # List all files including hidden
 alias l='ls -CF'  # List with indicators
-alias lld='du -sh'  # List directory sizes
+alias lS='ls -lS --color=auto'  # Sort by size, largest first
+alias lt='ls -ltr --color=auto'  # List sorted by time, newest last (reverse)
+alias ld='ls -Al --group-directories-first'  # Directories shown before files
+alias lR='ls -lR --color=auto'  # Recursive listing
+alias lsd='ls -d */'  # Show directories only
+alias ltree='tree -C -L 2'  # Tree view (if tree installed)
+
+# Enhanced Disk Useage Listing
+alias du='du -h' # List directory sizes
+alias d1='d1: du -h --max-depth=1 2>/dev/null | sort -h' # Top level directories by size
+alias dtop='dtop: du -h --max-depth=2 2>/dev/null | sort -hr | head -n 20' # Top 20 largest directories by size
 alias duh='du -sh * | sort -h'  # List all items in current dir by size
+alias df='df -h'
+alias dfi='df -hi'  # Show inode usage
+alias dft='df -hT'  # Include filesystem type column
+alias dfp='df -hP'  # POSIX output (portable format)
+alias dfree='df -h --output=avail,target'  # Show available space and mount points
 
 # SSH Shortcuts
 alias rhlabs='ssh rhlabs-server'
@@ -82,8 +97,6 @@ alias uvsetup='~/my_work_tools/global_env/new_uv_setup.sh'  # Migrate to UV
 alias c='clear'
 alias h='history'
 alias grep='grep --color=auto'
-alias df='df -h'
-alias du='du -h'
 alias mkdir='mkdir -p'  # Create parent dirs automatically
   
 # Macro aliases
