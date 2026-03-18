@@ -258,7 +258,7 @@ REPOEOF
 # Ensure shell tooling (shellcheck, rg) is available; try to install when missing
 ensure_shell_tools_installed() {
   local missing=()
-  local tools=("shellcheck" "rg")
+  local tools=("shellcheck" "rg" "tree")
   for tool in "${tools[@]}"; do
     if ! command -v "$tool" >/dev/null 2>&1; then
       missing+=("$tool")
@@ -276,6 +276,7 @@ ensure_shell_tools_installed() {
   declare -A pkg_map
   pkg_map["rg"]="ripgrep"
   pkg_map["shellcheck"]="shellcheck"
+  pkg_map["tree"]="tree"
 
   local install_pkgs=()
   for bin in "${missing[@]}"; do
