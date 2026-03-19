@@ -63,6 +63,9 @@ alias ~='cd ~'
 alias W='cd ~/Work_Environments'
 alias T="cd ~/my_work_tools"
 
+# Source files
+alias srcshell='source ~/my_work_tools/global_env/shell_functions.sh'
+
 # Enhanced listing
 alias ll='ls -Alh'  # List all files including hidden
 alias l='ls -CF'  # List with indicators
@@ -116,6 +119,7 @@ alias pvm='podman_volume_mounts'
 alias pvls='podman_volume_ls'
 alias bootstrap='~/my_work_tools/global_env/bootstrap.sh'
 alias newproject='~/my_work_tools/global_env/setup_project.sh'
+alias shellinstall='ensure_shell_tools_installed'
 
 # Shell Shortcuts
 alias lh="$HOME/my_work_tools/bin/bash/lookup_hosts.sh"
