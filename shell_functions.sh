@@ -303,7 +303,7 @@ ensure_shell_tools_installed() {
     local unavailable_pkgs=()
     for pkg in "${install_pkgs[@]}"; do
       info "Checking repo availability: $pkg ..."
-      if dnf list available "$pkg" >/dev/null 2>&1; then
+      if dnf repoquery --available --quiet "$pkg" 2>/dev/null | grep -q .; then
         info "  $pkg: available"
         available_pkgs+=("$pkg")
       else
