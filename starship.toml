@@ -168,17 +168,17 @@ disabled = false
 [git_status]
 format = '([\[$all_status$ahead_behind\]]($style) )'
 style = "red bold"
-stashed = '\$'
-ahead = "⇡"
-behind = "⇣"
+stashed = '\$${count}'
+ahead = "⇡${count}"
+behind = "⇣${count}"
 up_to_date = ""
-diverged = "⇕"
-conflicted = "="
-deleted = "✘"
-renamed = "»"
-modified = "!"
-staged = "+"
-untracked = "?"
+diverged = "⇕⇡${ahead_count}⇣${behind_count}"
+conflicted = "=${count}"
+deleted = "✘${count}"
+renamed = "»${count}"
+modified = "!${count}"
+staged = "+${count}"
+untracked = "?${count}"
 typechanged = ""
 ignore_submodules = false
 disabled = false
@@ -333,7 +333,7 @@ Windows = "🪟 "
 Zorin = "🔹 "
 
 [package]
-format = "is [$symbol$version]($style) "
+format = "[$symbol$version]($style) "
 symbol = "📦 "
 style = "208 bold"
 display_private = false
