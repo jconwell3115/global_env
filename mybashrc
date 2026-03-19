@@ -129,3 +129,7 @@ alias dc="$HOME/my_work_tools/bin/bash/data_converter.sh"
 
 # Git aliases
 alias gital='git config --get-regexp alias'
+
+# Initialize Starship
+export STARSHIP_CONFIG="$HOME/my_work_tools/global_env/starship.toml"
+eval "$(starship init bash)"
