@@ -298,9 +298,29 @@ ensure_shell_tools_installed() {
   done
 
   if command -v dnf >/dev/null 2>&1; then
-    warn "Using dnf to install packages: ${install_pkgs[*]} (binaries: ${missing[*]})"
-    if ! sudo dnf install -y "${install_pkgs[@]}"; then
-      warn "dnf install failed for: ${install_pkgs[*]}"
+    # Filter to only packages that exist in the configured repos
+    local available_pkgs=()
+    local unavailable_pkgs=()
+    for pkg in "${install_pkgs[@]}"; do
+      info "Checking repo availability: $pkg ..."
+      if dnf repoquery --available --quiet "$pkg" 2>/dev/null | grep -q .; then
+        info "  $pkg: available"
+        available_pkgs+=("$pkg")
+      else
+        warn "  $pkg: not found in repos"
+        unavailable_pkgs+=("$pkg")
+      fi
+    done
+    if [[ ${#unavailable_pkgs[@]} -gt 0 ]]; then
+      warn "Packages not found in repos (skipping): ${unavailable_pkgs[*]}"
+    fi
+    if [[ ${#available_pkgs[@]} -eq 0 ]]; then
+      warn "No available packages to install via dnf"
+    else
+      warn "Using dnf to install packages: ${available_pkgs[*]} (binaries: ${missing[*]})"
+      if ! sudo dnf install -y "${available_pkgs[@]}"; then
+        warn "dnf install failed for: ${available_pkgs[*]}"
+      fi
     fi
   else
     warn "No supported package manager found to install: ${install_pkgs[*]}"
