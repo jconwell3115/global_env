@@ -1,10 +1,12 @@
 # .bashrc
 
-# User specific environment
-if ! [[ "$PATH" =~ "$HOME/.local/bin:$HOME/bin:" ]]
-then
-    PATH="$HOME/.local/bin:$HOME/bin:$PATH"
-fi
+# User-specific PATH additions
+for dir in "$HOME/.local/bin" "$HOME/bin" "$HOME/my_work_tools/bin"; do
+  case ":$PATH:" in
+    *":$dir:"*) ;;
+    *) PATH="$dir:$PATH" ;;
+  esac
+done
 export PATH
 
 # BASH Variables
