@@ -117,6 +117,7 @@ alias rp='renew_project'
 alias rhp='renew_homepage'  # shorthand: renew the homepage containers
 alias pvm='podman_volume_mounts'
 alias pvls='podman_volume_ls'
+alias ckwg='$HOME/my_work_tools/bin/bash/check-wg-and-push.sh'
 alias bootstrap='~/my_work_tools/global_env/bootstrap.sh'
 alias newproject='~/my_work_tools/global_env/setup_project.sh'
 alias shellinstall='ensure_shell_tools_installed'
