@@ -31,19 +31,19 @@ repos:
 
       - id: markdownlint
         name: Markdownlint
-        entry: pymarkdownlnt scan
+        entry: bash -lc 'pymarkdownlnt --config ~/my_work_tools/global_env/.pymarkdown.json scan "$@"' --
         language: system
         types: [markdown]
         log_file: logs/markdownlint.log
 
-      # - id: shellcheck
-      #   name: ShellCheck
-      #   entry: shellcheck
-      #   args: ['-x']
-      #   description: Shell script static analysis
-      #   language: system
-      #   files: \.(sh|bash)$
-      #   log_file: logs/shellcheck.log
+      - id: shellcheck
+        name: ShellCheck
+        entry: shellcheck
+        args: ['-x']
+        description: Shell script static analysis
+        language: system
+        files: \.(sh|bash)$
+        log_file: logs/shellcheck.log
 
       - id: bandit
         name: Bandit

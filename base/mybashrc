@@ -7,6 +7,7 @@ then
 fi
 export PATH
 
+
 # BASH Variables
 export HISTFILESIZE=20000        # Commands saved in ~/.bash_history file
 export HISTTIMEFORMAT="%F %T "   # Add timestamps
@@ -24,8 +25,9 @@ export KEY_NAME="id_ed25519"
 export KEY_PATH="$HOME/.ssh/$KEY_NAME"
 export KEY_TYPE="ed25519"
 export KEY_SIZE="2048"
-export EMAIL="jconwell3115@gmail.com"
+export EMAIL="jonathan.conwell@marriott.com"
 export PYTHON_VERSION="3.12"
+export PRE_COMMIT_CONFIG="$GLOBAL_ENV_DIR/.pre-commit-config.yaml"
 export UV_CACHE_DIR="$HOME/.uv-cache"
 export UV_GLOBAL_TOOLS="ruff mypy pylint bandit pydocstyle ansible-lint yamllint djlint pymarkdownlnt pre-commit"
 export UV_CHANNEL="https://astral.sh/uv/install.sh"
@@ -41,7 +43,6 @@ if [[ $- == *i* ]]; then
     echo ""
     # other commands that produce output
 fi
-
 
 PS1='\[\e[0;32m\]\u@\h \[\e[1;33m\]\w \[\e[0;36m\]$ \[\e[m\]'
 PROMPT_DIRTRIM=2
@@ -61,10 +62,8 @@ alias ...='cd ../..'
 alias ....='cd ../../..'
 alias ~='cd ~'
 alias W='cd ~/Work_Environments'
+alias aaphubssh="ssh -i ~/.ssh/ansible-prod-user.pem ansible-prod-user@10.212.244.147"
 alias T="cd ~/my_work_tools"
-
-# Source files
-alias srcshell='source ~/my_work_tools/global_env/shell_functions.sh'
 
 # Enhanced listing
 alias ll='ls -Alh'  # List all files including hidden
@@ -86,9 +85,6 @@ alias dfi='df -hi'  # Show inode usage
 alias dft='df -hT'  # Include filesystem type column
 alias dfp='df -hP'  # POSIX output (portable format)
 alias dfree='df -h --output=avail,target'  # Show available space and mount points
-
-# SSH Shortcuts
-alias rhlabs='ssh rhlabs-server'
 
 # Python shortcuts
 alias py='python3'
@@ -114,17 +110,12 @@ alias cpc='copy_precommit_config'
 alias cci='copy_copilot_instructions'
 alias cgr='copy_global_requirements'
 alias rp='renew_project'
-alias rhp='renew_homepage'  # shorthand: renew the homepage containers
-alias pvm='podman_volume_mounts'
-alias pvls='podman_volume_ls'
-alias ckwg='$HOME/my_work_tools/bin/bash/check-wg-and-push.sh'
+alias lh="$HOME/my_work_tools/bin/shell/lookup_hosts.sh"
+alias dc="$HOME/my_work_tools/bin/shell/data_converter.sh"
+alias dnsrem="$HOME/my_work_tools/bin/shell/dns_remediation.sh"
+alias ncr="$HOME/my_work_tools/bin/python/network_config_remediation.py"
 alias bootstrap='~/my_work_tools/global_env/bootstrap.sh'
 alias newproject='~/my_work_tools/global_env/setup_project.sh'
-alias shellinstall='ensure_shell_tools_installed'
-
-# Shell Shortcuts
-alias lh="$HOME/my_work_tools/bin/bash/lookup_hosts.sh"
-alias dc="$HOME/my_work_tools/bin/bash/data_converter.sh"
 
 # Git aliases
 alias gital='git config --get-regexp alias'

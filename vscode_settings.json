@@ -146,5 +146,13 @@
             "path": "pwsh",
             "icon": "terminal-powershell"
         }
-    }
+    },
+    "python.terminal.useEnvFile": true,
+    "notebook.output.textLineLimit": 50,
+    "chat.instructionsFilesLocations": {
+        ".github/instructions": true,
+        ".claude/rules": true,
+        "~/my_work_tools/global_env/global-copilot-instructions.md": true
+    },
+    "chat.viewSessions.orientation": "stacked"
 }

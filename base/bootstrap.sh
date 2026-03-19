@@ -1,34 +1,29 @@
 #!/usr/bin/env bash
 
-# Machine Setup Script
-# One-time bootstrap for a new machine. Sets up:
-# - Work tools directories (my_work_tools, bin, global_env repos)
-# - SSH keys and GitHub access
-# - UV package manager and Python environment for my_work_tools
-# - Pre-commit hooks for global_env and bin repos
-# - ~/.bashrc and global git config
+# Bootstrap Script
+# One-time machine setup: installs shared work tools, clones infrastructure repos,
+# configures SSH, .bashrc, .gitconfig, and the UV environment for my_work_tools.
 #
-# For setting up a new project on an already-configured machine, use:
-#   setup_project.sh
+# Run this on a fresh machine before using setup_project.sh.
+# The original environment_setup.sh is retained as a reference/fallback.
 #
-# Usage (new machine, before SSH keys exist):
-#   curl -fsSL https://github.com/jconwell3115/global_env/raw/roadhouse/environment_setup.sh -o environment_setup.sh
-#   chmod +x environment_setup.sh
-#   ./environment_setup.sh
+# Usage:
+#   ./bootstrap.sh
 
 # ------------- Config -------------
+# Defined here because ~/.bashrc may not be installed yet on a fresh machine.
+# After bootstrap completes these become persistent via mybashrc.
 export WORK_TOOLS_DIR="$HOME/my_work_tools"
 export BIN_DIR="$WORK_TOOLS_DIR/bin/"
 export GLOBAL_ENV_DIR="$WORK_TOOLS_DIR/global_env"
 export SSH_DIR="$HOME/.ssh"
 export PYTHON_VERSION="${PYTHON_VERSION:-3.12}"
 
-# SSH key generation variables
 KEY_NAME="id_ed25519"
 KEY_PATH="$SSH_DIR/$KEY_NAME"
 KEY_TYPE="ed25519"
 KEY_SIZE="2048"
-EMAIL="jconwell3115@gmail.com"
+EMAIL="jonathan.conwell@marriott.com"
 
 set -euo pipefail
 
@@ -39,7 +34,7 @@ source "$SCRIPT_DIR/shell_functions.sh"
 
 # Only set trap if script is run directly (not sourced)
 if [[ "${BASH_SOURCE[0]}" == "${0}" ]]; then
-  export SCRIPT_NAME="environment_setup.sh"
+  export SCRIPT_NAME="bootstrap.sh"
   trap cleanup EXIT
 fi
 
@@ -48,7 +43,7 @@ validate_requirements
 setup_repos
 ensure_shell_tools_installed
 
-# ------------- Bootstrap: Clone Work Tools Repos First -------------
+# ------------- Setup Work Tools -------------
 section "Setting up shared my_work_tools environment..."
 
 if [[ -d "$WORK_TOOLS_DIR" ]]; then
@@ -195,12 +190,7 @@ validate_setup "bootstrap"
 
 section "Bootstrap complete. Please check for errors above."
 
-if [[ "${BASH_SOURCE[0]}" == "${0}" ]]; then
-  trap - EXIT
-  unset SCRIPT_NAME
-fi
-
-# Offer to run setup_project.sh immediately
+# ------------- Optional: Run Project Setup -------------
 read -rp "Would you like to set up a project now? (y/N): " RUN_PROJECT_SETUP
 if [[ $RUN_PROJECT_SETUP =~ ^[Yy]$ ]]; then
   SETUP_PROJECT_SCRIPT="$GLOBAL_ENV_DIR/setup_project.sh"

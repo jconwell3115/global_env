@@ -4,6 +4,12 @@ version = "0.1.0"
 description = "Example project using UV and pre-commit"
 requires-python = ">=3.11,<3.13"
 
+[tool.uv]
+# Treat this as a virtual project (dependencies only, not an installable package).
+# Without this, UV >=0.4 tries to build and install the project itself as a package.
+package = false
+index-url = "https://pypi.org/simple"
+
 [tool.ruff]
 line-length = 90
 target-version = "py312"
@@ -115,18 +121,38 @@ match = "(?!test_).*\\.py"              # Apply to all Python files except tests
 match-dir = "[^\\.].*"                  # Skip hidden directories
 
 [tool.ansible-lint]
-# Configure ansible-lint options
-# Example: ignore specific rules or directories
-skip_list = ["403", "404"]              # Rule IDs to skip
-exclude_paths = ["roles/test_role"]     # Paths to exclude
-verbosity = 1                           # 0 = quiet, 1 = normal, 2 = verbose
+skip_list = [
+  "var-naming[pattern]",
+  "var-naming[no-role-prefix]",
+  "run-once[task]",
+  "fqcn[keyword]",
+]
+exclude_paths = [
+  "files/",
+  "data/",
+  "logs/",
+  "stub_data/",
+  "collections/",
+  ".collections/",
+  "test/",
+  "venv/",
+  ".venv/",
+  ".git/",
+  "ACT/",
+  ".github/",
+  ".avd_vars",
+  "group_vars/",
+  "outputs/",
+  "outputs.bak/",
+  "playbook_examples/",
+]
 
 [tool.yamllint]
-# YAML linting configuration
-# You can reference a config file or inline rules
-# config_file = ".yamllint.yml"           # External config file
-# OR inline rules:
-rules = {line-length = { max = 120 }, indentation = { spaces = 2 }}
+extends = "default"
+
+[tool.yamllint.rules.line-length]
+max = 120
+level = "warning"
 
 [tool.djlint]
 close_void_tags=true
