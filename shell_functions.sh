@@ -245,10 +245,11 @@ REPOEOF
     fi
 
     info "Enabling GitHub CLI repository..."
-    if ! sudo dnf config-manager --add-repo https://cli.github.com/packages/rpm/gh-cli.repo >/dev/null 2>&1; then
-      warn "Could not add GitHub CLI repo; gh may not be available via dnf"
-    else
+    if sudo dnf config-manager --add-repo https://cli.github.com/packages/rpm/gh-cli.repo >/dev/null 2>&1 || \
+       sudo dnf config-manager addrepo --from-repofile=https://cli.github.com/packages/rpm/gh-cli.repo >/dev/null 2>&1; then
       info "GitHub CLI repo added"
+    else
+      warn "Could not add GitHub CLI repo; gh may not be available via dnf"
     fi
 
     info "Enabling Starship COPR repository (atim/starship)..."
