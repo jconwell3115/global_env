@@ -221,6 +221,12 @@ validate_requirements() {
 # Safe to call multiple times — repo-manager commands are idempotent.
 setup_repos() {
   if command -v dnf >/dev/null 2>&1; then
+    # Detect DNF major version: 4 uses --add-repo; 5 uses addrepo --from-repofile=
+    # DNF 4 prints "4.20.0"; DNF 5 prints "dnf5 version 5.2.18.0" — scan fields for
+    # the first one that looks like a version number (starts with a digit and a dot).
+    local dnf_major
+    dnf_major=$(dnf --version 2>/dev/null | awk 'NR==1{ for(i=1;i<=NF;i++) if($i~/^[0-9]+\./) { print int($i); exit } }')
+
     info "Enabling EPEL repository via dnf..."
     if ! sudo dnf install -y epel-release >/dev/null 2>&1; then
       warn "Could not enable epel-release via dnf; some packages may not be found"
@@ -245,8 +251,14 @@ REPOEOF
     fi
 
     info "Enabling GitHub CLI repository..."
-    if sudo dnf config-manager --add-repo https://cli.github.com/packages/rpm/gh-cli.repo >/dev/null 2>&1 || \
-       sudo dnf config-manager addrepo --from-repofile=https://cli.github.com/packages/rpm/gh-cli.repo >/dev/null 2>&1; then
+    local _gh_url="https://cli.github.com/packages/rpm/gh-cli.repo"
+    local _gh_ok=false
+    if [[ "${dnf_major}" -ge 5 ]]; then
+      sudo dnf config-manager addrepo --from-repofile="$_gh_url" >/dev/null 2>&1 && _gh_ok=true
+    else
+      sudo dnf config-manager --add-repo "$_gh_url" >/dev/null 2>&1 && _gh_ok=true
+    fi
+    if [[ "$_gh_ok" == true ]]; then
       info "GitHub CLI repo added"
     else
       warn "Could not add GitHub CLI repo; gh may not be available via dnf"
