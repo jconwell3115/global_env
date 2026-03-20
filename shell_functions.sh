@@ -250,6 +250,13 @@ REPOEOF
     else
       info "GitHub CLI repo added"
     fi
+
+    info "Enabling Starship COPR repository (atim/starship)..."
+    if ! sudo dnf copr enable -y atim/starship >/dev/null 2>&1; then
+      warn "Could not enable atim/starship COPR repo; starship may not be available via dnf"
+    else
+      info "Starship COPR repo enabled"
+    fi
   else
     info "No dnf found; skipping repo setup"
   fi
@@ -258,7 +265,7 @@ REPOEOF
 # Ensure shell tooling (shellcheck, rg) is available; try to install when missing
 ensure_shell_tools_installed() {
   local missing=()
-  local tools=("bat" "btop" "eza" "fd" "fzf" "jq" "ncdu" "procs" "rg" "shellcheck" "tldr" "tree" "zoxide")
+  local tools=("bat" "btop" "bzip" "eza" "fd" "fzf" "jq" "ncdu" "procs" "rg" "shellcheck" "starship" "tldr" "tree" "unzip" "zstd" "zoxide")
   for tool in "${tools[@]}"; do
     if ! command -v "$tool" >/dev/null 2>&1; then
       missing+=("$tool")
@@ -276,6 +283,7 @@ ensure_shell_tools_installed() {
   declare -A pkg_map
   pkg_map["bat"]="bat"
   pkg_map["btop"]="btop"
+  pkg_map["bzip"]="bzip2"
   pkg_map["eza"]="eza"
   pkg_map["fd"]="fd-find"
   pkg_map["fzf"]="fzf"
@@ -284,8 +292,11 @@ ensure_shell_tools_installed() {
   pkg_map["procs"]="procs"
   pkg_map["rg"]="ripgrep"
   pkg_map["shellcheck"]="shellcheck"
+  pkg_map["starship"]="starship"
   pkg_map["tldr"]="tldr"
   pkg_map["tree"]="tree"
+  pkg_map["unzip"]="unzip"
+  pkg_map["zstd"]="zstd"
   pkg_map["zoxide"]="zoxide"
 
   local install_pkgs=()
@@ -344,6 +355,14 @@ ensure_shell_tools_installed() {
           info "shellcheck installed via webi.sh"
         else
           warn "webi.sh installer failed for shellcheck"
+        fi
+      fi
+      if [[ "$tool" == "starship" ]]; then
+        warn "starship still missing; attempting webi.sh installer as final fallback"
+        if curl -sS https://starship.rs/install.sh | sh; then
+          info "starship installed via webi.sh"
+        else
+          warn "webi.sh installer failed for starship"
         fi
       fi
     done
