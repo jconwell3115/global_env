@@ -33,6 +33,8 @@ export UV_CACHE_DIR="$HOME/.uv-cache"
 export UV_GLOBAL_TOOLS="ruff mypy pylint bandit pydocstyle ansible-lint yamllint djlint pymarkdownlnt pre-commit"
 export UV_CHANNEL="https://astral.sh/uv/install.sh"
 
+# Alias for builtin commands
+alias cat='bat'
 
 # Source shared shell functions
 [ -f "$HOME/my_work_tools/global_env/shell_functions.sh" ] && source "$HOME/my_work_tools/global_env/shell_functions.sh"
@@ -46,8 +48,9 @@ if [[ $- == *i* ]]; then
 fi
 
 
-PS1='\[\e[0;32m\]\u@\h \[\e[1;33m\]\w \[\e[0;36m\]$ \[\e[m\]'
-PROMPT_DIRTRIM=2
+# Legacy PS1 (commented out since Starship is now used)
+# PS1='\[\e[0;32m\]\u@\h \[\e[1;33m\]\w \[\e[0;36m\]$ \[\e[m\]'
+# PROMPT_DIRTRIM=2
 
 # User specific aliases and functions
 
@@ -81,8 +84,9 @@ alias ltree='tree -C -L 2'  # Tree view (if tree installed)
 
 # Enhanced Disk Useage Listing
 alias du='du -h' # List directory sizes
-alias d1='du -h --max-depth=1 2>/dev/null | sort -h' # Top level directories by size
-alias dtop='du -h --max-depth=2 2>/dev/null | sort -hr | head -n 20' # Top 20 largest directories by size
+# Swapped to functions for better flexibility, but keeping these here for reference
+# alias d1='du -h --max-depth=1 2>/dev/null | sort -h' # Top level directories by size
+# alias dtop='du -h --max-depth=2 2>/dev/null | sort -hr | head -n 20' # Top 20 largest directories by size
 alias duh='du -sh * | sort -h'  # List all items in current dir by size
 alias df='df -h'
 alias dfi='df -hi'  # Show inode usage

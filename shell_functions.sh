@@ -13,6 +13,9 @@ section() {
   echo ""
 }
 
+d1() { du -h --max-depth=1 "${1:-.}" 2>/dev/null | sort -h; }
+dtop() { du -h --max-depth=2 "${1:-.}" 2>/dev/null | sort -hr | head -n 20; }
+
 ask_renew_ssh() {
   if [ -f "$KEY_PATH" ]; then
     read -rp "SSH key already exists at $KEY_PATH. Renew it? (y/N): " -n 1 -r
@@ -278,7 +281,7 @@ REPOEOF
 # Ensure shell tooling (shellcheck, rg) is available; try to install when missing
 ensure_shell_tools_installed() {
   local missing=()
-  local tools=("bat" "btop" "bzip" "eza" "fd" "fzf" "jq" "ncdu" "procs" "rg" "shellcheck" "starship" "tldr" "tree" "unzip" "zstd" "zoxide")
+  local tools=("bat" "btop" "bzip" "eza" "fd" "fzf" "jq" "ncdu" "procs" "restic" "rg" "shellcheck" "starship" "tldr" "tree" "unzip" "vault" "zstd" "zoxide")
   for tool in "${tools[@]}"; do
     if ! command -v "$tool" >/dev/null 2>&1; then
       missing+=("$tool")
@@ -303,12 +306,14 @@ ensure_shell_tools_installed() {
   pkg_map["jq"]="jq"
   pkg_map["ncdu"]="ncdu"
   pkg_map["procs"]="procs"
+  pkg_map["restic"]="restic"
   pkg_map["rg"]="ripgrep"
   pkg_map["shellcheck"]="shellcheck"
   pkg_map["starship"]="starship"
   pkg_map["tldr"]="tldr"
   pkg_map["tree"]="tree"
   pkg_map["unzip"]="unzip"
+  pkg_map["vault"]="vault"
   pkg_map["zstd"]="zstd"
   pkg_map["zoxide"]="zoxide"
 
