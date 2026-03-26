@@ -82,7 +82,7 @@ alias lR='ls -lR --color=auto'  # Recursive listing
 alias lsd='ls -d */'  # Show directories only
 alias ltree='tree -C -L 2'  # Tree view (if tree installed)
 
-# Enhanced Disk Useage Listing
+# Enhanced Disk Usage Listing
 alias du='du -h' # List directory sizes
 # Swapped to functions for better flexibility, but keeping these here for reference
 # alias d1='du -h --max-depth=1 2>/dev/null | sort -h' # Top level directories by size
