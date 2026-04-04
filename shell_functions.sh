@@ -161,7 +161,7 @@ copy_config_files() {
   local target_dir="$1"
   info "Copying configuration files to $target_dir ..."
 
-  # Get list of config files to potentially copy
+  # Get list of config files to potentially process
   local config_files=()
   for pattern in "requirements*" "pyproject.toml" ".pre-commit-config.yaml" ; do
     for file in "$GLOBAL_ENV_DIR"/$pattern; do
@@ -180,24 +180,31 @@ copy_config_files() {
     # pyproject.toml is treated as a create-once file.
     # Never overwrite an existing one — it may contain locally-added dependencies
     # and tool configs that should not be clobbered on subsequent runs.
-    if [[ "$filename" == "pyproject.toml" && -f "$target_file" ]]; then
-      info "Skipped $filename (already exists; will not overwrite to preserve local dependencies)"
+    if [[ "$filename" == "pyproject.toml" ]]; then
+      if [[ -f "$target_file" ]]; then
+        info "Skipped $filename (already exists; will not overwrite to preserve local dependencies)"
+      else
+        cp -pr "$source_file" "$target_dir" 2>/dev/null || true
+        info "Copied $filename (new file)"
+      fi
       continue
     fi
 
-    # Only process if file doesn't exist or is different
-    if [[ ! -f "$target_file" ]] || ! diff -q "$source_file" "$target_file" >/dev/null 2>&1; then
-      # Backup existing file if it exists (only when we're actually going to copy)
-      if [[ -f "$target_file" ]]; then
-        backup_file "$target_file"
-        info "Updated $filename (files were different)"
-      else
-        info "Copied $filename (new file)"
-      fi
-      cp -pr "$source_file" "$target_dir" 2>/dev/null || true
-    else
-      info "Skipped $filename (no changes)"
+    # requirements* and .pre-commit-config.yaml are managed as symlinks so all
+    # projects stay in sync with a single source of truth in GLOBAL_ENV_DIR.
+    if [[ -L "$target_file" ]] && [[ "$(readlink -f "$target_file")" == "$(readlink -f "$source_file")" ]]; then
+      info "Skipped $filename (symlink already up to date)"
+      continue
     fi
+
+    # Back up a plain file before replacing it with a symlink
+    if [[ -f "$target_file" && ! -L "$target_file" ]]; then
+      backup_file "$target_file"
+      info "Replaced $filename with symlink (backed up original)"
+    else
+      info "Created symlink for $filename -> $source_file"
+    fi
+    ln -sf "$source_file" "$target_file"
   done
 }
 
@@ -730,9 +737,7 @@ copy_precommit_config() {
 
 copy_copilot_instructions() {
   local project_path="$1"
-  local global_copilot="$GLOBAL_ENV_DIR/copilot-instructions-template.md"
-  local home_github_dir="$HOME/.github"
-  local home_copilot="$home_github_dir/copilot-instructions.md"
+  local global_copilot="$GLOBAL_ENV_DIR/global-copilot-instructions.md"
   local github_dir="$project_path/.github"
   local target_file="$github_dir/copilot-instructions.md"
 
@@ -742,29 +747,8 @@ copy_copilot_instructions() {
   fi
 
   if [[ ! -f "$global_copilot" ]]; then
-    warn "Global copilot-instructions-template.md not found at $global_copilot; skipping"
+    warn "$global_copilot not found; skipping"
     return 0
-  fi
-
-  # Check and update ~/.github/copilot-instructions.md
-  if [[ ! -d "$home_github_dir" ]]; then
-    mkdir -p "$home_github_dir"
-    info "Created .github directory at $home_github_dir"
-  fi
-
-  if [[ -f "$home_copilot" ]]; then
-    # Check if home version differs from template
-    if ! diff -q "$global_copilot" "$home_copilot" >/dev/null 2>&1; then
-      backup_file "$home_copilot"
-      cp -pr "$global_copilot" "$home_copilot"
-      info "Updated $HOME/.github/copilot-instructions.md (old version backed up)"
-    else
-      info "$HOME/.github/copilot-instructions.md is up to date"
-    fi
-  else
-    # No home version exists - create it
-    cp -pr "$global_copilot" "$home_copilot"
-    info "Created $HOME/.github/copilot-instructions.md"
   fi
 
   # Create .github directory if it doesn't exist
@@ -774,25 +758,26 @@ copy_copilot_instructions() {
   fi
 
   # Handle existing copilot-instructions.md in project
-  if [[ -f "$target_file" ]]; then
-    # Check if existing file is identical to template
+  if [[ -f "$target_file" && ! -L "$target_file" ]]; then
+    # Already a correct symlink — nothing to do
     if diff -q "$global_copilot" "$target_file" >/dev/null 2>&1; then
-      info "Existing copilot-instructions.md is identical to template; skipping"
-      return 0
+      info "Existing copilot-instructions.md is identical to template; replacing with symlink"
+      rm -f "$target_file"
     else
-      # Files differ - create a reference copy and warn user
-      local template_copy="$github_dir/copilot-instructions-template.md"
-      cp -pr "$global_copilot" "$template_copy"
-      warn "Existing copilot-instructions.md differs from template"
-      warn "Template saved as $template_copy for reference"
-      warn "Please manually merge changes or replace the existing file"
-      return 0
+      # Files differ — preserve project customizations under a distinct name
+      local project_copy="$github_dir/project-copilot-instructions.md"
+      mv "$target_file" "$project_copy"
+      info "Moved existing copilot-instructions.md -> project-copilot-instructions.md"
+      info "Project-specific instructions preserved at $project_copy"
     fi
+  elif [[ -L "$target_file" ]] && [[ "$(readlink -f "$target_file")" == "$(readlink -f "$global_copilot")" ]]; then
+    info "copilot-instructions.md symlink already points to global template; skipping"
+    return 0
   fi
 
-  # No existing file - safe to copy
-  cp -pr "$global_copilot" "$target_file"
-  info "Copied copilot-instructions-template.md -> $target_file"
+  # Create symlink -> global template (covers new file, replaced identical, and moved-differ cases)
+  ln -sf "$global_copilot" "$target_file"
+  info "Symlinked copilot-instructions.md -> $global_copilot"
 }
 
 copy_global_requirements() {
