@@ -102,7 +102,7 @@ fi
 # ------------- Clone Work Tools Repos -------------
 section "Cloning work tools repositories..."
 
-clone_or_pull "git@git.marriott.com:jconw356/global_env.git"
+clone_or_pull "git@github.com:jconwell3115/global_env.git"
 
 cd "$GLOBAL_ENV_DIR" || exit
 if is_git_repo; then
@@ -117,7 +117,7 @@ cd "$WORK_TOOLS_DIR" || exit
 info "Pausing for 30 seconds or until you press enter ..."
 read -t 30 -rp "" || true
 
-clone_or_pull "git@git.marriott.com:jconw356/bin.git"
+clone_or_pull "git@github.com:jconwell3115/bin.git"
 
 cd "$BIN_DIR" || exit
 info "Setting up bin directory with configuration files..."
