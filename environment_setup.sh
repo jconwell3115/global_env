@@ -20,6 +20,10 @@
 #
 # Options:
 #   -y   Answer yes to every prompt and take the defaults (unattended run)
+#
+# Work machines: set OVERLAY_REPO to also clone a private overlay repo into
+# $GLOBAL_ENV_OVERLAY_DIR (default ~/my_work_tools/global_env_work) and run its setup.sh, e.g.
+#   OVERLAY_REPO=git@git.example.com:me/global_env_work.git ./environment_setup.sh
 
 set -euo pipefail
 
@@ -152,6 +156,14 @@ fi
 clone_or_pull "git@github.com:$GITHUB_OWNER/$GLOBAL_ENV_REPO.git"
 clone_or_pull "git@github.com:$GITHUB_OWNER/bin.git"
 
+# Optional private overlay; cloned next to global_env so GLOBAL_ENV_OVERLAY_DIR finds it
+if [[ -n "${OVERLAY_REPO:-}" ]]; then
+  if [[ "$(basename "$OVERLAY_REPO" .git)" != "$(basename "$GLOBAL_ENV_OVERLAY_DIR")" ]]; then
+    warn "OVERLAY_REPO name differs from $(basename "$GLOBAL_ENV_OVERLAY_DIR"); set GLOBAL_ENV_OVERLAY_DIR to match"
+  fi
+  clone_or_pull "$OVERLAY_REPO" || warn "Could not clone $OVERLAY_REPO; continuing without the overlay"
+fi
+
 # ------------- Shared my_work_tools Environment -------------
 section "Setting up shared my_work_tools environment..."
 
@@ -253,6 +265,16 @@ else
   fi
   mv "$gitconfig_tmp" "$GITCONFIG"
   info "Your ~/.gitconfig now includes $GLOBAL_GIT_CONFIG"
+fi
+
+# ------------- Work Overlay -------------
+if [[ -d "$GLOBAL_ENV_OVERLAY_DIR" ]]; then
+  section "Setting up work overlay..."
+  if [[ -x "$GLOBAL_ENV_OVERLAY_DIR/setup.sh" ]]; then
+    "$GLOBAL_ENV_OVERLAY_DIR/setup.sh" || warn "Overlay setup.sh failed; check the output above"
+  else
+    info "No setup.sh in $GLOBAL_ENV_OVERLAY_DIR; nothing to run"
+  fi
 fi
 
 # ------------- Validate Bootstrap -------------

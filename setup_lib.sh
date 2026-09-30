@@ -2,11 +2,40 @@
 # Shared helpers for the setup scripts (environment_setup.sh, setup_project.sh,
 # new_uv_setup.sh). Keep interactive-only helpers in shell_functions.sh.
 
+# ------------- Colours -------------
+RED='\033[1;31m'
+YELLOW='\033[1;33m'
+CYAN='\033[1;36m'
+GREEN='\033[1;32m'
+BLUE='\033[1;34m'
+BOLD='\033[1m'
+DIM='\033[2m'
+RESET='\033[0m'
+
+# ------------- Logging -------------
+# log_* is the standard; info/warn/err/die are kept as short aliases.
+# shellcheck disable=SC2059  # colour codes live in the format string on purpose
+log_info()    { printf "${CYAN}[INFO]${RESET}  %s\n" "$*"; }
+# shellcheck disable=SC2059
+log_ok()      { printf "${GREEN}[OK]${RESET}    %s\n" "$*"; }
+# shellcheck disable=SC2059
+log_warn()    { printf "${YELLOW}[WARN]${RESET}  %s\n" "$*" >&2; }
+# shellcheck disable=SC2059
+log_err()     { printf "${BOLD}${RED}[ERROR]${RESET} %s\n" "$*" >&2; }
+# shellcheck disable=SC2059
+log_dry()     { printf "${BLUE}[DRY]${RESET}   %s\n" "$*"; }
+# VERBOSE=true turns on log_verbose output
+# shellcheck disable=SC2059
+log_verbose() { [[ "${VERBOSE:-false}" == true ]] && printf "${DIM}[VERB]${RESET}  %s\n" "$*"; return 0; }
+
+info()  { log_info "$*"; }
+warn()  { log_warn "$*"; }
+err()   { log_err "$*"; }
+die()   { log_err "$*"; exit 1; }
+
 # ------------- Helpers -------------
-info()  { printf "\033[1;34m[INFO]\033[0m %s\n" "$*"; }
-warn()  { printf "\033[1;33m[WARN]\033[0m %s\n" "$*" >&2; }
-err()   { printf "\033[1;31m[ERR ]\033[0m %s\n" "$*" >&2; }
-die()   { err "$*"; exit 1; }
+# True when $1 is -h or --help
+_want_help() { [[ "$1" == "-h" || "$1" == "--help" ]]; }
 
 section() {
   printf "\n\033[1m=== %s ===\033[0m\n\n" "$*"
@@ -166,7 +195,19 @@ customize_pyproject_toml() {
 
     # Add UV sources configuration if not already present
     ensure_package_false "$pyproject_file"
+    apply_overlay_pyproject "$pyproject_file"
   fi
+}
+
+# Work overlay: append its pyproject.uv.toml (private package indexes) once. Its default index
+# replaces the public index-url so uv sees a single default.
+apply_overlay_pyproject() {
+  local pyproject_file="$1" snippet="${GLOBAL_ENV_OVERLAY_DIR:-}/pyproject.uv.toml"
+  [[ -f "$snippet" && -f "$pyproject_file" ]] || return 0
+  grep -q '^\[\[tool\.uv\.index\]\]' "$pyproject_file" && return 0
+  sed -i '/^\[tool\.uv\]/,/^\[/{/^index-url = /d}' "$pyproject_file"
+  { echo; cat "$snippet"; } >> "$pyproject_file"
+  info "Added work package indexes from $snippet to $pyproject_file"
 }
 
 backup_file() {
@@ -300,6 +341,25 @@ REPOEOF
       info "GitHub CLI repo added"
     else
       warn "Could not add GitHub CLI repo; gh may not be available via dnf"
+    fi
+
+    info "Enabling HashiCorp repository (vault)..."
+    if [[ ! -f /etc/yum.repos.d/hashicorp.repo ]]; then
+      local _hc_distro _hc_ok=false
+      _hc_distro=$(. /etc/os-release 2>/dev/null; [[ "${ID:-}" == fedora ]] && echo fedora || echo RHEL)
+      local _hc_url="https://rpm.releases.hashicorp.com/$_hc_distro/hashicorp.repo"
+      if [[ "${dnf_major}" -ge 5 ]]; then
+        sudo dnf config-manager addrepo --from-repofile="$_hc_url" >/dev/null 2>&1 && _hc_ok=true
+      else
+        sudo dnf config-manager --add-repo "$_hc_url" >/dev/null 2>&1 && _hc_ok=true
+      fi
+      if [[ "$_hc_ok" == true ]]; then
+        info "HashiCorp repo added"
+      else
+        warn "Could not add HashiCorp repo; vault may not be available via dnf"
+      fi
+    else
+      info "HashiCorp repo already present"
     fi
 
     info "Enabling Starship COPR repository (atim/starship)..."
@@ -795,27 +855,45 @@ copy_global_requirements() {
     return 1
   fi
 
-  info "Copying global requirements files to project: $project_path"
+  info "Linking global requirements files into project: $project_path"
 
-  # Copy requirements files if they exist
-  local req_files=("requirements.txt" "requirements-dev.txt" "requirements.yml")
-  for req_file in "${req_files[@]}"; do
-    local global_file="$GLOBAL_ENV_DIR/$req_file"
-    if [[ -f "$global_file" ]]; then
-      cp -pr "$global_file" "$project_path"
-      info "Copied $req_file to $project_path"
-    else
-      warn "Global $req_file not found, skipping"
+  # requirements* are symlinks so every project tracks one source of truth; the work overlay
+  # adds requirements-work.txt (internal packages) when it is installed
+  local source_file target_file filename
+  local -a req_sources=("$GLOBAL_ENV_DIR/requirements.txt" "$GLOBAL_ENV_DIR/requirements-dev.txt" "$GLOBAL_ENV_DIR/requirements.yml")
+  [[ -f "${GLOBAL_ENV_OVERLAY_DIR:-}/requirements-work.txt" ]] && req_sources+=("$GLOBAL_ENV_OVERLAY_DIR/requirements-work.txt")
+  for source_file in "${req_sources[@]}"; do
+    filename=$(basename "$source_file")
+    target_file="$project_path/$filename"
+    if [[ ! -f "$source_file" ]]; then
+      warn "Global $filename not found, skipping"
+      continue
     fi
+    if [[ -L "$target_file" ]] && [[ "$(readlink -f "$target_file")" == "$(readlink -f "$source_file")" ]]; then
+      info "Skipped $filename (symlink already up to date)"
+      continue
+    fi
+    # A repo that tracks its own copy keeps it
+    if [[ -f "$target_file" && ! -L "$target_file" ]] \
+      && git -C "$project_path" ls-files --error-unmatch "$filename" >/dev/null 2>&1; then
+      warn "$target_file is tracked in git; leaving it as is"
+      continue
+    fi
+    [[ -f "$target_file" && ! -L "$target_file" ]] && backup_file "$target_file"
+    ln -sf "$source_file" "$target_file"
+    info "Symlinked $filename -> $source_file"
   done
 
   # Change to project directory and update UV dependencies
   cd "$project_path" || return 1
 
-  if [[ -f "requirements.txt" ]]; then
-    info "Adding requirements.txt to UV project..."
-    uv add -r requirements.txt --no-build-isolation || warn "Failed to add requirements.txt"
-  fi
+  local req
+  for req in requirements.txt requirements-work.txt; do
+    if [[ -f "$req" ]]; then
+      info "Adding $req to UV project..."
+      uv add -r "$req" --no-build-isolation || warn "Failed to add $req"
+    fi
+  done
 
   if [[ -f "requirements-dev.txt" ]]; then
     info "Adding requirements-dev.txt as dev dependencies..."
@@ -824,8 +902,16 @@ copy_global_requirements() {
 
   if [[ -f "requirements.yml" ]]; then
     info "Installing Ansible requirements..."
-    if command -v ansible-galaxy >/dev/null 2>&1; then
-      ansible-galaxy install -r requirements.yml || warn "Failed to install Ansible requirements"
+    # Prefer the project's .venv ansible-galaxy (works when run outside the venv)
+    local ansible_galaxy_bin=""
+    if [[ -x "$project_path/.venv/bin/ansible-galaxy" ]]; then
+      ansible_galaxy_bin="$project_path/.venv/bin/ansible-galaxy"
+    elif command -v ansible-galaxy >/dev/null 2>&1; then
+      ansible_galaxy_bin="$(command -v ansible-galaxy)"
+    fi
+    if [[ -n "$ansible_galaxy_bin" ]]; then
+      info "Using ansible-galaxy: $ansible_galaxy_bin"
+      "$ansible_galaxy_bin" install -r requirements.yml || warn "Failed to install Ansible requirements"
     else
       warn "ansible-galaxy not found, skipping requirements.yml"
     fi
