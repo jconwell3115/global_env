@@ -139,6 +139,7 @@ elif $HAS_REQS; then
     ensure_package_false pyproject.toml
     uv venv  # Ensure venv exists
   fi
+  apply_overlay_pyproject pyproject.toml
 
   uv add setuptools --no-build-isolation  # Ensure setuptools is present for builds
 
@@ -160,6 +161,7 @@ elif $HAS_REQS; then
 elif $HAS_PYPROJECT; then
   info "pyproject.toml detected (no Pipfile/requirements.txt). Locking & syncing with UV..."
   ensure_package_false pyproject.toml
+  apply_overlay_pyproject pyproject.toml
   uv venv  # Ensure venv exists
   uv add setuptools --no-build-isolation  # Ensure setuptools is present for builds
 

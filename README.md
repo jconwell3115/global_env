@@ -47,6 +47,19 @@ This repository contains shell scripts to automate creating and configuring a Li
 - `~/.bashrc` gets one line that sources `$GLOBAL_ENV_DIR/mybashrc`, so a `git pull` in `global_env` updates your shell for new sessions. An old full copy of `mybashrc` in `~/.bashrc` is replaced by that line after confirmation (with a timestamped backup); any other `~/.bashrc` is kept and the line is appended.
 - `~/.gitconfig` gets `[include] path = $GLOBAL_ENV_DIR/global_git_config` at the top, so settings in `~/.gitconfig` override the shared ones. An old identical copy of the template is replaced by the include; a customized one is backed up and kept below it.
 
+### Private overlay (optional)
+
+Machine-specific or private additions live in a separate repo cloned at `$GLOBAL_ENV_OVERLAY_DIR` (default `~/my_work_tools/global_env_work`). Everything below is skipped when that directory does not exist, so this repo works the same without it:
+
+- `shell.d/*.sh`: sourced by `mybashrc` after `shell_functions.sh`
+- `mybashrc.local`: sourced last by `mybashrc`, so its aliases/exports override the defaults
+- `gitconfig`: included by `global_git_config` (e.g. a work email); github.com repos always use `~/.gitconfig-public`
+- `pyproject.uv.toml`: appended to new projects' `pyproject.toml` (private package indexes)
+- `requirements-work.txt`: symlinked into projects alongside the global requirements
+- `setup.sh`: run by `environment_setup.sh`
+
+Clone it during setup with `OVERLAY_REPO=<git url> ./environment_setup.sh`. A private scripts repo (bin's counterpart) can be cloned at `$BIN_WORK_DIR` (default `~/my_work_tools/bin_work`) with `BIN_OVERLAY_REPO=<git url>`; the overlay's `mybashrc.local` puts it on `PATH`.
+
 ### Using the scripts
 
 #### 1) New machine
