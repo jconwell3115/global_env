@@ -22,8 +22,10 @@
 #   -y   Answer yes to every prompt and take the defaults (unattended run)
 #
 # Work machines: set OVERLAY_REPO to also clone a private overlay repo into
-# $GLOBAL_ENV_OVERLAY_DIR (default ~/my_work_tools/global_env_work) and run its setup.sh, e.g.
-#   OVERLAY_REPO=git@git.example.com:me/global_env_work.git ./environment_setup.sh
+# $GLOBAL_ENV_OVERLAY_DIR (default ~/my_work_tools/global_env_work) and run its setup.sh, and
+# BIN_OVERLAY_REPO for a private scripts repo at $BIN_WORK_DIR (default ~/my_work_tools/bin_work):
+#   OVERLAY_REPO=git@git.example.com:me/global_env_work.git \
+#   BIN_OVERLAY_REPO=git@git.example.com:me/bin_work.git ./environment_setup.sh
 
 set -euo pipefail
 
@@ -163,6 +165,12 @@ if [[ -n "${OVERLAY_REPO:-}" ]]; then
   fi
   clone_or_pull "$OVERLAY_REPO" || warn "Could not clone $OVERLAY_REPO; continuing without the overlay"
 fi
+if [[ -n "${BIN_OVERLAY_REPO:-}" ]]; then
+  if [[ "$(basename "$BIN_OVERLAY_REPO" .git)" != "$(basename "$BIN_WORK_DIR")" ]]; then
+    warn "BIN_OVERLAY_REPO name differs from $(basename "$BIN_WORK_DIR"); set BIN_WORK_DIR to match"
+  fi
+  clone_or_pull "$BIN_OVERLAY_REPO" || warn "Could not clone $BIN_OVERLAY_REPO; continuing without it"
+fi
 
 # ------------- Shared my_work_tools Environment -------------
 section "Setting up shared my_work_tools environment..."
@@ -199,7 +207,8 @@ fi
 # ------------- Pre-commit Hooks for Work Tools Repos -------------
 section "Installing pre-commit hooks..."
 
-# global_env holds the shared .pre-commit-config.yaml itself; bin gets a symlink to it
+# global_env holds the shared .pre-commit-config.yaml itself; bin (and the private repos,
+# when present) get a symlink to it
 if [[ -d "$BIN_DIR/.git" ]]; then
   copy_precommit_config "$BIN_DIR"
   if [[ ! -f "$BIN_DIR/.gitignore" ]]; then
@@ -207,8 +216,15 @@ if [[ -d "$BIN_DIR/.git" ]]; then
     info "Copied .gitignore to bin directory"
   fi
 fi
+precommit_repos=("$GLOBAL_ENV_DIR" "$BIN_DIR")
+for repo_dir in "$GLOBAL_ENV_OVERLAY_DIR" "$BIN_WORK_DIR"; do
+  if [[ -d "$repo_dir/.git" ]]; then
+    copy_precommit_config "$repo_dir"
+    precommit_repos+=("$repo_dir")
+  fi
+done
 
-for repo_dir in "$GLOBAL_ENV_DIR" "$BIN_DIR"; do
+for repo_dir in "${precommit_repos[@]}"; do
   if [[ ! -d "$repo_dir/.git" ]]; then
     warn "$repo_dir is not a git repository, skipping pre-commit install"
     continue

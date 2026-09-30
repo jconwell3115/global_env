@@ -11,5 +11,7 @@
 # Optional private overlay (work-only functions, aliases and config); everything that uses it
 # checks it exists, so machines without it just skip it
 : "${GLOBAL_ENV_OVERLAY_DIR:=$WORK_TOOLS_DIR/global_env_work}"
+# Optional private scripts repo (bin's counterpart to the overlay); the overlay puts it on PATH
+: "${BIN_WORK_DIR:=$WORK_TOOLS_DIR/bin_work}"
 
-export WORK_TOOLS_DIR WORK_ENV_DIR GLOBAL_ENV_DIR BIN_DIR SSH_DIR GITHUB_OWNER GLOBAL_ENV_OVERLAY_DIR
+export WORK_TOOLS_DIR WORK_ENV_DIR GLOBAL_ENV_DIR BIN_DIR SSH_DIR GITHUB_OWNER GLOBAL_ENV_OVERLAY_DIR BIN_WORK_DIR

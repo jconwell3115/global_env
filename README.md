@@ -58,7 +58,7 @@ Machine-specific or private additions live in a separate repo cloned at `$GLOBAL
 - `requirements-work.txt`: symlinked into projects alongside the global requirements
 - `setup.sh`: run by `environment_setup.sh`
 
-Clone it during setup with `OVERLAY_REPO=<git url> ./environment_setup.sh`.
+Clone it during setup with `OVERLAY_REPO=<git url> ./environment_setup.sh`. A private scripts repo (bin's counterpart) can be cloned at `$BIN_WORK_DIR` (default `~/my_work_tools/bin_work`) with `BIN_OVERLAY_REPO=<git url>`; the overlay's `mybashrc.local` puts it on `PATH`.
 
 ### Using the scripts
 
