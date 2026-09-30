@@ -3,28 +3,54 @@
 # Project Setup Script
 # Sets up a new project environment on an already-configured machine.
 # Assumes environment_setup.sh has already been run (global_env and bin are cloned,
-# shell_functions.sh is available, SSH keys exist).
+# SSH keys exist).
 #
 # Usage:
-#   $GLOBAL_ENV_DIR/setup_project.sh
-#   # or from anywhere:
-#   ~/my_work_tools/global_env/setup_project.sh
+#   setup_project.sh [-n NAME] [-r "repo1 repo2"] [-o OWNER] [-v VERSION] [-d DESCRIPTION] [-y]
+#
+# Any value not given as an option is prompted for. With -y nothing is prompted:
+# missing values take their defaults (a project name is still required).
 
-# ------------- Guard: require env vars from ~/.bashrc -------------
-# These are set by mybashrc. If they're missing, bootstrap.sh hasn't been run
-# or ~/.bashrc hasn't been sourced.
-: "${GLOBAL_ENV_DIR:?GLOBAL_ENV_DIR is not set — run bootstrap.sh first or source ~/.bashrc}"
-: "${WORK_ENV_DIR:?WORK_ENV_DIR is not set — run bootstrap.sh first or source ~/.bashrc}"
-: "${BIN_DIR:?BIN_DIR is not set — run bootstrap.sh first or source ~/.bashrc}"
-export BIN_DIR GLOBAL_ENV_DIR
+set -euo pipefail
 
-WORK_TOOLS_DIR="${WORK_TOOLS_DIR:-$HOME/my_work_tools}"
-
-# ------------- Bootstrap: Source shell_functions.sh -------------
-# Source shared utilities
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
-# shellcheck disable=SC1091
-source "$SCRIPT_DIR/shell_functions.sh"
+# shellcheck source=paths.sh
+source "$SCRIPT_DIR/paths.sh"
+# shellcheck source=setup_lib.sh
+source "$SCRIPT_DIR/setup_lib.sh"
+
+usage() {
+  cat <<EOF
+Usage: $0 [-n NAME] [-r "repo1 repo2"] [-o OWNER] [-v VERSION] [-d DESCRIPTION] [-y]
+  -n   Project name (directory under $WORK_ENV_DIR)
+  -r   Space-separated repo names to clone ("" for none)
+  -o   Repo owner (default: $GITHUB_OWNER)
+  -v   Project version (default: 0.1.0)
+  -d   Project description
+  -y   Don't prompt; take defaults for anything not given
+EOF
+}
+
+PROJECT_NAME=""
+REPO_NAMES_INPUT=""
+REPOS_GIVEN=false
+REPO_OWNER=""
+PROJECT_VERSION=""
+PROJECT_DESCRIPTION=""
+
+while getopts ":n:r:o:v:d:yh" opt; do
+  case "$opt" in
+    n) PROJECT_NAME="$OPTARG" ;;
+    r) REPO_NAMES_INPUT="$OPTARG"; REPOS_GIVEN=true ;;
+    o) REPO_OWNER="$OPTARG" ;;
+    v) PROJECT_VERSION="$OPTARG" ;;
+    d) PROJECT_DESCRIPTION="$OPTARG" ;;
+    y) export ASSUME_YES=1 ;;
+    h) usage; exit 0 ;;
+    :) die "Option -$OPTARG needs a value" ;;
+    *) usage >&2; exit 2 ;;
+  esac
+done
 
 # Only set trap if script is run directly (not sourced)
 if [[ "${BASH_SOURCE[0]}" == "${0}" ]]; then
@@ -33,85 +59,79 @@ if [[ "${BASH_SOURCE[0]}" == "${0}" ]]; then
 fi
 
 # ------------- Input Collection -------------
-read -rp "Enter the project name: " PROJECT_NAME
-if [[ -z "$PROJECT_NAME" ]]; then
-  die "Project name is required"
+NAME_RE='^[A-Za-z0-9_][A-Za-z0-9._-]*$'
+
+[[ -n "$PROJECT_NAME" ]] || PROJECT_NAME=$(ask "Enter the project name")
+[[ -n "$PROJECT_NAME" ]] || die "Project name is required"
+[[ "$PROJECT_NAME" =~ $NAME_RE ]] \
+  || die "Invalid project name '$PROJECT_NAME' (letters, digits, '.', '_', '-'; must not start with '.' or '-')"
+
+if [[ "$REPOS_GIVEN" == false ]]; then
+  REPO_NAMES_INPUT=$(ask "Enter the repo name(s), space-separated (leave blank to skip cloning)")
 fi
+read -ra REPO_NAMES <<< "$REPO_NAMES_INPUT"
+for repo in "${REPO_NAMES[@]}"; do
+  [[ "$repo" =~ $NAME_RE ]] || die "Invalid repo name '$repo'"
+done
 
-read -rp "Enter the repo name(s), space-separated (leave blank to skip cloning): " REPO_NAMES_INPUT
-IFS=' ' read -ra REPO_NAMES <<< "$REPO_NAMES_INPUT"
-REPO_NAME="${REPO_NAMES[0]:-}"
-
-REPO_OWNER=""
-if [[ ${#REPO_NAMES[@]} -gt 0 && -n "${REPO_NAMES[0]}" ]]; then
-  read -rp "Enter the repo owner (leave blank for jconwell3115): " REPO_OWNER
-  REPO_OWNER="${REPO_OWNER:-jconwell3115}"
+if [[ ${#REPO_NAMES[@]} -gt 0 ]]; then
+  [[ -n "$REPO_OWNER" ]] || REPO_OWNER=$(ask "Enter the repo owner" "$GITHUB_OWNER")
 else
   warn "No repo names provided - setting up project directory only (no repository will be cloned)"
 fi
 
-read -rp "Enter the project version (default 0.1.0): " PROJECT_VERSION
-PROJECT_VERSION="${PROJECT_VERSION:-0.1.0}"
+[[ -n "$PROJECT_VERSION" ]] || PROJECT_VERSION=$(ask "Enter the project version" "0.1.0")
 
-if [[ -n "$REPO_NAME" ]]; then
+if [[ ${#REPO_NAMES[@]} -gt 0 ]]; then
   default_desc="Project for ${REPO_NAMES[*]}"
 else
   default_desc="Project $PROJECT_NAME"
 fi
-read -rp "Enter the project description (default '$default_desc'): " PROJECT_DESCRIPTION
-PROJECT_DESCRIPTION="${PROJECT_DESCRIPTION:-$default_desc}"
+[[ -n "$PROJECT_DESCRIPTION" ]] || PROJECT_DESCRIPTION=$(ask "Enter the project description" "$default_desc")
 
-# Export for shell_functions.sh (validate_setup, etc.)
-export REPO_NAME
-export REPO_NAMES="${REPO_NAMES[*]}"
-export PROJECT_DIR="$WORK_ENV_DIR/$PROJECT_NAME"
-# Re-split after export flattens the array
-IFS=' ' read -ra REPO_NAMES <<< "$REPO_NAMES"
+PROJECT_DIR="$WORK_ENV_DIR/$PROJECT_NAME"
 
 # ------------- Preflight -------------
 validate_requirements
-ensure_shell_tools_installed
+check_shell_tools
 cleanup_old_virtualenvs "$PROJECT_NAME"
 
 # ------------- Setup Project Directory -------------
 section "Setting up project environment for '$PROJECT_NAME'..."
 
 create_dir_if_not_exists "$WORK_ENV_DIR" "work environments directory"
-
-cd "$WORK_ENV_DIR" || exit
-info "Changed to work environments directory: $(pwd)"
-
 create_dir_if_not_exists "$PROJECT_DIR" "project directory"
 
-cd "$PROJECT_DIR" || exit
-info "Changed to project directory: $(pwd)"
-
-# ------------- Clone Repository -------------
-if [[ -n "$REPO_NAME" ]]; then
-  info "Cloning project repository..."
-  clone_or_pull "git@github.com:${REPO_OWNER}/$REPO_NAME.git"
-
-  cd "$PROJECT_DIR/$REPO_NAME" || exit
-  info "Changed to repository directory: $(pwd)"
-
-  if is_git_repo; then
-    copy_precommit_config .
-    copy_copilot_instructions .
-    info "Installing pre-commit for $REPO_NAME directory..."
-    pre-commit install
-  else
-    warn "Project repository is not a git repository, skipping pre-commit install"
+# ------------- Clone Repositories -------------
+for repo in "${REPO_NAMES[@]}"; do
+  section "Setting up repository $REPO_OWNER/$repo..."
+  cd "$PROJECT_DIR"
+  if ! clone_or_pull "git@github.com:$REPO_OWNER/$repo.git"; then
+    warn "Could not clone $REPO_OWNER/$repo; skipping it"
+    continue
   fi
-  create_log_files
-else
-  warn "No repo name provided, skipping repository clone, pre-commit install, and log file creation"
-fi
+
+  repo_dir="$PROJECT_DIR/$repo"
+  if [[ -d "$repo_dir/.git" ]]; then
+    copy_precommit_config "$repo_dir"
+    copy_copilot_instructions "$repo_dir"
+    if command -v pre-commit >/dev/null 2>&1; then
+      info "Installing pre-commit for $repo..."
+      (cd "$repo_dir" && pre-commit install)
+    else
+      warn "pre-commit not found; skipping hook install for $repo"
+    fi
+    (cd "$repo_dir" && create_log_files)
+    exclude_from_git "$repo_dir" "/logs/"
+  else
+    warn "$repo_dir is not a git repository, skipping pre-commit install"
+  fi
+done
 
 # ------------- Configure Project Files -------------
-cd "$PROJECT_DIR" || exit
+cd "$PROJECT_DIR"
 info "Changed to project directory: $(pwd)"
 
-info "Copying configuration files to project..."
 copy_config_files "$PROJECT_DIR"
 
 PROJECT_PYPROJECT="$PROJECT_DIR/pyproject.toml"
@@ -128,7 +148,7 @@ setup_uv_if_needed "$PROJECT_NAME"
 generate_uv_diagnostics
 
 # ------------- Done -------------
-validate_setup "project"
+validate_setup project "$PROJECT_DIR" "${REPO_NAMES[@]}"
 
 section "Project setup complete for '$PROJECT_NAME'! Please check for errors."
 

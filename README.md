@@ -10,86 +10,61 @@ This repository contains shell scripts to automate creating and configuring a Li
 
 ### Main scripts
 
-- `environment_setup.sh` — Orchestrates a full environment setup (directories, SSH keys, cloning repos, configuring git, installing pre-commit hooks, setting up UV for shared and project environments).
-- `shell_functions.sh` — Shared utilities used by the other scripts (logging, cloning/pulling, file backups, UV helpers, diagnostics).
+- `environment_setup.sh` — One-time machine bootstrap: package repos and shell tools, SSH key, cloning `global_env` and `bin`, the shared `my_work_tools` UV environment, pre-commit hooks, `~/.bashrc` and `~/.gitconfig`. Safe to re-run.
+- `setup_project.sh` — Sets up a project under `$WORK_ENV_DIR` on an already-bootstrapped machine: clones one or more repos, links the shared pre-commit config and Copilot instructions, and sets up UV.
+- `paths.sh` — The one place work-tools paths are defined (`WORK_TOOLS_DIR`, `WORK_ENV_DIR`, `GLOBAL_ENV_DIR`, `BIN_DIR`, `SSH_DIR`, `GITHUB_OWNER`). Sourced by `mybashrc` and the scripts; values already in the environment win.
+- `setup_lib.sh` — Shared helpers for the setup scripts (logging, prompts, cloning, config linking, UV helpers, diagnostics).
+- `shell_functions.sh` — Interactive shell helpers (`extract`, `mkcd`, `serve`, podman helpers, ...). Sourced by `mybashrc`; it also loads `setup_lib.sh` so helpers like `copy_precommit_config` work as shell commands.
 - `new_uv_setup.sh` — Automates migration from Pipenv / requirements files / pyproject.toml to UV, installs a Python version, and installs commonly used global UV tools.
 
 ### Prerequisites
 
-- Bash (POSIX-compatible shell).
-- Required commands: `git`, `ssh-keygen`, `curl`. The scripts will exit if these are missing.
-- `uv` (UV package manager) is optional; `new_uv_setup.sh` will attempt to install UV automatically if not present.
+- Bash 4.4+ (RHEL/Fedora with `dnf` for automatic package installs).
+- Required commands: `git`, `ssh-keygen`, `curl`. The scripts exit if these are missing.
+- `sudo` access (asked for once, up front) for package repos and tool installs.
 
-### Quick overview — what `environment_setup.sh` does
+### What `environment_setup.sh` does
 
-1. Prompts for:
-   - Project name (required)
-   - Repo name (optional — leave blank to only create the project directory)
-   - Repo owner (press Enter to default to "Network-DevOps")
-   - Project version & description (used to customize `pyproject.toml`)
-2. Validates required system tools.
-3. Cleans up old virtual environments for the project name.
-4. Ensures directories:
-   - `$HOME/my_work_tools` (work tools)
-   - `$HOME/Work_Environments` (project area)
-5. Copies configuration files (templates) from this repo into target directories, backing up differing files.
-6. Sets up or syncs a UV environment for shared tools (`my_work_tools`) and for the project:
-   - If `uv.lock` exists, runs `uv sync`.
-   - Otherwise runs `new_uv_setup.sh` to initialize/migrate to UV.
-7. Offers to create / renew an SSH key (ed25519 by default) and prints the public key for upload to Git host.
-8. Clones configured work repositories (example: `git@git.marriott.com:jconw483/global_env.git` and `bin.git`) and installs `pre-commit` when a directory is a git repo.
-9. Copies the repo `mybashrc` into `~/.bashrc` (review this before running).
-10. Configures a few global Git settings (user.name, user.email, credential helper, alias.bc, pull.rebase).
-11. Generates diagnostics and log files to help validate the setup.
+1. If run on its own (downloaded with curl), clones `global_env` over HTTPS into `~/my_work_tools/global_env` and re-runs from there.
+2. Validates required tools, enables package repos (EPEL, VS Code, GitHub CLI, Starship COPR) and installs missing shell tools.
+3. Creates or renews the SSH key (`~/.ssh/id_ed25519`, optional passphrase), prints it for upload to GitHub, and checks GitHub SSH access. Once SSH works, a HTTPS-cloned `global_env` is switched to its SSH remote.
+4. Clones or fast-forwards `global_env` and `bin` into `~/my_work_tools`.
+5. Sets up the shared UV environment in `~/my_work_tools` (`uv sync` if `uv.lock` exists, otherwise `new_uv_setup.sh`).
+6. Links the shared `.pre-commit-config.yaml` into `bin` and installs pre-commit hooks in both repos.
+7. Adds a loader line for `mybashrc` to `~/.bashrc` (see below) and adds an `[include]` of `global_git_config` to `~/.gitconfig`.
+8. Validates the result and offers to run `setup_project.sh`.
 
-### Defaults and configuration variables
+### What `setup_project.sh` does
 
-The top of `environment_setup.sh` contains defaults that you can change before running:
+1. Takes the project name, repo names, owner, version and description from options or prompts. Project and repo names are validated (letters, digits, `.`, `_`, `-`).
+2. Lists old Pipenv virtualenvs named `<project>` or `<project>-*` and deletes them only if you confirm (never with `-y`).
+3. Creates `$WORK_ENV_DIR/<project>` and clones each repo into it.
+4. In each repo, symlinks `.pre-commit-config.yaml` and `.github/copilot-instructions.md` to the shared copies in `global_env`, installs pre-commit hooks, and adds these files and `logs/` to `.git/info/exclude` so `git status` stays clean. A repo that tracks its own `.pre-commit-config.yaml` keeps it.
+5. Links the `requirements*` files and copies `pyproject.toml` (never overwriting an existing one) into the project directory, then sets up UV.
 
-- `WORK_ENV_DIR` (default: `$HOME/Work_Environments`)
-- `WORK_TOOLS_DIR` (default: `$HOME/my_work_tools`)
-- `BIN_DIR` (default: `$WORK_TOOLS_DIR/bin/`)
-- `GLOBAL_ENV_DIR` (default: `$WORK_TOOLS_DIR/global_env`)
-- `CONDA_DIR`, `PIPCONF_DIR`, `SSH_DIR`, `USERNAME`, `EMAIL`, `KEY_NAME`, `KEY_TYPE`, `KEY_SIZE`, etc.
+### mybashrc and global_git_config
 
-If you prefer not to edit the script, run it interactively and provide values at the prompts.
-
-### mybashrc
-
-- Location: The script copies the `mybashrc` file from the repo (expected at `$GLOBAL_ENV_DIR/mybashrc`) to your home as `~/.bashrc`.
-- Behavior: `environment_setup.sh` performs `cat "$GLOBAL_ENV_DIR/mybashrc" > "$HOME/.bashrc"` and then `source "$HOME/.bashrc"`, so the profile is overwritten and immediately applied for the running shell session.
-- Contents: `mybashrc` is intended to provide PATH updates, environment variables, and helper aliases/functions used by these setup scripts and the UV workflow. Review the file to ensure there are no conflicts with your existing shell customizations.
-- Recommendations:
-  - Back up your existing bash profile before running the script:
-
-    ```bash
-    cp -p ~/.bashrc ~/.bashrc.pre_global_env_bak.$(date +%Y%m%d_%H%M%S)
-    ```
-
-  - Inspect and edit `mybashrc` in this repo to add or remove environment tweaks before running `environment_setup.sh`.
-  - If you want the changes to apply only to future sessions, avoid sourcing the file immediately and instead open a new shell after the copy, or manually merge entries.
-- Reverting: Restore your previous profile with:
-
-  ```bash
-  mv ~/.bashrc.pre_global_env_bak.<TIMESTAMP> ~/.bashrc
-  source ~/.bashrc
-  ```
-
-  or edit ~/.bashrc to remove or adjust the lines you don't want.
+- `~/.bashrc` gets one line that sources `$GLOBAL_ENV_DIR/mybashrc`, so a `git pull` in `global_env` updates your shell for new sessions. An old full copy of `mybashrc` in `~/.bashrc` is replaced by that line after confirmation (with a timestamped backup); any other `~/.bashrc` is kept and the line is appended.
+- `~/.gitconfig` gets `[include] path = $GLOBAL_ENV_DIR/global_git_config` at the top, so settings in `~/.gitconfig` override the shared ones. An old identical copy of the template is replaced by the include; a customized one is backed up and kept below it.
 
 ### Using the scripts
 
-#### 1) Full interactive setup
-
-From the directory containing `environment_setup.sh` (or after cloning this repo into your work tools dir):
+#### 1) New machine
 
 ```bash
-./environment_setup.sh
+curl -fsSL https://github.com/jconwell3115/global_env/raw/roadhouse/environment_setup.sh -o environment_setup.sh
+chmod +x environment_setup.sh
+./environment_setup.sh        # add -y for an unattended run with defaults
 ```
 
-Follow the prompts.
+#### 2) New project
 
-#### 2) Migrate a project to UV (manual use)
+```bash
+setup_project.sh                                  # prompts for everything
+setup_project.sh -n my_proj -r "repo1 repo2" -y   # no prompts; owner defaults to $GITHUB_OWNER
+```
+
+#### 3) Migrate a project to UV (manual use)
 
 Change into the project directory and run:
 
@@ -120,38 +95,35 @@ PYTHON_VERSION=3.12 ./new_uv_setup.sh
 - Installs configured global tools via `uv tool install`.
 - Creates a dependency snapshot file like `uv-dependencies-YYYYMMDD.txt` on success.
 
-### Key behaviors from `shell_functions.sh`
+### Key behaviors from `setup_lib.sh`
 
-- Logging functions: `info`, `warn`, `err`, `die` for consistent message formatting.
-- `copy_config_files`: copies templates (`requirements*`, `pyproject.toml`, `.pre-commit-config.yaml`, `.gitignore`, etc.) from the `global_env` repo to a target folder and backs up differing files (`.bak.TIMESTAMP`).
-- `setup_uv_if_needed`: runs `uv sync` when `uv.lock` exists, otherwise delegates to `new_uv_setup.sh`.
-- `generate_uv_diagnostics`: writes a timestamped diagnostics file with system, UV, Python and project details.
-- Other utilities: `create_dir_if_not_exists`, `clone_or_pull`, `create_log_files`, `backup_file`, `remove_file`, `countfiles`, `extract`, `findreplace`, etc.
+- Logging: `info`, `warn`, `err`, `die`, `section`. Prompts: `confirm` and `ask`, which honor `ASSUME_YES=1` (set by `-y`).
+- `copy_config_files`: symlinks `requirements*` from `global_env` into a target folder (backing up differing plain files as `.bak.TIMESTAMP`) and copies `pyproject.toml` only if missing.
+- `copy_precommit_config` / `copy_copilot_instructions`: symlink the shared files into a git repo and add them to `.git/info/exclude`.
+- `setup_uv_if_needed`: runs `uv sync` when `uv.lock` exists (warning on failure), otherwise delegates to `new_uv_setup.sh`.
+- `generate_uv_diagnostics`: writes `logs/uv-setup-diagnostics-YYYYMMDD_HHMMSS.txt` with system, UV, Python and project details.
 
 ### Logs and diagnostics
 
-- Logs from `environment_setup.sh` are written to `logs/environment_setup-YYYYMMDD_HHMMSS.log`.
-- `create_log_files` creates `logs/` files for several linters and formatters (ansible-lint, yamllint, ruff, black, mypy, bandit, djlint, pydocstyle).
-- `generate_uv_diagnostics` produces a detailed diagnostic file `uv-setup-diagnostics-YYYYMMDD_HHMMSS.txt` in the current directory.
+- `create_log_files` creates `logs/` files for the linters and formatters run by pre-commit.
+- `generate_uv_diagnostics` writes its diagnostics file into `logs/` of the current directory.
 
 ### Safety, backups and notes
 
-- Files that will be overwritten are backed up with `filename.bak.TIMESTAMP` unless they match the repo template.
-- SSH key generation: defaults to `~/.ssh/id_ed25519` and prints the public key; the script will pause to let you add it to your Git host.
-- `environment_setup.sh` exits if required tools are missing.
-- The scripts assume SSH-based repo cloning (e.g., `git@git.marriott.com:...`). Update URLs or configure SSH keys accordingly.
-- `environment_setup.sh` may copy `mybashrc` to `~/.bashrc` — inspect that file if you have a custom shell environment.
+- Files that get replaced are backed up as `filename.bak.TIMESTAMP` unless they match the repo template. A renewed SSH key's old pair is kept as `id_ed25519.bak.TIMESTAMP`.
+- Repos are cloned over SSH (`git@github.com:`); only the very first `global_env` clone uses HTTPS.
+- `git pull` uses `--ff-only`; a repo with local changes or a diverged branch is left alone with a warning.
 
 ### Troubleshooting
 
 - If `uv` is not found, `new_uv_setup.sh` attempts to install it.
 - If `pre-commit` fails to install, ensure the target directory is a git repo and that Python/UV environment is available.
-- Check `logs/`, `uv-setup-diagnostics-*.txt` and the script output for detailed error information.
+- Check `logs/` (including `logs/uv-setup-diagnostics-*.txt`) and the script output for detailed error information.
 
 ### Customization and contribution
 
-- Edit `shell_functions.sh` to change copying rules, templates, or add/remove global tools.
-- Update defaults in `environment_setup.sh` to match your preferred layout and identity settings.
+- Edit `setup_lib.sh` to change copying rules or the `SHELL_TOOLS` list.
+- Edit `paths.sh` (or export the variables before running) to change the directory layout or GitHub owner.
 - Modify the UV configuration injected in `customize_pyproject_toml()` if you need to add private package indexes or extra build dependencies.
 
 ### Author / License

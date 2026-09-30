@@ -19,7 +19,8 @@ set -euo pipefail
 
 # Source shared utilities
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
-source "$SCRIPT_DIR/shell_functions.sh"
+# shellcheck source=setup_lib.sh
+source "$SCRIPT_DIR/setup_lib.sh"
 
 # ------------- Config (override with env vars) -------------
 : "${PYTHON_VERSION:=3.12}"
