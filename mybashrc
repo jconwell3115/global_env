@@ -1,7 +1,7 @@
 # .bashrc
 
 # User-specific PATH additions
-for dir in "$HOME/.local/bin" "$HOME/bin" "$HOME/my_work_tools/bin"; do
+for dir in "$HOME/.local/bin" "$HOME/bin" "$HOME/my_work_tools/bin" "$HOME/my_work_tools/bin/bash"; do
   case ":$PATH:" in
     *":$dir:"*) ;;
     *) PATH="$dir:$PATH" ;;
