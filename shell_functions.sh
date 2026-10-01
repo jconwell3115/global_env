@@ -270,4 +270,19 @@ podman_volume_ls() {
 
   ls -la "$mp" "$@"
 }
+# ------------- ansible-vault secrets -------------
+# Read values from an ansible-vault encrypted YAML file without writing it to disk.
+# Override the file locations with VAULT_SECRETS_FILE / VAULT_PASS_FILE.
+# vault_get '.some_key'   print one value (yq expression)
+# vault_keys              list every key path in the file
+vault_get() {
+    ansible-vault view "${VAULT_SECRETS_FILE:-$HOME/.config/secrets.yml}" \
+        --vault-password-file "${VAULT_PASS_FILE:-$HOME/.config/.vault_pass}" \
+        | yq -r "$1"
+}
+vault_keys() {
+    ansible-vault view "${VAULT_SECRETS_FILE:-$HOME/.config/secrets.yml}" \
+        --vault-password-file "${VAULT_PASS_FILE:-$HOME/.config/.vault_pass}" \
+        | yq -r 'paths | join(".")'
+}
 # ------------- End of shell_functions.sh -------------

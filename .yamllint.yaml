@@ -1,0 +1,32 @@
+extends: default
+
+rules:
+  # Allow longer lines (e.g., long URLs or wrapped code)
+  line-length:
+    max: 120
+    level: warning
+
+  indentation:
+    spaces: 2
+    indent-sequences: false
+
+  colons:
+    max-spaces-before: 0
+    max-spaces-after: 1
+
+  trailing-spaces: enable
+  new-line-at-end-of-file: enable
+  document-start: disable
+  key-duplicates: enable
+  comments:
+    min-spaces-from-content: 1
+
+  # Disallow ambiguous truthy/falsey values like "on", "off", "yes", "no".
+  truthy:
+    allowed-values: ["true", "false", "True", "False"]
+    level: error
+  # Enforce spacing for brackets and sequences
+  brackets:
+    max-spaces-inside: 1
+    min-spaces-inside: 0
+    level: warning

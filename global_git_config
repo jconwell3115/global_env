@@ -7,7 +7,7 @@
 [core]
     editor = vim
     pager = less -FRX
-    excludesfile = ~/.gitignore_global
+    excludesfile = ~/my_work_tools/global_env/.gitignore_global
     autocrlf = input
     whitespace = fix,-indent-with-non-tab,trailing-space,cr-at-eol
 
@@ -131,3 +131,13 @@
 
     # Ignore helper
     ignore = "!gi() { echo $1 >> .gitignore; }; gi"
+
+# Commit email: personal by default. The work overlay's gitconfig (only present on the work
+# machine; git skips a missing include) makes the work email the default there, and github.com
+# repos always use the personal email from ~/.gitconfig-public. Order matters: last one wins.
+[include]
+    path = ~/my_work_tools/global_env_work/gitconfig
+[includeIf "hasconfig:remote.*.url:git@github.com:*/**"]
+    path = ~/.gitconfig-public
+[includeIf "hasconfig:remote.*.url:https://github.com/**"]
+    path = ~/.gitconfig-public

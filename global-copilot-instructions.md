@@ -6,9 +6,12 @@
 
 ## Workspace Layout (Multi-Repo)
 
-- This workspace is a parent project containing multiple repositories.
-- Tooling configuration is centralized in the workspace-root `pyproject.toml` (Ruff and mypy).
-- Each repo typically has its own `.pre-commit-config.yaml`; run `pre-commit` from the repo root when validating changes.
+- This workspace is a parent project containing multiple
+  repositories.
+- Tooling configuration is centralized in the workspace-root
+  `pyproject.toml` (Ruff, and mypy).
+- Each repo typically has its own `.pre-commit-config.yaml`; run `pre-commit` from the
+repo root when validating changes.
 
 ## Code Style and Standards
 
@@ -17,15 +20,20 @@
 #### Python
 
 - **Version**: Python 3.12+
-- **Type Hints**: Use modern built-in generics and union syntax (see **Modern Python Typing** section below). Do not import deprecated aliases from `typing` (`Dict`, `List`, `Optional`, `Tuple`, `Union`) — use built-in types and `|` syntax instead.
-- **Formatting**: Follow PEP 8 with line length of 90 characters (aligned with Ruff configuration)
-- **String Quotes**: Use double quotes for all strings (enforced by Ruff formatter)
-- **Linting**: Code must pass `mypy` (strict, with `ignore_missing_imports=true`) and `ruff` (lint + import sorting)
-- **Imports**: Group imports as: stdlib, third-party, framework modules (e.g., Ansible: `ansible.module_utils.*`), local modules (use `isort` for sorting)
+- **Formatting**: Follow PEP 8 with line length of 90 characters
+  (aligned with Ruff configuration)
+- **String Quotes**: Always use double quotes ("") for all strings,
+  never single quotes (enforced by Ruff formatter)
+- **Linting**: Code must pass `mypy` (strict, with
+  `ignore_missing_imports=true`) and `ruff` (lint + import sorting)
+- **Imports**: Group imports as: stdlib, third-party, framework
+  modules (e.g., Ansible: `ansible.module_utils.*`), local modules
+  (use `isort` for sorting)
 
-#### Modern Python Typing (3.10+)
+#### Modern Python Typing (3.10+) (PEP 585 + PEP 604)
 
-Python 3.10+ provides cleaner, built-in syntax for type annotations. **Always use these forms** — Ruff rule `UP` (pyupgrade) will flag the old `typing` module aliases.
+Python 3.10+ provides cleaner, built-in syntax for type annotations.
+**Always use these forms** — Ruff rule `UP` (pyupgrade) will flag the old `typing` module aliases.
 
 **Union types — use `|` instead of `Union`:**
 
@@ -127,7 +135,7 @@ def decorator(func: Callable[P, T]) -> Callable[P, T]: ...
 | `typing.Sequence` | `collections.abc.Sequence` |
 | `typing.Iterator` | `collections.abc.Iterator` |
 
-**Import grouping example (updated for modern typing):**
+**Import grouping example:**
 
 ```python
 # Standard library
@@ -150,8 +158,9 @@ from [package_name].helpers import CustomComplianceInputs
 #### [Repo Name]
 
 - **Playbooks**: Top-level files named `[pattern]*.yml` are orchestration playbooks.
-- **Custom Ansible modules**: Python modules under `library/` are Ansible module entrypoints.
-- **Non-Ansible code**: Python packages at repo root (e.g., `[package_name]/`) for code that is NOT an Ansible module.
+- **Custom Ansible modules**: Python modules in `library/` are Ansible module entrypoints.
+- **Non-Ansible code**: Python packages at repo root (e.g., `[package_name]/`) for code
+that is NOT an Ansible module.
 - **Packaged YAML rules**: Store operator-editable YAML inside Python packages (e.g., `[package_name]/rules.yaml`).
   - Use `importlib.resources.files(__package__).joinpath("rules.yaml")` to load packaged resources.
   - For repo-root rules (legacy): use `Path(__file__).parent.parent / "rules" / "rules.yml"`.
@@ -160,9 +169,9 @@ from [package_name].helpers import CustomComplianceInputs
 
 #### Shell / Bash
 
-- **Shell**: Use `bash` for scripts that require Bash features and POSIX
-    sh when portability is required. Specify version if you depend on
-    Bash-specific features (e.g., Bash 4.4+).
+- **Shell**: Use `bash` for scripts that require Bash features and
+    POSIX sh when portability is required. Specify version if you
+    depend on Bash-specific features (e.g., Bash 4.4+).
 - **Shebang**: Start executable scripts with `#!/usr/bin/env bash`.
 - **Strict mode**: Use `set -euo pipefail` and `IFS=$'\n\t'` at the top
     of scripts unless a clear reason to opt-out is documented.
@@ -208,26 +217,39 @@ Example for Ansible:
 
 ### Python Docstrings
 
-All Python modules, classes, methods, and functions must use reStructuredText (reST) format following these conventions:
+All Python modules, classes, methods, and functions must use reStructuredText (reST)
+format following these conventions:
 
 **Convention Guidelines:**
 
-- **Modules and Classes**: Use Numpy-style section headings (Parameters, Returns, Raises, etc.) for better readability
-- **Functions and Methods**: Use reST field lists (`:param:`, `:returns:`, `:rtype:`) + Raises section heading for consistency
+- **Modules and Classes**: Use Numpy-style section headings
+(Parameters, Returns, Raises, etc.) for better readability
+- **Functions and Methods**: Use reST field lists
+(`:param:`, `:returns:`, `:rtype:`) + Raises section heading for consistency
 - **pydocstyle configuration** (from workspace pyproject.toml):
   - Base convention: PEP 257
-  - Enforces D200 (one-line docstrings fit on one line), D205 (blank line after summary), D210 (no surrounding whitespace), D211 (no blank before class), D214/D215 (section indentation), D300 (triple double quotes), D301 (raw strings for backslashes)
-  - Ignores D203 (blank line before class, conflicts with D211), D212 (multi-line summary position)
+  - Enforces D200 (one-line docstrings fit on one line), D205 (blank
+    line after summary), D210 (no surrounding whitespace), D211 (no
+    blank before class), D214/D215 (section indentation), D300
+    (triple double quotes), D301 (raw strings for backslashes)
+  - Ignores D203 (blank line before class, conflicts with D211),
+    D212 (multi-line summary position)
   - Applies to all Python files except tests
 
 **Universal Requirements:**
 
 - Use `"""triple double quotes"""` for all docstrings (D300)
-- One-line docstrings must fit on one line with opening and closing quotes (D200)
-- Multi-line docstrings: summary line, blank line, optional section heading with underline, blank line, then detailed description (D205)
-- No blank line before class docstrings (D211, ignores conflicting D203)
-- Module docstrings: start with one-line summary, then module name as section heading
-- Multi-line summary starts on first line (D212 ignored for flexibility)
+- One-line docstrings must fit on one line with opening and closing
+  quotes (D200)
+- Multi-line docstrings: summary line, blank line, optional section
+  heading with underline, blank line, then detailed description
+  (D205)
+- No blank line before class docstrings (D211, ignores conflicting
+  D203)
+- Module docstrings: start with one-line summary, then module name
+  as section heading
+- Multi-line summary starts on first line (D212 ignored for
+  flexibility)
 - Always include a blank line before any section heading
 - Use double backticks for inline code: \`\`variable_name\`\`
 - Section underlines: `=` for module title, `-` for subsections
@@ -430,7 +452,9 @@ class ClassName:
 
 #### Method/Function Docstrings
 
-Method and function docstrings use reST field lists for parameters, return values, and raises, with Numpy-style section headings for additional documentation.
+Method and function docstrings use reST field lists for parameters,
+return values and raises, with Numpy-style section headings for
+additional documentation.
 
 **Required elements:**
 
@@ -449,7 +473,8 @@ Method and function docstrings use reST field lists for parameters, return value
 - **Notes** -- Additional context, performance considerations
 - **See Also** -- Cross-references to related functions
 
-**Critical formatting rule**: Always include a blank line before the Raises section heading (and any other section heading).
+**Critical formatting rule**: Always include a blank line before the
+Raises section heading (and any other section heading).
 
 **Improvements:**
 
@@ -1024,16 +1049,27 @@ if __name__ == "__main__":
 
 ## Best Practices
 
-1. **Always use type hints** - Every function/method parameter and return value must be typed for better IDE support and error detection
-2. **Document side effects** - Clearly document any mutations, I/O, or state changes in docstrings with **bold** emphasis
-3. **Handle multiple input shapes** - Data can come in various envelopes/formats; normalize early in the pipeline
-4. **Normalize before matching** - Always normalize identifiers (strip, lowercase) before comparison or lookup operations
-5. **Deep copy when merging** - Prevent unintended mutations with `copy.deepcopy()` when merging data structures
-6. **Provide realistic examples** - Include runnable code examples in module/class docstrings showing actual usage
-7. **Test with type checkers** - Ensure type hints are correct and complete by running mypy or similar tools
-8. **Use conservative defaults** - Prefer safe operations that preserve data rather than destructive operations
-9. **Log comprehensively** - Use appropriate log levels and include context (identifiers, operation, values)
-10. **Follow the principle of least surprise** - Design APIs and behaviors that match user expectations
+1. **Always use type hints** - Every function/method parameter and
+   return value must be typed for better IDE support and error
+   detection
+2. **Document side effects** - Clearly document any mutations, I/O,
+   or state changes in docstrings with **bold** emphasis
+3. **Handle multiple input shapes** - Data can come in various
+   envelopes/formats; normalize early in the pipeline
+4. **Normalize before matching** - Always normalize identifiers
+   (strip, lowercase) before comparison or lookup operations
+5. **Deep copy when merging** - Prevent unintended mutations with
+   `copy.deepcopy()` when merging data structures
+6. **Provide realistic examples** - Include runnable code examples
+   in module/class docstrings showing actual usage
+7. **Test with type checkers** - Ensure type hints are correct and
+   complete by running mypy or similar tools
+8. **Use conservative defaults** - Prefer safe operations that
+   preserve data rather than destructive operations
+9. **Log comprehensively** - Use appropriate log levels and include
+   context (identifiers, operation, values)
+10. **Follow the principle of least surprise** - Design APIs and
+    behaviors that match user expectations
 
 ## Do/Don't Rules
 
@@ -1058,8 +1094,10 @@ class Config:
 
 ### Exception Handling
 
-- **Do** use specific exceptions (`FileNotFoundError`, `KeyError`, `TypeError`) over generic `ValueError` when possible
-- **Do** include context in error messages: object name, identifier, platform, rule token, YAML path, etc.
+- **Do** use specific exceptions (`FileNotFoundError`, `KeyError`,
+  `TypeError`) over generic `ValueError` when possible
+- **Do** include context in error messages: object name, identifier,
+  platform, rule token, YAML path, etc.
 - **Don't** swallow exceptions without logging context
 - **Do** standardize error message format: `"Action failed: {context}. {suggestion}"`
 
@@ -1078,7 +1116,9 @@ if not yaml_path.exists():
 
 ### Identifier Normalization
 
-- **Do** normalize identifiers consistently using `identifier.strip().lower()` before using as dict keys or comparisons
+- **Do** normalize identifiers consistently using
+  `identifier.strip().lower()` before using as dict keys or
+  comparisons
 - **Do** normalize early in the pipeline (at input extraction)
 - **Don't** compare raw user input without normalization
 
@@ -1094,7 +1134,9 @@ if inputs.platform_network_driver in rule.platforms:  # Case mismatch breaks loo
 
 ### Logging
 
-- **Do** log at appropriate levels: `debug` for detailed traces, `info` for major steps, `warning` for recoverable issues, `error` for failures
+- **Do** log at appropriate levels: `debug` for detailed traces,
+  `info` for major steps, `warning` for recoverable issues, `error`
+  for failures
 - **Do** include context: device name, platform, rule name, operation
 - **Don't** log sensitive data (tokens, passwords, credentials)
 - **Do** use the standard logging setup pattern (see below)
@@ -1133,12 +1175,6 @@ logger.setLevel(LOGLEVEL)
 - Auto-create `logs/` directory with `mkdir(exist_ok=True)`
 - Default to `INFO` level; adjust as needed for debugging
 
-### Type Hints and Validation
-
-- **Do** prefer `Sequence[str]` over `List[str]` for read-only parameters (accepts tuples, lists)
-- **Do** use `Path | Traversable` for file parameters that may be packaged resources
-- **Do** validate input early and fail fast with clear error messages
-
 ## Repo Commands
 
 Run these commands from the repository root to validate code:
@@ -1160,11 +1196,11 @@ python -m mypy --ignore-missing-imports [package_name]/
 ### Code Formatting
 
 ```bash
-# Format with Black (90 char line length)
-python -m black --line-length 90 .
+# Format with Ruff (90 char line length)
+python -m ruff format --line-length 90 .
 
 # Check formatting without making changes
-python -m black --check --line-length 90 .
+python -m ruff format --check --line-length 90 .
 ```
 
 ### Testing and Validation

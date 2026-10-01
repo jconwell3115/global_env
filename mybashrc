@@ -1,7 +1,7 @@
 # .bashrc
 
 # User-specific PATH additions
-for dir in "$HOME/.local/bin" "$HOME/bin" "$HOME/my_work_tools/bin"; do
+for dir in "$HOME/.local/bin" "$HOME/bin" "$HOME/my_work_tools/bin" "$HOME/my_work_tools/bin/bash"; do
   case ":$PATH:" in
     *":$dir:"*) ;;
     *) PATH="$dir:$PATH" ;;
@@ -10,7 +10,10 @@ done
 export PATH
 
 # BASH Variables
+export HISTSIZE=10000            # Commands kept in memory
 export HISTFILESIZE=20000        # Commands saved in ~/.bash_history file
+export HISTCONTROL=ignoredups:erasedups
+export PROMPT_COMMAND="history -a"  # Write each command to history as it runs
 export HISTTIMEFORMAT="%F %T "   # Add timestamps
 shopt -s histappend              # Append to history instead of overwriting
 
@@ -36,6 +39,15 @@ alias cat='bat'
 # Source shared shell functions
 [ -f "$HOME/my_work_tools/global_env/shell_functions.sh" ] && source "$HOME/my_work_tools/global_env/shell_functions.sh"
 
+# Private overlay (work machine only): extra functions in shell.d/, then aliases/exports that
+# override the defaults here (e.g. EMAIL). Skipped when GLOBAL_ENV_OVERLAY_DIR does not exist.
+if [ -d "${GLOBAL_ENV_OVERLAY_DIR:-}" ]; then
+  for _overlay_file in "$GLOBAL_ENV_OVERLAY_DIR"/shell.d/*.sh; do
+    [ -f "$_overlay_file" ] && source "$_overlay_file"
+  done
+  unset _overlay_file
+fi
+
 # Only output for interactive shells
 if [[ $- == *i* ]]; then
     echo ""
@@ -53,7 +65,7 @@ fi
 
 # .bashrc commands
 alias readbash='source ~/.bashrc'
-alias configbash='vi ~/.bashrc'
+alias configbash='vi ~/my_work_tools/global_env/mybashrc'
 alias cpbash='cp -pr ~/my_work_tools/global_env/mybashrc ~/.bashrc'
 alias catbash='cat ~/.bashrc'
 alias diffbash='diff ~/my_work_tools/global_env/mybashrc ~/.bashrc'
@@ -118,6 +130,7 @@ alias cpc='copy_precommit_config'
 alias cci='copy_copilot_instructions'
 alias cgr='copy_global_requirements'
 alias rp='renew_project'
+alias pp='renew_project'  # old name (provision_project)
 alias rhp='renew_homepage'  # shorthand: renew the homepage containers
 alias pvm='podman_volume_mounts'
 alias pvls='podman_volume_ls'
@@ -135,4 +148,9 @@ alias gital='git config --get-regexp alias'
 
 # Initialize Starship
 export STARSHIP_CONFIG="$HOME/my_work_tools/global_env/starship.toml"
-eval "$(starship init bash)"
+if [[ $- == *i* ]] && command -v starship >/dev/null 2>&1; then
+    eval "$(starship init bash)"
+fi
+
+# Overlay aliases/exports last so they win over the defaults above
+[ -f "${GLOBAL_ENV_OVERLAY_DIR:-}/mybashrc.local" ] && source "$GLOBAL_ENV_OVERLAY_DIR/mybashrc.local"
