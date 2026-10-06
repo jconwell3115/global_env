@@ -1,232 +1,71 @@
-# Claude Code Instructions - Generic Starter
+# Global Claude Code Instructions
 
-Copy this into a project's `CLAUDE.md` (or a workspace-root one for a
-multi-repo setup) and fill in the bracketed placeholders. Delete any section
-that doesn't apply — this is a starting point, not a checklist to satisfy.
+Symlinked to `~/.claude/CLAUDE.md`, so it applies to every project. Keep it
+short: it's loaded into every session. Project-specific rules belong in the
+project's own `CLAUDE.md`. The Copilot equivalent is
+`global_env/global-copilot-instructions.md`; keep the two in sync.
 
-## Project Overview
+## Workspace Layout
 
-[Provide a concise description of the project, its purpose, and main
-technologies used]
+- Workspaces are parent projects containing multiple repos under `$WORK_ENV_DIR`.
+- Ruff/mypy config is centralized in the workspace-root `pyproject.toml`.
+- Each repo has its own `.pre-commit-config.yaml`; run `pre-commit` from the repo root.
 
-## Workspace Layout (Multi-Repo, if applicable)
+## Python
 
-- [Note if this is a parent workspace containing multiple repos, and where
-  each lives]
-- [Note where shared tooling config lives, e.g. a workspace-root
-  `pyproject.toml` for Ruff/mypy]
-- [Note per-repo validation, e.g. "each repo has its own
-  `.pre-commit-config.yaml`; run `pre-commit` from that repo's root"]
+- 3.12+; Ruff format, double quotes, 90-char lines; must pass `ruff check` and
+  `mypy --strict --ignore-missing-imports`.
+- Imports: stdlib → third-party → framework (`ansible.module_utils.*`) → local.
+- Modern typing only (Ruff `UP`): `X | None`, `X | Y`, `list`/`dict`/`tuple`/
+  `set`/`type[X]`, `collections.abc.Callable`/`Sequence`/`Iterator`, and
+  `type X = ...` aliases. Import from `typing` only for `Any`, `ClassVar`,
+  `Final`, `Literal`, `Never`, `Protocol`, `Self`, `TypeVar`, `ParamSpec`,
+  `overload`.
+- Structure: logic in classes, private helpers prefixed `_`; `main()` only
+  restores SIGINT, inits args/module, instantiates, and delegates to
+  `run_module()`. Ansible modules live in `library/` and use
+  `module.fail_json()`/`exit_json()`.
 
-## Code Style and Standards
+### Docstrings
 
-### Python
+reST, pydocstyle (PEP 257; D203/D212 ignored). Summary in imperative mood, ends
+with a period, blank line after it. Modules/classes use Numpy headings
+(`Parameters`, `Attributes`, `Returns`, `Raises`, `Examples`, `Notes`,
+`See Also`). Functions use `:param:`/`:type:`/`:returns:`/`:rtype:` plus a Numpy
+`Raises` heading. Blank line before every heading. Document exceptions and side
+effects (mutations/I/O in **bold**). Types must match annotations. Full
+templates: `global_env/copilot/python-docstrings.instructions.md`.
 
-- **Version**: [target Python version]
-- **Formatting**: [formatter + line length, e.g. Ruff format, double quotes,
-  90-char lines]
-- **Linting**: [tools that must pass, e.g. `ruff check`, `mypy --strict`]
-- **Imports**: [group order, e.g. stdlib → third-party → framework → local,
-  isort-sorted]
+## Shell / Bash
 
-### Modern Python Typing (3.10+)
+- `#!/usr/bin/env bash`, `set -euo pipefail`, `IFS=$'\n\t'`; quote expansions.
+- Named functions with explicit `return`; `getopts` + `--help`; no `eval`.
+- Errors to stderr with non-zero exit; never commit `set -x`; pass `shellcheck`.
+- Check for required commands up front. Reuse the `global_env/setup_lib.sh`
+  helpers (`info`, `warn`, `err`, `die`, `confirm`).
 
-If the project targets 3.10+, these are the modern forms — worth enforcing
-via Ruff's `UP` (pyupgrade) rule regardless of project specifics:
+## Rules
 
-| Old (deprecated)     | Modern (3.10+)              |
-|-----------------------|------------------------------|
-| `Optional[X]`          | `X \| None`                  |
-| `Union[X, Y]`          | `X \| Y`                     |
-| `List[X]` / `Dict[K,V]` / `Tuple[X,Y]` / `Set[X]` / `Type[X]` | `list[X]` / `dict[K,V]` / `tuple[X,Y]` / `set[X]` / `type[X]` |
-| `typing.Callable`, `typing.Sequence`, `typing.Iterator` | `collections.abc.Callable`, etc. |
-
-Still import from `typing` for `Any`, `ClassVar`, `Final`, `Literal`,
-`Never`, `Protocol`, `TypeAlias`, `TypeVar`, `overload`, `Self` (3.11+),
-`ParamSpec`. Prefer the `type X = ...` statement (3.12+) over `TypeAlias`
-where possible.
-
-### Repo-Specific Conventions
-
-[Describe naming patterns and structural conventions specific to this repo —
-e.g. a module/file naming prefix, where custom code entrypoints live, which
-directories are generated/gitignored]
-
-### Shell / Bash
-
-- `bash` for scripts needing Bash features; POSIX `sh` when portability
-  matters. Note the minimum Bash version if using Bash-specific features.
-- Shebang: `#!/usr/bin/env bash`.
-- Strict mode: `set -euo pipefail` and `IFS=$'\n\t'` unless there's a
-  documented reason not to.
-- Always quote expansions (`"$var"`) unless intentionally word-splitting.
-- Prefer named functions (`function_name() { ... }`) with explicit `return`
-  codes over inline blocks.
-- Use `getopts` for flags; validate inputs; provide `--help` usage text.
-- No `eval` or other arbitrary-input execution. Sanitize external input.
-- Errors to stderr (`>&2`), not `echo`; use exit codes for failure states.
-- `set -x` only for interactive debugging — never commit it enabled.
-- Run `shellcheck`; wire it into `pre-commit` where applicable.
-- Don't assume the environment — check for required commands and fail fast
-  with a helpful message if missing.
-- No secrets in scripts; use environment variables, and mark sensitive
-  inputs so they're never logged.
-
-## Documentation Style Guide (Python Docstrings)
-
-A reasonable default if the project doesn't already have its own convention —
-reST-flavored docstrings, pydocstyle-compatible (PEP 257 base, D200/D205/
-D210/D211/D214/D215/D300/D301 enforced, D203/D212 ignored).
-
-**Convention split:**
-- **Modules & classes**: Numpy-style section headings (`Parameters`,
-  `Attributes`, `Returns`, `Raises`, `Examples`, `Notes`, `See Also`), each
-  preceded by a blank line, underlined with `=` (module title) or `-`
-  (subsections).
-- **Functions & methods**: reST field lists (`:param name:`, `:type name:`,
-  `:returns:`, `:rtype:`), with a `Raises` section heading (Numpy-style) for
-  exceptions — blank line before it.
-
-**Universal rules:**
-- `"""Triple double quotes"""` only.
-- One-line docstrings fit on one line; first line ends with a period,
-  imperative mood ("Do X", not "Does X"), capitalized first word.
-- Multi-line: summary line → blank line → body / sections.
-- Use double backticks for inline code (`` ``variable_name`` ``).
-- Document all exceptions, side effects (mutations, I/O, state changes —
-  call out with **bold**), and non-obvious edge cases.
-- Type annotations in code must match `:type:`/`:rtype:` declarations.
-- Cross-reference with `:class:`, `:meth:`, `:mod:`, `:py:meth:`.
-
-**Minimal example (function):**
-
-```python
-def normalize_identifier(value: str, aliases: dict[str, str] | None = None) -> str:
-    """Normalize an identifier for consistent lookup.
-
-    :param value: Raw identifier as received from the caller.
-    :type value: str
-    :param aliases: Optional mapping of known aliases to canonical names.
-    :type aliases: dict[str, str] | None
-
-    :returns: The normalized, lowercase, alias-resolved identifier.
-    :rtype: str
-
-    Raises
-    ------
-    ValueError
-        If ``value`` is empty after stripping whitespace.
-    """
-```
-
-**Minimal example (module/class heading style):**
-
-```python
-"""One-line summary of the module.
-
-module_name
-===========
-
-Extended description of purpose and context.
-
-Parameters
-----------
-param_name : type
-    Description, constraints, default.
-
-Returns
--------
-On success, returns ...
-
-Raises
-------
-ValueError
-    When ...
-"""
-```
-
-Follow this same Numpy-heading pattern for class docstrings (`Parameters` for
-`__init__`, `Attributes` for public/protected attrs, `Methods` summarizing
-each public method).
-
-## Project Structure Pattern
-
-[If the project follows a consistent structural pattern, describe it here.
-Example — business logic isolated in a class, `main()`/entrypoint doing only
-init/wiring/delegation, private helpers prefixed `_`:]
-
-```python
-class ExampleProcessor:
-    """One-line summary of what this class processes.
-
-    Parameters
-    ----------
-    config : dict
-        Configuration for this run.
-    """
-
-    def __init__(self, config: dict) -> None:
-        self.config = config
-
-    def _validate(self) -> None:
-        """Validate configuration before running."""
-
-    def run(self) -> dict:
-        """Execute the pipeline and return the result."""
-        self._validate()
-        return {"status": "ok"}
-
-
-def main() -> None:
-    """Entry point: init, instantiate, delegate."""
-    config = {}
-    result = ExampleProcessor(config).run()
-    print(result)
-
-
-if __name__ == "__main__":
-    main()
-```
-
-## Best Practices
-
-1. Type-hint every parameter and return value.
-2. Document side effects explicitly with **bold** emphasis.
-3. Normalize input identifiers (`identifier.strip().lower()`) early, before
-   any comparison or dict lookup.
-4. Deep-copy when merging data structures (`copy.deepcopy`) to avoid shared
-   references.
-5. Prefer conservative merges: extend lists, merge dicts recursively,
-   preserve existing data over destructive replacement.
-6. Use `field(default_factory=list)` / `dict` for mutable dataclass
-   defaults — never bare `[]`/`{}`.
-7. Log with context (relevant identifiers, operation) at the right level;
-   never log secrets. Standard logger setup: `logging.getLogger(__name__)`,
-   file + stream handler, `INFO` default.
-8. Use specific exceptions, not bare `Exception`/`ValueError`; include
-   context in the message (object, identifier, path, etc.).
+- Type-hint everything. Normalize identifiers early (`.strip().lower()`).
+- Conservative merges: `copy.deepcopy`, extend lists, merge dicts recursively.
+- `field(default_factory=list)` for mutable dataclass defaults.
+- Specific exceptions with context; never swallow them silently.
+- `logging.getLogger(__name__)`, file (`logs/<module>.log`) + stream, `INFO`.
+- Never log secrets; `no_log=True` for sensitive Ansible params; validate input.
 
 ## Repo Commands
 
-[Fill in the actual commands for this project once known, e.g.:]
-
 ```bash
-# Lint / type-check
-python -m ruff check .
-python -m mypy --ignore-missing-imports [package_dir]/
-
-# Format
-python -m ruff format .
-
-# Tests
+python -m ruff check . && python -m ruff format --check .
+python -m mypy --ignore-missing-imports <package_dir>/
 python -m pytest -q
 pre-commit run --all-files
 ```
 
-## Security Considerations
+Commits: `type(scope): subject` (feat, fix, docs, style, refactor, test, chore).
 
-- Never log tokens, passwords, or credentials.
-- Mark sensitive parameters so they're excluded from logs (framework
-  permitting, e.g. Ansible's `no_log=True`).
-- Validate all external input.
-- Follow least privilege for any credentials used.
+<!-- pyml disable md022 -->
+
+# graphify
+- **graphify** (`~/.claude/skills/graphify/SKILL.md`) - any input to knowledge graph. Trigger: `/graphify`
+When the user types `/graphify`, use the installed graphify skill or instructions before doing anything else.
