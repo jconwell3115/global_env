@@ -20,14 +20,14 @@ repos:
         language: system
         types: [python]
 
-      # - id: mypy
-      #   name: Mypy
-      #   entry: uv run -- mypy
-      #   language: system
-      #   log_file: logs/mypy.log
-      #   types: [python]
-      #   require_serial: true
-      #   additional_dependencies: []
+      - id: mypy
+        name: Mypy
+        entry: uv run -- mypy
+        language: system
+        log_file: logs/mypy.log
+        types: [python]
+        require_serial: true
+        additional_dependencies: []
 
       # - id: markdownlint
       #   name: Markdownlint
@@ -80,16 +80,16 @@ repos:
         types: [yaml]
         exclude: ^.pre-commit-config.yaml$
 
-#       - id: djlint-reformat-jinja
-#         name: DjLint Reformat Jinja
-#         entry: djlint reformat
-#         language: system
-#         files: \.j2$
-#         log_file: logs/djlint-reformat.log
+      - id: djlint-reformat-jinja
+        name: DjLint Reformat Jinja
+        entry: djlint reformat
+        language: system
+        files: \.j2$
+        log_file: logs/djlint-reformat.log
 
-#       - id: djlint-jinja
-#         name: DjLint Jinja
-#         entry: djlint check
-#         language: system
-#         files: \.j2$
-#         log_file: logs/djlint.log
+      - id: djlint-jinja
+        name: DjLint Jinja
+        entry: djlint check
+        language: system
+        files: \.j2$
+        log_file: logs/djlint.log

@@ -54,3 +54,6 @@ uv.lock
 
 # Copilot instructions
 .github/*copilot*.md
+
+# Graphify knowledge graph output
+graphify-out/
