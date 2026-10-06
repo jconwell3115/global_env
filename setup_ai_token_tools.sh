@@ -7,6 +7,7 @@
 #   links     - ~/.claude/CLAUDE.md and ~/.github / ~/.copilot instructions symlinks
 # Copilot Chat in VS Code reads ~/.copilot/instructions, which "links" fills from
 # global_env/copilot/*.instructions.md plus the work overlay's copilot/ folder if present.
+# It also links the overlay's claude/skills/* into ~/.claude/skills and ~/.copilot/skills.
 #
 # Usage:
 #   setup_ai_token_tools.sh [-o graphify|ponytail|links] [-u] [-y]
@@ -25,7 +26,7 @@ source "$SCRIPT_DIR/setup_lib.sh"
 PONYTAIL_REPO="DietrichGebert/ponytail"
 PONYTAIL_PLUGIN="ponytail@ponytail"
 PONYTAIL_CONFIG="$HOME/.config/ponytail/config.json"
-GRAPHIFY_PACKAGE="graphifyy"
+GRAPHIFY_PACKAGE="graphifyy==0.9.76"   # bump deliberately, then re-run -o graphify
 
 usage() {
   cat <<EOF
@@ -116,6 +117,20 @@ _link_instructions() {
   return 0
 }
 
+# Link each skill folder in $GLOBAL_ENV_OVERLAY_DIR/claude/skills into ~/.claude/skills
+# and ~/.copilot/skills (Copilot CLI and VS Code Copilot Chat read the latter).
+_link_skills() {
+  local src="$GLOBAL_ENV_OVERLAY_DIR/claude/skills" d dir
+  [[ -d "$src" ]] || return 0
+  for d in "$src"/*/; do
+    [[ -f "$d/SKILL.md" ]] || continue
+    for dir in "$HOME/.claude/skills" "$HOME/.copilot/skills"; do
+      _link "${d%/}" "$dir/$(basename "$d")"
+    done
+  done
+  return 0
+}
+
 setup_links() {
   section "Global instruction links"
   _link "$GLOBAL_ENV_DIR/CLAUDE.md" "$HOME/.claude/CLAUDE.md"
@@ -124,6 +139,7 @@ setup_links() {
   # chat.instructionsFilesLocations is deprecated and only used by the VS Code Local agent
   _link "$GLOBAL_ENV_DIR/global-copilot-instructions.md" "$HOME/.copilot/copilot-instructions.md"
   _link_instructions
+  _link_skills
 }
 
 remove_links() {
@@ -136,6 +152,9 @@ remove_links() {
     _unlink "$f"
   done
   rmdir "$HOME/.copilot/instructions" 2>/dev/null || true
+  for f in "$HOME/.claude/skills"/* "$HOME/.copilot/skills"/*; do
+    _unlink "$f"
+  done
 }
 
 setup_graphify() {
@@ -149,11 +168,9 @@ setup_graphify() {
   # Global /graphify skill only. Per-repo hooks (graphify claude install / hook install)
   # are opt-in for large repos, see README.
   graphify install
-  if _have copilot; then
-    graphify install --platform copilot
-  else
-    warn "Copilot CLI not found; skipping graphify Copilot CLI skill"
-  fi
+  # ~/.copilot/skills is read by both Copilot CLI and VS Code Copilot Chat, so install
+  # it even when the CLI is absent.
+  graphify copilot install
   log_ok "Graphify ready: run /graphify . inside a repo to build its graph"
   warn "Graphify sends docs, PDFs and images (not code) to Claude for extraction"
 }
@@ -163,7 +180,7 @@ remove_graphify() {
   if _have graphify; then
     uv tool uninstall "$GRAPHIFY_PACKAGE"
   fi
-  rm -rf "$HOME/.claude/skills/graphify"
+  rm -rf "$HOME/.claude/skills/graphify" "$HOME/.copilot/skills/graphify"
   log_ok "Graphify removed"
 }
 

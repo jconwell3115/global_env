@@ -155,5 +155,6 @@
         "~/my_work_tools/global_env/global-copilot-instructions.md": true,
         "~/my_work_tools/global_env/copilot": true
     },
+    "chat.useAgentSkills": true,
     "chat.viewSessions.orientation": "stacked"
 }

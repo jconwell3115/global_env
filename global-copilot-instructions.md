@@ -119,3 +119,11 @@ pre-commit run --all-files
 
 - Commits: `type(scope): subject` (feat, fix, docs, style, refactor, test, chore).
 - Branches: `feature/…`, `bugfix/…`, `hotfix/…`, `docs/…`.
+
+## graphify
+
+- **graphify** (`~/.copilot/skills/graphify/SKILL.md`): turns any input into a knowledge
+  graph. Trigger: `/graphify`.
+- When the user types `/graphify`, load that skill before doing anything else.
+- If `graphify-out/` exists in the repo, answer codebase/architecture questions from
+  `graphify-out/GRAPH_REPORT.md` and the graph before grepping files.
