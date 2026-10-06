@@ -275,14 +275,22 @@ podman_volume_ls() {
 # Override the file locations with VAULT_SECRETS_FILE / VAULT_PASS_FILE.
 # vault_get '.some_key'   print one value (yq expression)
 # vault_keys              list every key path in the file
-vault_get() {
-    ansible-vault view "${VAULT_SECRETS_FILE:-$HOME/.config/secrets.yml}" \
-        --vault-password-file "${VAULT_PASS_FILE:-$HOME/.config/.vault_pass}" \
-        | yq -r "$1"
+# Tools resolve from PATH first, then the my_work_tools venv, so these work
+# even when a project venv without ansible-core/yq is active.
+_vault_tool() {
+    local p
+    p="$(command -v "$1")" || p="$HOME/my_work_tools/.venv/bin/$1"
+    [[ -x "$p" ]] || { echo "vault: '$1' not found on PATH or in ~/my_work_tools/.venv/bin" >&2; return 127; }
+    echo "$p"
 }
-vault_keys() {
-    ansible-vault view "${VAULT_SECRETS_FILE:-$HOME/.config/secrets.yml}" \
+_vault_query() {
+    local av yq
+    av="$(_vault_tool ansible-vault)" || return
+    yq="$(_vault_tool yq)" || return
+    "$av" view "${VAULT_SECRETS_FILE:-$HOME/.config/secrets.yml}" \
         --vault-password-file "${VAULT_PASS_FILE:-$HOME/.config/.vault_pass}" \
-        | yq -r 'paths | join(".")'
+        | "$yq" -r "$1"
 }
+vault_get() { _vault_query "$1"; }
+vault_keys() { _vault_query 'paths | join(".")'; }
 # ------------- End of shell_functions.sh -------------
