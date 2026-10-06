@@ -15,6 +15,7 @@ This repository contains shell scripts to automate creating and configuring a Li
 - `paths.sh` — The one place work-tools paths are defined (`WORK_TOOLS_DIR`, `WORK_ENV_DIR`, `GLOBAL_ENV_DIR`, `BIN_DIR`, `SSH_DIR`, `GITHUB_OWNER`). Sourced by `mybashrc` and the scripts; values already in the environment win.
 - `setup_lib.sh` — Shared helpers for the setup scripts (logging, prompts, cloning, config linking, UV helpers, diagnostics).
 - `shell_functions.sh` — Interactive shell helpers (`extract`, `mkcd`, `serve`, podman helpers, ...). Sourced by `mybashrc`; it also loads `setup_lib.sh` so helpers like `copy_precommit_config` work as shell commands.
+- `setup_ai_token_tools.sh` — Installs user-level tools that cut Claude Code / Copilot token use (Graphify, Ponytail) and links the global instruction files. See [AI token-reduction tools](#ai-token-reduction-tools).
 - `new_uv_setup.sh` — Automates migration from Pipenv / requirements files / pyproject.toml to UV, installs a Python version, and installs commonly used global UV tools.
 
 ### Prerequisites
@@ -107,6 +108,44 @@ PYTHON_VERSION=3.12 ./new_uv_setup.sh
 - Installs ansible-galaxy roles from `requirements.yml` if Ansible is available inside the UV environment.
 - Installs configured global tools via `uv tool install`.
 - Creates a dependency snapshot file like `uv-dependencies-YYYYMMDD.txt` on success.
+
+### AI token-reduction tools
+
+`setup_ai_token_tools.sh [-o graphify|ponytail|links] [-u] [-y]` sets these up for the user, so every
+repo gets them. It is safe to re-run.
+
+- **Ponytail** (`DietrichGebert/ponytail`) cuts generated code. It makes the agent reuse existing
+  code, the stdlib and installed deps before writing new code. The default level is `lite`, which
+  names the lazier option instead of forcing it.
+  - Installed as a Claude Code plugin (`claude plugin list`).
+  - Level set in `~/.config/ponytail/config.json` and `PONYTAIL_DEFAULT_MODE` in `mybashrc`.
+  - Commands: `/ponytail lite|full|ultra|off`, `/ponytail-review`, `/ponytail-gain`.
+  - `claude plugin details ponytail@ponytail` shows its always-on cost (~1k tokens).
+- **Graphify** (PyPI `graphifyy`) cuts file reads. It builds a knowledge graph of a repo that the
+  agent queries instead of grepping, and is worth it on large repos.
+  - Installed as a `uv tool` plus the global skill `~/.claude/skills/graphify/`.
+  - Per repo: `/graphify .`, then optionally `graphify hook install` to rebuild on
+    commit/checkout. The `graphify-out/` output is globally git-ignored.
+  - It parses code locally, but sends docs, PDFs and images to Claude for concept extraction.
+    Keep it to code on sensitive repos.
+  - `graphify install` appends a `# graphify` block to `CLAUDE.md` through the symlink. Leave
+    the heading as is, because the installer uses it to stay idempotent.
+- **Instruction files** cut always-on context. `global-copilot-instructions.md` is the lean core
+  (~5 KB, down from ~40 KB). Language detail lives in `copilot/*.instructions.md` and loads only
+  for matching files (`applyTo`). `CLAUDE.md` is the Claude equivalent.
+- **Links**: `~/.claude/CLAUDE.md`, `~/.github/copilot-instructions.md` and
+  `~/.copilot/copilot-instructions.md` link back here. `~/.copilot/instructions/` gets one link per
+  `copilot/*.instructions.md`, plus the work overlay's `copilot/` files when present (overlay wins
+  on a name clash). Links to deleted files are pruned on each run.
+  `~/.copilot/` is where current VS Code Copilot Chat and Copilot CLI read user instructions.
+  `chat.instructionsFilesLocations` is deprecated and only used by the VS Code Local agent.
+
+Copilot Chat in VS Code can't run plugins, so it gets the Ponytail rules from
+`copilot/ponytail.instructions.md`. That folder is registered in `chat.instructionsFilesLocations`
+(see `vscode_settings.json`). Copilot CLI steps are skipped until `copilot` is installed. Re-run the
+script after installing it.
+
+Remove everything with `setup_ai_token_tools.sh -u` (or `-u -o <tool>`).
 
 ### Key behaviors from `setup_lib.sh`
 
